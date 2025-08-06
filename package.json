@@ -1,0 +1,46 @@
+{
+  "name": "sabancioglu-otomotiv-api",
+  "version": "1.0.0",
+  "description": "Sabancıoğlu Otomotiv Stok ve Satış Yönetimi API",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.18.2"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "api": "node server.js",
+    "dev": "nodemon server.js",
+    "hibrit": "node server.js",
+    "test": "node test-server.js",
+    "test:api": "node -e \"require('./test-api.js')\"",
+    "test:endpoints": "curl -s http://localhost:3000/api/test && echo",
+    "backup": "node python-scripts/backup_db.py",
+    "analyze": "node python-scripts/analyze_data.py"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "better-sqlite3": "^12.2.0",
+    "cors": "^2.8.5",
+    "debug": "^4.4.1",
+    "express": "^4.21.2",
+    "fs-extra": "^11.1.1",
+    "node-cron": "^3.0.3",
+    "node-fetch": "^2.7.0",
+    "nodemailer": "^6.10.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "sqlite3": "^5.1.7",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "otomotiv",
+    "stok",
+    "satış",
+    "api"
+  ],
+  "author": "Sabancıoğlu Otomotiv",
+  "license": "MIT"
+}

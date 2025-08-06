@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Persistence Test</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Data Persistence Test</h1>
+    <div id="status">Loading...</div>
+    <div id="data"></div>
+    
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        const socket = io(API_BASE);
+        
+        let testData = {
+            stokListesi: {},
+            satisGecmisi: [],
+            musteriler: {},
+            borclarim: {}
+        };
+        
+        // Test data persistence
+        async function testDataPersistence() {
+            const statusDiv = document.getElementById('status');
+            const dataDiv = document.getElementById('data');
+            
+            try {
+                // Step 1: Load initial data
+                statusDiv.innerHTML = 'Step 1: Loading initial data...';
+                const response = await fetch(`${API_BASE}/api/tum-veriler`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    testData = result.data;
+                    dataDiv.innerHTML = `<h3>Initial Data:</h3><pre>${JSON.stringify(testData, null, 2)}</pre>`;
+                    statusDiv.innerHTML = 'Step 1: ✅ Initial data loaded successfully';
+                } else {
+                    throw new Error(result.error || 'Failed to load data');
+                }
+                
+                // Step 2: Add a test product
+                statusDiv.innerHTML = 'Step 2: Adding test product...';
+                const testProduct = {
+                    barkod: 'TEST123',
+                    urun_adi: 'Test Product',
+                    marka: 'Test Brand',
+                    stok_miktari: 10,
+                    fiyat: 100,
+                    alisFiyati: 80,
+                    kategori: 'Test'
+                };
+                
+                testData.stokListesi['TEST123_Test Brand_'] = testProduct;
+                
+                // Step 3: Save data to backend
+                statusDiv.innerHTML = 'Step 3: Saving data to backend...';
+                const saveResponse = await fetch(`${API_BASE}/api/tum-veriler`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                
+                const saveResult = await saveResponse.json();
+                if (saveResult.success) {
+                    statusDiv.innerHTML = 'Step 3: ✅ Data saved successfully';
+                } else {
+                    throw new Error(saveResult.error || 'Failed to save data');
+                }
+                
+                // Step 4: Reload data to verify persistence
+                statusDiv.innerHTML = 'Step 4: Reloading data to verify persistence...';
+                const reloadResponse = await fetch(`${API_BASE}/api/tum-veriler`);
+                const reloadResult = await reloadResponse.json();
+                
+                if (reloadResult.success) {
+                    const reloadedData = reloadResult.data;
+                    const testProductExists = reloadedData.stokListesi['TEST123_Test Brand_'];
+                    
+                    if (testProductExists) {
+                        statusDiv.innerHTML = 'Step 4: ✅ Data persistence verified! Test product found after reload.';
+                        dataDiv.innerHTML += `<h3>Reloaded Data:</h3><pre>${JSON.stringify(reloadedData, null, 2)}</pre>`;
+                    } else {
+                        statusDiv.innerHTML = 'Step 4: ❌ Data persistence failed! Test product not found after reload.';
+                    }
+                } else {
+                    throw new Error(reloadResult.error || 'Failed to reload data');
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `❌ Test failed: ${error.message}`;
+                console.error('Test error:', error);
+            }
+        }
+        
+        // Run test when page loads
+        window.addEventListener('load', testDataPersistence);
+    </script>
+</body>
+</html>

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karanlık Tema Test</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c6fbb;
+            --primary-dark: #1a5ca3;
+            --secondary: #3a7ca5;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #3498db;
+            --light: #f8f9fa;
+            --dark: #2c3e50;
+            --gray: #7f8c8d;
+            --light-gray: #ecf0f1;
+            --border: #dcdde1;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+            
+            /* Light theme variables */
+            --bg-primary: #f5f7fb;
+            --bg-secondary: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --border-color: #dcdde1;
+            --card-bg: #ffffff;
+        }
+
+        /* Dark theme variables */
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --border-color: #404040;
+            --card-bg: #2d2d2d;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --input-bg: #3a3a3a;
+            --input-border: #555555;
+            --input-text: #ffffff;
+            --table-bg: #2d2d2d;
+            --table-border: #404040;
+            --table-hover: #3a3a3a;
+            --modal-bg: #2d2d2d;
+            --modal-overlay: rgba(0, 0, 0, 0.7);
+            --dropdown-bg: #3a3a3a;
+            --dropdown-hover: #4a4a4a;
+            --tooltip-bg: #3a3a3a;
+            --tooltip-text: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+            transition: var(--transition);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .theme-toggle {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .theme-toggle:hover {
+            background: var(--primary-dark);
+        }
+
+        .test-section {
+            background: var(--card-bg);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 15px;
+            transition: var(--transition);
+            background-color: var(--input-bg, var(--bg-secondary));
+            color: var(--input-text, var(--text-primary));
+            margin-bottom: 10px;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(44, 111, 187, 0.15);
+            outline: none;
+            background-color: var(--input-bg, var(--bg-secondary));
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            background: var(--table-bg, white);
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background: var(--primary);
+            color: white;
+        }
+
+        th, td {
+            padding: 12px 18px;
+            text-align: left;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+            background-color: var(--card-bg);
+        }
+
+        tbody tr:hover {
+            background-color: var(--table-hover, var(--bg-secondary));
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-overlay, rgba(0, 0, 0, 0.5));
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--modal-bg, white);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .context-menu {
+            position: absolute;
+            background: var(--dropdown-bg, white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            min-width: 180px;
+            display: none;
+        }
+
+        .context-menu-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .context-menu-item:hover {
+            background-color: var(--dropdown-hover, #f0f0f0);
+        }
+
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--tooltip-bg, var(--dark));
+            color: var(--tooltip-text, white);
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 13px;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            z-index: 1001;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            background: var(--success);
+        }
+
+        .notification.error {
+            background: var(--danger);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Karanlık Tema Test Sayfası</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <i class="fas fa-moon" id="themeIcon"></i>
+                <span id="themeText">Karanlık Tema</span>
+            </button>
+        </div>
+
+        <div class="test-section">
+            <h2>Form Kontrolleri</h2>
+            <input type="text" class="form-control" placeholder="Barkod girin">
+            <input type="number" class="form-control" placeholder="Miktar">
+            <input type="text" class="form-control" placeholder="Fiyat">
+            <div>
+                <button class="btn btn-primary">Kaydet</button>
+                <button class="btn btn-success">Ekle</button>
+                <button class="btn btn-warning">Düzenle</button>
+                <button class="btn btn-danger">Sil</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Tablo Testi</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Barkod</th>
+                            <th>Ürün Adı</th>
+                            <th>Marka</th>
+                            <th>Miktar</th>
+                            <th>Fiyat</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>123456</td>
+                            <td>Fren Balatası</td>
+                            <td>Bosch</td>
+                            <td>10</td>
+                            <td>75 ₺</td>
+                        </tr>
+                        <tr>
+                            <td>789012</td>
+                            <td>Yağ Filtresi</td>
+                            <td>Mann</td>
+                            <td>5</td>
+                            <td>45 ₺</td>
+                        </tr>
+                        <tr>
+                            <td>345678</td>
+                            <td>Hava Filtresi</td>
+                            <td>Mahle</td>
+                            <td>8</td>
+                            <td>35 ₺</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Modal Testi</h2>
+            <button class="btn btn-primary" onclick="showModal()">Modal Aç</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Context Menu Testi</h2>
+            <div class="tooltip">
+                <button class="btn btn-info" onclick="showContextMenu(event)">Sağ Tık</button>
+                <span class="tooltiptext">Bu bir tooltip örneğidir</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="testModal">
+        <div class="modal-content">
+            <h3>Test Modal</h3>
+            <p>Bu bir test modal'ıdır. Karanlık temada nasıl göründüğünü test ediyoruz.</p>
+            <input type="text" class="form-control" placeholder="Modal içinde input">
+            <button class="btn btn-primary" onclick="closeModal()">Kapat</button>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item">
+            <i class="fas fa-edit"></i> Düzenle
+        </div>
+        <div class="context-menu-item">
+            <i class="fas fa-trash"></i> Sil
+        </div>
+        <div class="context-menu-item">
+            <i class="fas fa-print"></i> Yazdır
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        let currentTheme = 'light';
+
+        // Tema değiştirme fonksiyonu
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+            
+            // Menü ikonunu güncelle
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            if (currentTheme === 'dark') {
+                themeIcon.className = 'fas fa-sun';
+                themeText.textContent = 'Açık Tema';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                themeText.textContent = 'Karanlık Tema';
+            }
+            
+            showNotification('Tema değiştirildi', 'success');
+        }
+
+        // Tema ayarlarını yükle
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                currentTheme = savedTheme;
+            }
+            
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            if (currentTheme === 'dark') {
+                themeIcon.className = 'fas fa-sun';
+                themeText.textContent = 'Açık Tema';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                themeText.textContent = 'Karanlık Tema';
+            }
+        }
+
+        // Modal fonksiyonları
+        function showModal() {
+            document.getElementById('testModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('testModal').style.display = 'none';
+        }
+
+        // Context menu fonksiyonları
+        function showContextMenu(event) {
+            event.preventDefault();
+            const contextMenu = document.getElementById('contextMenu');
+            contextMenu.style.display = 'block';
+            contextMenu.style.left = event.pageX + 'px';
+            contextMenu.style.top = event.pageY + 'px';
+        }
+
+        // Context menu'yu kapat
+        document.addEventListener('click', function() {
+            document.getElementById('contextMenu').style.display = 'none';
+        });
+
+        // Notification fonksiyonu
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Sayfa yüklendiğinde tema yükle
+        window.onload = function() {
+            loadTheme();
+            console.log('🎨 Test sayfası yüklendi, tema:', currentTheme);
+        };
+    </script>
+</body>
+</html>

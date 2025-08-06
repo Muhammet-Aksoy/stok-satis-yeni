@@ -1,0 +1,2069 @@
+{
+  "stokListesi": {
+    "230965__": {
+      "barkod": "230965",
+      "marka": null
+    },
+    "MS 3002_MS_": {
+      "barkod": "MS 3002",
+      "marka": "MS"
+    },
+    "6C1118045_ORJ_": {
+      "barkod": "6C1118045",
+      "marka": "ORJ"
+    },
+    "BK3118045 BSG_BSG_": {
+      "barkod": "BK3118045 BSG",
+      "marka": "BSG"
+    },
+    "BK3118045 ORJ_ORJ_": {
+      "barkod": "BK3118045 ORJ",
+      "marka": "ORJ"
+    },
+    "5C161K353CC__": {
+      "barkod": "5C161K353CC",
+      "marka": null
+    },
+    "6C1118045NE_DP_": {
+      "barkod": "6C1118045NE",
+      "marka": "DP"
+    },
+    "5C161K353 BC_ORJ_": {
+      "barkod": "5C161K353 BC",
+      "marka": "ORJ"
+    },
+    "95VT1K353AA_SOMSAN_": {
+      "barkod": "95VT1K353AA",
+      "marka": "SOMSAN"
+    },
+    "8C1V 2A 315__": {
+      "barkod": "8C1V 2A 315",
+      "marka": null
+    },
+    "8C1V 1125 AA__": {
+      "barkod": "8C1V 1125 AA",
+      "marka": null
+    },
+    "BK3118045 VOTTO_VOTTO_": {
+      "barkod": "BK3118045 VOTTO",
+      "marka": "VOTTO"
+    },
+    "5C161K353_DP_": {
+      "barkod": "5C161K353",
+      "marka": "DP"
+    },
+    "5C16 1K353 DC_DC_": {
+      "barkod": "5C16 1K353 DC",
+      "marka": "DC"
+    },
+    "95VT1K353BA_SOMSAN_": {
+      "barkod": "95VT1K353BA",
+      "marka": "SOMSAN"
+    },
+    "5C161K353 BC ORJ_ORJ_": {
+      "barkod": "5C161K353 BC ORJ",
+      "marka": "ORJ"
+    },
+    "YC15 2261 AA_cifam_": {
+      "barkod": "YC15 2261 AA",
+      "marka": "cifam"
+    },
+    "YC15 2261 AA_BOSCH_": {
+      "barkod": "YC15 2261 AA",
+      "marka": "BOSCH"
+    },
+    "YC15 2261 AA_delphi_": {
+      "barkod": "YC15 2261 AA",
+      "marka": "delphi"
+    },
+    "YC15 2261 AA_Naiba_": {
+      "barkod": "YC15 2261 AA",
+      "marka": "Naiba"
+    },
+    "SCH313283_SACHS_": {
+      "barkod": "SCH313283",
+      "marka": "SACHS"
+    },
+    "BSG30300020_BSG_": {
+      "barkod": "BSG30300020",
+      "marka": "BSG"
+    },
+    "BSG30300021_BSG_": {
+      "barkod": "BSG30300021",
+      "marka": "BSG"
+    },
+    "SCH 230 709_SACHS_": {
+      "barkod": "SCH 230 709",
+      "marka": "SACHS"
+    },
+    "BSG30300033_BSG_": {
+      "barkod": "BSG30300033",
+      "marka": "BSG"
+    },
+    "SCH315469_SACHS_": {
+      "barkod": "SCH315469",
+      "marka": "SACHS"
+    },
+    "SCH200375_SACHS_": {
+      "barkod": "SCH200375",
+      "marka": "SACHS"
+    },
+    "SCH 315241_SACHS_": {
+      "barkod": "SCH 315241",
+      "marka": "SACHS"
+    },
+    "sch 315242_SACHS_": {
+      "barkod": "sch 315242",
+      "marka": "SACHS"
+    },
+    "sch 290685_SACHS_": {
+      "barkod": "sch 290685",
+      "marka": "SACHS"
+    },
+    "93bb 2a451_MGA_": {
+      "barkod": "93bb 2a451",
+      "marka": "MGA"
+    },
+    "BSG 30-300-031_BSG_": {
+      "barkod": "BSG 30-300-031",
+      "marka": "BSG"
+    },
+    "313502_SACHS_": {
+      "barkod": "313502",
+      "marka": "SACHS"
+    },
+    "BSG 30300024_BSG_": {
+      "barkod": "BSG 30300024",
+      "marka": "BSG"
+    },
+    "BSG 311897_SACHS_": {
+      "barkod": "BSG 311897",
+      "marka": "SACHS"
+    },
+    "SCH 230713_SACHS_": {
+      "barkod": "SCH 230713",
+      "marka": "SACHS"
+    },
+    "SCH 230858_SACHS_": {
+      "barkod": "SCH 230858",
+      "marka": "SACHS"
+    },
+    "PN7330608MM_MaysanMado_": {
+      "barkod": "PN7330608MM",
+      "marka": "MaysanMado"
+    },
+    "9T1613404AD_DP_": {
+      "barkod": "9T1613404AD",
+      "marka": "DP"
+    },
+    "6C1113405AC_DP_": {
+      "barkod": "6C1113405AC",
+      "marka": "DP"
+    },
+    "6C1113404AC_DP_": {
+      "barkod": "6C1113404AC",
+      "marka": "DP"
+    },
+    "XS4J 8591 DB_dp-OES_": {
+      "barkod": "XS4J 8591 DB",
+      "marka": "dp-OES"
+    },
+    "98AG18145CL_Magneti Marelli_": {
+      "barkod": "98AG18145CL",
+      "marka": "Magneti Marelli"
+    },
+    "SCH 290838_SACHS_": {
+      "barkod": "SCH 290838",
+      "marka": "SACHS"
+    },
+    "SCH 290839_SACHS_": {
+      "barkod": "SCH 290839",
+      "marka": "SACHS"
+    },
+    "SCH 290837_SACHS_": {
+      "barkod": "SCH 290837",
+      "marka": "SACHS"
+    },
+    "359004400010_M.MARELLI_": {
+      "barkod": "359004400010",
+      "marka": "M.MARELLI"
+    },
+    "SS 1347_DP_": {
+      "barkod": "SS 1347",
+      "marka": "DP"
+    },
+    "SS 1346_DP_": {
+      "barkod": "SS 1346",
+      "marka": "DP"
+    },
+    "BSG30700226_BSG_": {
+      "barkod": "BSG30700226",
+      "marka": "BSG"
+    },
+    "F026003025_BOSCH_": {
+      "barkod": "F026003025",
+      "marka": "BOSCH"
+    },
+    "0986AF6039_BOSCH_": {
+      "barkod": "0986AF6039",
+      "marka": "BOSCH"
+    },
+    "CS81478OES_OES_": {
+      "barkod": "CS81478OES",
+      "marka": "OES"
+    },
+    "SS 4115 DLP_DELPHI_": {
+      "barkod": "SS 4115 DLP",
+      "marka": "DELPHI"
+    },
+    "SS 44396_DP_": {
+      "barkod": "SS 44396",
+      "marka": "DP"
+    },
+    "SS 44395_DP_": {
+      "barkod": "SS 44395",
+      "marka": "DP"
+    },
+    "SS 86104_DP_": {
+      "barkod": "SS 86104",
+      "marka": "DP"
+    },
+    "B86052_DP_": {
+      "barkod": "B86052",
+      "marka": "DP"
+    },
+    "SS 7631_DP_": {
+      "barkod": "SS 7631",
+      "marka": "DP"
+    },
+    "SS 7632_DP_": {
+      "barkod": "SS 7632",
+      "marka": "DP"
+    },
+    "B 1087_DP_": {
+      "barkod": "B 1087",
+      "marka": "DP"
+    },
+    "SS 3309_DP_": {
+      "barkod": "SS 3309",
+      "marka": "DP"
+    },
+    "B 1833_DP_": {
+      "barkod": "B 1833",
+      "marka": "DP"
+    },
+    "BK21 2K021 AB_DP_": {
+      "barkod": "BK21 2K021 AB",
+      "marka": "DP"
+    },
+    "95AX3270BA_DP_": {
+      "barkod": "95AX3270BA",
+      "marka": "DP"
+    },
+    "BS 1302_DP_": {
+      "barkod": "BS 1302",
+      "marka": "DP"
+    },
+    "BP 2401-R PLN_DP_": {
+      "barkod": "BP 2401-R PLN",
+      "marka": "DP"
+    },
+    "BSG 30-805-018__": {
+      "barkod": "BSG 30-805-018",
+      "marka": null
+    },
+    "YC15H11396_ORJ_": {
+      "barkod": "YC15H11396",
+      "marka": "ORJ"
+    },
+    "6C11 3025 AB_ORJ_": {
+      "barkod": "6C11 3025 AB",
+      "marka": "ORJ"
+    },
+    "YC15 23106 BG_ORJ_": {
+      "barkod": "YC15 23106 BG",
+      "marka": "ORJ"
+    },
+    "YC15H11397_orj_": {
+      "barkod": "YC15H11397",
+      "marka": "orj"
+    },
+    "VKBA1465_skf_": {
+      "barkod": "VKBA1465",
+      "marka": "skf"
+    },
+    "10-30_opet_": {
+      "barkod": "10-30",
+      "marka": "opet"
+    },
+    "atf__": {
+      "barkod": "atf",
+      "marka": null
+    },
+    "XS7Q6744A1A_Champıon_": {
+      "barkod": "XS7Q6744A1A",
+      "marka": "Champıon"
+    },
+    "custom ayak altı paspası_custom_": {
+      "barkod": "custom ayak altı paspası",
+      "marka": "custom"
+    },
+    "6C11V16585__": {
+      "barkod": "6C11V16585",
+      "marka": null
+    },
+    "2M51 8200__": {
+      "barkod": "2M51 8200",
+      "marka": null
+    },
+    "Focus Ön Panjur_Focus Ön Panjur_": {
+      "barkod": "Focus Ön Panjur",
+      "marka": "Focus Ön Panjur"
+    },
+    "Focus Ön Panjur_retow_": {
+      "barkod": "Focus Ön Panjur",
+      "marka": "retow"
+    },
+    "ET7617B968_DP_": {
+      "barkod": "ET7617B968",
+      "marka": "DP"
+    },
+    "bm518200be_fase_": {
+      "barkod": "bm518200be",
+      "marka": "fase"
+    },
+    "8m518200_fase_": {
+      "barkod": "8m518200",
+      "marka": "fase"
+    },
+    "8a618200_fase_": {
+      "barkod": "8a618200",
+      "marka": "fase"
+    },
+    "Focus Ön Panjur Büyük_retow_": {
+      "barkod": "Focus Ön Panjur Büyük",
+      "marka": "retow"
+    },
+    "bk3117b968_dp_": {
+      "barkod": "bk3117b968",
+      "marka": "dp"
+    },
+    "784020_focus_": {
+      "barkod": "784020",
+      "marka": "focus"
+    },
+    "YC15 8200 CAYBB4_ORJ_": {
+      "barkod": "YC15 8200 CAYBB4",
+      "marka": "ORJ"
+    },
+    "95vb8355_orj_": {
+      "barkod": "95vb8355",
+      "marka": "orj"
+    },
+    "6C119092 aa_orj_": {
+      "barkod": "6C119092 aa",
+      "marka": "orj"
+    },
+    "YAKIT DEPO TUTUCU SACI_YAKIT DEPO TUTUCU SACI_": {
+      "barkod": "YAKIT DEPO TUTUCU SACI",
+      "marka": "YAKIT DEPO TUTUCU SACI"
+    },
+    "6c11 3l519_Ditaş_": {
+      "barkod": "6c11 3l519",
+      "marka": "Ditaş"
+    },
+    "GK31 13W030_ayfar_": {
+      "barkod": "GK31 13W030",
+      "marka": "ayfar"
+    },
+    "GK31 13W029_ayfar_": {
+      "barkod": "GK31 13W029",
+      "marka": "ayfar"
+    },
+    "yc15 17504_orj_": {
+      "barkod": "yc15 17504",
+      "marka": "orj"
+    },
+    "95vb 8k619_orj_": {
+      "barkod": "95vb 8k619",
+      "marka": "orj"
+    },
+    "BK31 17683_aty_": {
+      "barkod": "BK31 17683",
+      "marka": "aty"
+    },
+    "BK31 17682_aty_": {
+      "barkod": "BK31 17682",
+      "marka": "aty"
+    },
+    "ATY 0105170018_aty_": {
+      "barkod": "ATY 0105170018",
+      "marka": "aty"
+    },
+    "0105170017_aty_": {
+      "barkod": "0105170017",
+      "marka": "aty"
+    },
+    "YC15 16A563_orj_": {
+      "barkod": "YC15 16A563",
+      "marka": "orj"
+    },
+    "yc15 28344_orj_": {
+      "barkod": "yc15 28344",
+      "marka": "orj"
+    },
+    "bt1r 7e395_orj_": {
+      "barkod": "bt1r 7e395",
+      "marka": "orj"
+    },
+    "BT1R 7E395_turtel_": {
+      "barkod": "BT1R 7E395",
+      "marka": "turtel"
+    },
+    "2S6R 7E395__": {
+      "barkod": "2S6R 7E395",
+      "marka": null
+    },
+    "XS4R 7E395_ORJ_": {
+      "barkod": "XS4R 7E395",
+      "marka": "ORJ"
+    },
+    "CV1R 7E395_TURTEL_": {
+      "barkod": "CV1R 7E395",
+      "marka": "TURTEL"
+    },
+    "5C16 18N344_İBRAŞ_": {
+      "barkod": "5C16 18N344",
+      "marka": "İBRAŞ"
+    },
+    "5C16 18N344_DP_": {
+      "barkod": "5C16 18N344",
+      "marka": "DP"
+    },
+    "7C16 6019__": {
+      "barkod": "7C16 6019",
+      "marka": null
+    },
+    "6C1Q 6019__": {
+      "barkod": "6C1Q 6019",
+      "marka": null
+    },
+    "BK3Q 6019_DİTAŞ_": {
+      "barkod": "BK3Q 6019",
+      "marka": "DİTAŞ"
+    },
+    "ATY 0105170017_ATY_": {
+      "barkod": "ATY 0105170017",
+      "marka": "ATY"
+    },
+    "ATY 0105170016_ATY_": {
+      "barkod": "ATY 0105170016",
+      "marka": "ATY"
+    },
+    "BM5113404_FASE_": {
+      "barkod": "BM5113404",
+      "marka": "FASE"
+    },
+    "BM51 13405_FASE_": {
+      "barkod": "BM51 13405",
+      "marka": "FASE"
+    },
+    "BM51 13404 JC_FASE_": {
+      "barkod": "BM51 13404 JC",
+      "marka": "FASE"
+    },
+    "BM51 13A603_FASE_": {
+      "barkod": "BM51 13A603",
+      "marka": "FASE"
+    },
+    "BM51 13A602_FASE_": {
+      "barkod": "BM51 13A602",
+      "marka": "FASE"
+    },
+    "8A61 13A603_FASE_": {
+      "barkod": "8A61 13A603",
+      "marka": "FASE"
+    },
+    "BM51 13405__": {
+      "barkod": "BM51 13405",
+      "marka": null
+    },
+    "6S61 13A602 BE_DEPO_": {
+      "barkod": "6S61 13A602 BE",
+      "marka": "DEPO"
+    },
+    "BK21 17683__": {
+      "barkod": "BK21 17683",
+      "marka": null
+    },
+    "BK21 17682__": {
+      "barkod": "BK21 17682",
+      "marka": null
+    },
+    "CUSTOM AYNA SAĞ SİYAH KAPAK ELEK ISIT__": {
+      "barkod": "CUSTOM AYNA SAĞ SİYAH KAPAK ELEK ISIT",
+      "marka": null
+    },
+    "ET76 17682__": {
+      "barkod": "ET76 17682",
+      "marka": null
+    },
+    "ET76 17683__": {
+      "barkod": "ET76 17683",
+      "marka": null
+    },
+    "SS24080_DP_": {
+      "barkod": "SS24080",
+      "marka": "DP"
+    },
+    "BSG 30-300-029_BSG_": {
+      "barkod": "BSG 30-300-029",
+      "marka": "BSG"
+    },
+    "30300022_BSG_": {
+      "barkod": "30300022",
+      "marka": "BSG"
+    },
+    "EY16 18080__": {
+      "barkod": "EY16 18080",
+      "marka": null
+    },
+    "230855_SACHS_": {
+      "barkod": "230855",
+      "marka": "SACHS"
+    },
+    "30300009_BSG_": {
+      "barkod": "30300009",
+      "marka": "BSG"
+    },
+    "2C16 18080 BA_DP_": {
+      "barkod": "2C16 18080 BA",
+      "marka": "DP"
+    },
+    "FK31 18080_VOTTO_": {
+      "barkod": "FK31 18080",
+      "marka": "VOTTO"
+    },
+    "2C16 18080_VOTTO_": {
+      "barkod": "2C16 18080",
+      "marka": "VOTTO"
+    },
+    "6C16 8K520_FORD_": {
+      "barkod": "6C16 8K520",
+      "marka": "FORD"
+    },
+    "CONNET ÖN KAPI FİTİLİ__": {
+      "barkod": "CONNET ÖN KAPI FİTİLİ",
+      "marka": null
+    },
+    "7T16 2420 AC_FORD_": {
+      "barkod": "7T16 2420 AC",
+      "marka": "FORD"
+    },
+    "7T16 2420_FORD_": {
+      "barkod": "7T16 2420",
+      "marka": "FORD"
+    },
+    "YC15 1130 AD_FASE_": {
+      "barkod": "YC15 1130 AD",
+      "marka": "FASE"
+    },
+    "2T1J 16L560__": {
+      "barkod": "2T1J 16L560",
+      "marka": null
+    },
+    "2T1J16L560__": {
+      "barkod": "2T1J16L560",
+      "marka": null
+    },
+    "yc15 28344_YAN SANAYİ_": {
+      "barkod": "yc15 28344",
+      "marka": "YAN SANAYİ"
+    },
+    "YC15 V28345_YAN SANAYİ_": {
+      "barkod": "YC15 V28345",
+      "marka": "YAN SANAYİ"
+    },
+    "YC15 16A562__": {
+      "barkod": "YC15 16A562",
+      "marka": null
+    },
+    "YC15 16A563__": {
+      "barkod": "YC15 16A563",
+      "marka": null
+    },
+    "BK31 16A266_ORJ_": {
+      "barkod": "BK31 16A266",
+      "marka": "ORJ"
+    },
+    "T15 ARKA KAPI SAĞ FİTİL__": {
+      "barkod": "T15 ARKA KAPI SAĞ FİTİL",
+      "marka": null
+    },
+    "ARKA KAPI CAM FİTİLİ T15 SAĞ VE SOL__": {
+      "barkod": "ARKA KAPI CAM FİTİLİ T15 SAĞ VE SOL",
+      "marka": null
+    },
+    "YC15 V50336__": {
+      "barkod": "YC15 V50336",
+      "marka": null
+    },
+    "BK31 17926__": {
+      "barkod": "BK31 17926",
+      "marka": null
+    },
+    "92VB 3K661__": {
+      "barkod": "92VB 3K661",
+      "marka": null
+    },
+    "BK2R 7E395 CB_TURTEL_": {
+      "barkod": "BK2R 7E395 CB",
+      "marka": "TURTEL"
+    },
+    "BC11V406A10AA__": {
+      "barkod": "BC11V406A10AA",
+      "marka": null
+    },
+    "ET76 A406A10__": {
+      "barkod": "ET76 A406A10",
+      "marka": null
+    },
+    "BK21 V406A10__": {
+      "barkod": "BK21 V406A10",
+      "marka": null
+    },
+    "CC11 9289 AC_EUROCRAFT_": {
+      "barkod": "CC11 9289 AC",
+      "marka": "EUROCRAFT"
+    },
+    "CC11 9323_EUROCRAFT_": {
+      "barkod": "CC11 9323",
+      "marka": "EUROCRAFT"
+    },
+    "86VB V406A10__": {
+      "barkod": "86VB V406A10",
+      "marka": null
+    },
+    "BK21 V406A10 BB_MGA_": {
+      "barkod": "BK21 V406A10 BB",
+      "marka": "MGA"
+    },
+    "92VB V22168_FASE_": {
+      "barkod": "92VB V22168",
+      "marka": "FASE"
+    },
+    "YC15V43286_DP_": {
+      "barkod": "YC15V43286",
+      "marka": "DP"
+    },
+    "YC15 V431A03_ONPER-DP_": {
+      "barkod": "YC15 V431A03",
+      "marka": "ONPER-DP"
+    },
+    "92VB 5349 AB__": {
+      "barkod": "92VB 5349 AB",
+      "marka": null
+    },
+    "013375801_VİCTOR REİNZ_": {
+      "barkod": "013375801",
+      "marka": "VİCTOR REİNZ"
+    },
+    "90VB 13404__": {
+      "barkod": "90VB 13404",
+      "marka": null
+    },
+    "90VB13405__": {
+      "barkod": "90VB13405",
+      "marka": null
+    },
+    "ASFAR  20003__": {
+      "barkod": "ASFAR  20003",
+      "marka": null
+    },
+    "4C16 13405__": {
+      "barkod": "4C16 13405",
+      "marka": null
+    },
+    "4C16 13404__": {
+      "barkod": "4C16 13404",
+      "marka": null
+    },
+    "6C11 13405__": {
+      "barkod": "6C11 13405",
+      "marka": null
+    },
+    "6C11 13404__": {
+      "barkod": "6C11 13404",
+      "marka": null
+    },
+    "9T16 13404__": {
+      "barkod": "9T16 13404",
+      "marka": null
+    },
+    "9T16 13405__": {
+      "barkod": "9T16 13405",
+      "marka": null
+    },
+    "ASFAR 200019__": {
+      "barkod": "ASFAR 200019",
+      "marka": null
+    },
+    "ASFAR 200021_ASFAR_": {
+      "barkod": "ASFAR 200021",
+      "marka": "ASFAR"
+    },
+    "BK21 13405-5104466_MARS_": {
+      "barkod": "BK21 13405-5104466",
+      "marka": "MARS"
+    },
+    "BK21 13404-510445_MARS_": {
+      "barkod": "BK21 13404-510445",
+      "marka": "MARS"
+    },
+    "ET76 13405_ÇERKES_": {
+      "barkod": "ET76 13405",
+      "marka": "ÇERKES"
+    },
+    "ET76 13404_ÇERKES_": {
+      "barkod": "ET76 13404",
+      "marka": "ÇERKES"
+    },
+    "6c11 v020c49_ford_": {
+      "barkod": "6c11 v020c49",
+      "marka": "ford"
+    },
+    "348760_KALE_": {
+      "barkod": "348760",
+      "marka": "KALE"
+    },
+    "6C11 8K218 AC_CABU_": {
+      "barkod": "6C11 8K218 AC",
+      "marka": "CABU"
+    },
+    "343865_KALE_": {
+      "barkod": "343865",
+      "marka": "KALE"
+    },
+    "BK21 13C087_CABU_": {
+      "barkod": "BK21 13C087",
+      "marka": "CABU"
+    },
+    "348765_KALE_": {
+      "barkod": "348765",
+      "marka": "KALE"
+    },
+    "BK21 8K218_YAN SANAYİ_": {
+      "barkod": "BK21 8K218",
+      "marka": "YAN SANAYİ"
+    },
+    "GK31 13W030 BC_FORD_": {
+      "barkod": "GK31 13W030 BC",
+      "marka": "FORD"
+    },
+    "8A61 13W030 CH_TYC_": {
+      "barkod": "8A61 13W030 CH",
+      "marka": "TYC"
+    },
+    "AYF 505503 / 92VB 13006 A1B_AYFAR_": {
+      "barkod": "AYF 505503 / 92VB 13006 A1B",
+      "marka": "AYFAR"
+    },
+    "YC15 2005 AA_DP_": {
+      "barkod": "YC15 2005 AA",
+      "marka": "DP"
+    },
+    "6C11 2005 BE_BOSCH_": {
+      "barkod": "6C11 2005 BE",
+      "marka": "BOSCH"
+    },
+    "BCH 0204774975_BOSCH_": {
+      "barkod": "BCH 0204774975",
+      "marka": "BOSCH"
+    },
+    "4C16 13008 CA_ORJ_": {
+      "barkod": "4C16 13008 CA",
+      "marka": "ORJ"
+    },
+    "4C16 13008 DA_ORJ_": {
+      "barkod": "4C16 13008 DA",
+      "marka": "ORJ"
+    },
+    "4C16 13008 BA_ORJ_": {
+      "barkod": "4C16 13008 BA",
+      "marka": "ORJ"
+    },
+    "4C16 13008_ORJ_": {
+      "barkod": "4C16 13008",
+      "marka": "ORJ"
+    },
+    "BK21 2M008 AC__": {
+      "barkod": "BK21 2M008 AC",
+      "marka": null
+    },
+    "BS23007__": {
+      "barkod": "BS23007",
+      "marka": null
+    },
+    "BK21 2K021 AC__": {
+      "barkod": "BK21 2K021 AC",
+      "marka": null
+    },
+    "VAL 826700_Valeo_": {
+      "barkod": "VAL 826700",
+      "marka": "Valeo"
+    },
+    "VAL 826344_Valeo_": {
+      "barkod": "VAL 826344",
+      "marka": "Valeo"
+    },
+    "BP 8219_DP_": {
+      "barkod": "BP 8219",
+      "marka": "DP"
+    },
+    "BP1277_DP_": {
+      "barkod": "BP1277",
+      "marka": "DP"
+    },
+    "BS 81553_DP_": {
+      "barkod": "BS 81553",
+      "marka": "DP"
+    },
+    "BE1308_DP_": {
+      "barkod": "BE1308",
+      "marka": "DP"
+    },
+    "BE1416_DP_": {
+      "barkod": "BE1416",
+      "marka": "DP"
+    },
+    "DP719_DP_": {
+      "barkod": "DP719",
+      "marka": "DP"
+    },
+    "LP1724_DELPHİ_": {
+      "barkod": "LP1724",
+      "marka": "DELPHİ"
+    },
+    "2T142K021_ORJ_": {
+      "barkod": "2T142K021",
+      "marka": "ORJ"
+    },
+    "ES 1344 MGN_MAGNETI_": {
+      "barkod": "ES 1344 MGN",
+      "marka": "MAGNETI"
+    },
+    "SS 81030_DP  CONNECT  2002-_": {
+      "barkod": "SS 81030",
+      "marka": "DP  CONNECT  2002-"
+    },
+    "BE 81228_DP_": {
+      "barkod": "BE 81228",
+      "marka": "DP"
+    },
+    "B 1246_DP_": {
+      "barkod": "B 1246",
+      "marka": "DP"
+    },
+    "CS 8124_DP_": {
+      "barkod": "CS 8124",
+      "marka": "DP"
+    },
+    "SS 4122_dp_": {
+      "barkod": "SS 4122",
+      "marka": "dp"
+    },
+    "SS 8104_dp_": {
+      "barkod": "SS 8104",
+      "marka": "dp"
+    },
+    "AY11 2K021__": {
+      "barkod": "AY11 2K021",
+      "marka": null
+    },
+    "86VB 17682 ADW_aty_": {
+      "barkod": "86VB 17682 ADW",
+      "marka": "aty"
+    },
+    "bk21 4002_CM_": {
+      "barkod": "bk21 4002",
+      "marka": "CM"
+    },
+    "ET76 6P08_CM_": {
+      "barkod": "ET76 6P08",
+      "marka": "CM"
+    },
+    "ET76 6F012_CM_": {
+      "barkod": "ET76 6F012",
+      "marka": "CM"
+    },
+    "JT76 7M121_CM_": {
+      "barkod": "JT76 7M121",
+      "marka": "CM"
+    },
+    "JT766 P082 AB_CM_": {
+      "barkod": "JT766 P082 AB",
+      "marka": "CM"
+    },
+    "8V51 3C367_DİTAŞ_": {
+      "barkod": "8V51 3C367",
+      "marka": "DİTAŞ"
+    },
+    "8V51 3C437__": {
+      "barkod": "8V51 3C437",
+      "marka": null
+    },
+    "8V51 1215_OPTİMAL_": {
+      "barkod": "8V51 1215",
+      "marka": "OPTİMAL"
+    },
+    "3S616P082__": {
+      "barkod": "3S616P082",
+      "marka": null
+    },
+    "8V51 3B438_Ditaş_": {
+      "barkod": "8V51 3B438",
+      "marka": "Ditaş"
+    },
+    "8V51 3B438_Ford_": {
+      "barkod": "8V51 3B438",
+      "marka": "Ford"
+    },
+    "8v15 31519_AYD_": {
+      "barkod": "8v15 31519",
+      "marka": "AYD"
+    },
+    "8v15 31519_Ditaş_": {
+      "barkod": "8v15 31519",
+      "marka": "Ditaş"
+    },
+    "3M51 5K978_ORJ_": {
+      "barkod": "3M51 5K978",
+      "marka": "ORJ"
+    },
+    "8V51 3395_FORD_": {
+      "barkod": "8V51 3395",
+      "marka": "FORD"
+    },
+    "8V51 3395_Delphi_": {
+      "barkod": "8V51 3395",
+      "marka": "Delphi"
+    },
+    "8V51 3395_Fase_": {
+      "barkod": "8V51 3395",
+      "marka": "Fase"
+    },
+    "büyük tabla burcu__": {
+      "barkod": "büyük tabla burcu",
+      "marka": null
+    },
+    "küçük tabla burcu__": {
+      "barkod": "küçük tabla burcu",
+      "marka": null
+    },
+    "EY162261_Matelle_": {
+      "barkod": "EY162261",
+      "marka": "Matelle"
+    },
+    "AY11 3051 AA-K_ECEM_": {
+      "barkod": "AY11 3051 AA-K",
+      "marka": "ECEM"
+    },
+    "AY11 2K021_DC_": {
+      "barkod": "AY11 2K021",
+      "marka": "DC"
+    },
+    "ACP1 2C299 C1A_DP_": {
+      "barkod": "ACP1 2C299 C1A",
+      "marka": "DP"
+    },
+    "AP1984_apetech_": {
+      "barkod": "AP1984",
+      "marka": "apetech"
+    },
+    "EY162200_Kale_": {
+      "barkod": "EY162200",
+      "marka": "Kale"
+    },
+    "0986487753_BOSCH_": {
+      "barkod": "0986487753",
+      "marka": "BOSCH"
+    },
+    "ACP1 2C299__": {
+      "barkod": "ACP1 2C299",
+      "marka": null
+    },
+    "B1BC 1104__": {
+      "barkod": "B1BC 1104",
+      "marka": null
+    },
+    "344515__": {
+      "barkod": "344515",
+      "marka": null
+    },
+    "25748 18205 ANSKD13__": {
+      "barkod": "25748 18205 ANSKD13",
+      "marka": null
+    },
+    "YC15 2K478 AB_BOSCH_": {
+      "barkod": "YC15 2K478 AB",
+      "marka": "BOSCH"
+    },
+    "ET76 515B0 AA_bsg_": {
+      "barkod": "ET76 515B0 AA",
+      "marka": "bsg"
+    },
+    "ET76 515C0_BSG_": {
+      "barkod": "ET76 515C0",
+      "marka": "BSG"
+    },
+    "YC15 V04100 AJYRCI_ORJ_": {
+      "barkod": "YC15 V04100 AJYRCI",
+      "marka": "ORJ"
+    },
+    "8V51 5349 AB_DP_": {
+      "barkod": "8V51 5349 AB",
+      "marka": "DP"
+    },
+    "EY16 3042 AA_Ditaş_": {
+      "barkod": "EY16 3042 AA",
+      "marka": "Ditaş"
+    },
+    "EY16 3042 AA_Yan Sanayi_": {
+      "barkod": "EY16 3042 AA",
+      "marka": "Yan Sanayi"
+    },
+    "EY16 3051 AA_prs_": {
+      "barkod": "EY16 3051 AA",
+      "marka": "prs"
+    },
+    "AV2Q6051CA_Victor Reinz_": {
+      "barkod": "AV2Q6051CA",
+      "marka": "Victor Reinz"
+    },
+    "AV2Q6051AA_Victor Reinz_": {
+      "barkod": "AV2Q6051AA",
+      "marka": "Victor Reinz"
+    },
+    "AV2Q6051BA_Victor Reinz_": {
+      "barkod": "AV2Q6051BA",
+      "marka": "Victor Reinz"
+    },
+    "95VX 1125 AA_AYD_": {
+      "barkod": "95VX 1125 AA",
+      "marka": "AYD"
+    },
+    "92VB 1125 BA_BOSCH_": {
+      "barkod": "92VB 1125 BA",
+      "marka": "BOSCH"
+    },
+    "92VB 1125 BA_MGA_": {
+      "barkod": "92VB 1125 BA",
+      "marka": "MGA"
+    },
+    "2T14 2A315 AC_BOSCH_": {
+      "barkod": "2T14 2A315 AC",
+      "marka": "BOSCH"
+    },
+    "BK211125_DJ_": {
+      "barkod": "BK211125",
+      "marka": "DJ"
+    },
+    "BK211125_ORJ_": {
+      "barkod": "BK211125",
+      "marka": "ORJ"
+    },
+    "8v218k218_bsg_": {
+      "barkod": "8v218k218",
+      "marka": "bsg"
+    },
+    "1M51 13006_DEPO_": {
+      "barkod": "1M51 13006",
+      "marka": "DEPO"
+    },
+    "4M51 13099__": {
+      "barkod": "4M51 13099",
+      "marka": null
+    },
+    "8M5113100_ATY_": {
+      "barkod": "8M5113100",
+      "marka": "ATY"
+    },
+    "8M5113100_TYC_": {
+      "barkod": "8M5113100",
+      "marka": "TYC"
+    },
+    "8M51 13100_TYC_": {
+      "barkod": "8M51 13100",
+      "marka": "TYC"
+    },
+    "8M51 13W030 EC__": {
+      "barkod": "8M51 13W030 EC",
+      "marka": null
+    },
+    "8M51 13W029_DP_": {
+      "barkod": "8M51 13W029",
+      "marka": "DP"
+    },
+    "8M51 13101 AE__": {
+      "barkod": "8M51 13101 AE",
+      "marka": null
+    },
+    "7C16 6049 BB_ORJİNAL_": {
+      "barkod": "7C16 6049 BB",
+      "marka": "ORJİNAL"
+    },
+    "7C16 6049 BB_ATY_": {
+      "barkod": "7C16 6049 BB",
+      "marka": "ATY"
+    },
+    "1402165000_GOETZE_": {
+      "barkod": "1402165000",
+      "marka": "GOETZE"
+    },
+    "1402165100_GOETZE_": {
+      "barkod": "1402165100",
+      "marka": "GOETZE"
+    },
+    "1402112000__": {
+      "barkod": "1402112000",
+      "marka": null
+    },
+    "14-02076000_GOETZE_": {
+      "barkod": "14-02076000",
+      "marka": "GOETZE"
+    },
+    "014WV2400__": {
+      "barkod": "014WV2400",
+      "marka": null
+    },
+    "7t169600__": {
+      "barkod": "7t169600",
+      "marka": null
+    },
+    "CC11 8C617 AE_FANEX_": {
+      "barkod": "CC11 8C617 AE",
+      "marka": "FANEX"
+    },
+    "CC11 8C617 AE_hmpx_": {
+      "barkod": "CC11 8C617 AE",
+      "marka": "hmpx"
+    },
+    "8C16 8C617 AB_BORGWARNER_": {
+      "barkod": "8C16 8C617 AB",
+      "marka": "BORGWARNER"
+    },
+    "6C11 2K478 BD_bosch_": {
+      "barkod": "6C11 2K478 BD",
+      "marka": "bosch"
+    },
+    "1402093000_GOETZE_": {
+      "barkod": "1402093000",
+      "marka": "GOETZE"
+    },
+    "6C11 2K478 BD_bsg_": {
+      "barkod": "6C11 2K478 BD",
+      "marka": "bsg"
+    },
+    "6C11 2K478 AD_BSG_": {
+      "barkod": "6C11 2K478 AD",
+      "marka": "BSG"
+    },
+    "6C11 2K478 AC_ORJ_": {
+      "barkod": "6C11 2K478 AC",
+      "marka": "ORJ"
+    },
+    "ET76 13W029 AJ_AYFAR_": {
+      "barkod": "ET76 13W029 AJ",
+      "marka": "AYFAR"
+    },
+    "ET76 13W030_ayfar_": {
+      "barkod": "ET76 13W030",
+      "marka": "ayfar"
+    },
+    "ET76 13W029_AYFAR_": {
+      "barkod": "ET76 13W029",
+      "marka": "AYFAR"
+    },
+    "6C16 17683 CFYGAX_orj_": {
+      "barkod": "6C16 17683 CFYGAX",
+      "marka": "orj"
+    },
+    "6C16 17682 BGYGAX_ORJ_": {
+      "barkod": "6C16 17682 BGYGAX",
+      "marka": "ORJ"
+    },
+    "6C16 17683 DGYGAX_orj_": {
+      "barkod": "6C16 17683 DGYGAX",
+      "marka": "orj"
+    },
+    "3C16 17682 AAYGAX_ORJ_": {
+      "barkod": "3C16 17682 AAYGAX",
+      "marka": "ORJ"
+    },
+    "6C16 17683 AEYGAX_ORJ_": {
+      "barkod": "6C16 17683 AEYGAX",
+      "marka": "ORJ"
+    },
+    "6C16 17682 AFYGAX_ORJ_": {
+      "barkod": "6C16 17682 AFYGAX",
+      "marka": "ORJ"
+    },
+    "6C16 17682 CEYGAX_ORJ_": {
+      "barkod": "6C16 17682 CEYGAX",
+      "marka": "ORJ"
+    },
+    "6C16 17682 DFYGAX_ORJ_": {
+      "barkod": "6C16 17682 DFYGAX",
+      "marka": "ORJ"
+    },
+    "4M513R700AC_KALE_": {
+      "barkod": "4M513R700AC",
+      "marka": "KALE"
+    },
+    "XS4H 18476 AB__": {
+      "barkod": "XS4H 18476 AB",
+      "marka": null
+    },
+    "6G9Q 6U003 AA__": {
+      "barkod": "6G9Q 6U003 AA",
+      "marka": null
+    },
+    "6C119L440__": {
+      "barkod": "6C119L440",
+      "marka": null
+    },
+    "6c11 9l440 ab_kale_": {
+      "barkod": "6c11 9l440 ab",
+      "marka": "kale"
+    },
+    "YC1H8005CD_KALE_": {
+      "barkod": "YC1H8005CD",
+      "marka": "KALE"
+    },
+    "2T1Q 9L440 AC_ORJ_": {
+      "barkod": "2T1Q 9L440 AC",
+      "marka": "ORJ"
+    },
+    "7T16 9L440 AE__": {
+      "barkod": "7T16 9L440 AE",
+      "marka": null
+    },
+    "3M5H 8C607_FASE_": {
+      "barkod": "3M5H 8C607",
+      "marka": "FASE"
+    },
+    "CC119L440_ORJ_": {
+      "barkod": "CC119L440",
+      "marka": "ORJ"
+    },
+    "7C16 9424_ORJ_": {
+      "barkod": "7C16 9424",
+      "marka": "ORJ"
+    },
+    "4T16 8C607 KC_BSG_": {
+      "barkod": "4T16 8C607 KC",
+      "marka": "BSG"
+    },
+    "3C1Q 9424_FOMOCCO_": {
+      "barkod": "3C1Q 9424",
+      "marka": "FOMOCCO"
+    },
+    "EY16 3K171 AA_ORJ_": {
+      "barkod": "EY16 3K171 AA",
+      "marka": "ORJ"
+    },
+    "EY16 3K170 AA_ORJ_": {
+      "barkod": "EY16 3K170 AA",
+      "marka": "ORJ"
+    },
+    "2M5Q 6B624 BD_DP_": {
+      "barkod": "2M5Q 6B624 BD",
+      "marka": "DP"
+    },
+    "BK21 2C300 AB_LENNOX_": {
+      "barkod": "BK21 2C300 AB",
+      "marka": "LENNOX"
+    },
+    "KK21 2C300 AC_DP_": {
+      "barkod": "KK21 2C300 AC",
+      "marka": "DP"
+    },
+    "VKBA 7086_SKF_": {
+      "barkod": "VKBA 7086",
+      "marka": "SKF"
+    },
+    "BK31 2C300 BC_DJ_": {
+      "barkod": "BK31 2C300 BC",
+      "marka": "DJ"
+    },
+    "BK31 2C300 AD_DJB-DP_": {
+      "barkod": "BK31 2C300 AD",
+      "marka": "DJB-DP"
+    },
+    "834106_VALEO_": {
+      "barkod": "834106",
+      "marka": "VALEO"
+    },
+    "826296_VALEO_": {
+      "barkod": "826296",
+      "marka": "VALEO"
+    },
+    "86VX 7L596 AA_LUK_": {
+      "barkod": "86VX 7L596 AA",
+      "marka": "LUK"
+    },
+    "826700_VALEO_": {
+      "barkod": "826700",
+      "marka": "VALEO"
+    },
+    "1C1O 7540 AF_ORJİNAL_": {
+      "barkod": "1C1O 7540 AF",
+      "marka": "ORJİNAL"
+    },
+    "826899__": {
+      "barkod": "826899",
+      "marka": null
+    },
+    "826933_VALEO_": {
+      "barkod": "826933",
+      "marka": "VALEO"
+    },
+    "CC1Q19A216BB_ONPER_": {
+      "barkod": "CC1Q19A216BB",
+      "marka": "ONPER"
+    },
+    "GK2Q 6B319 BB_CORTECO_": {
+      "barkod": "GK2Q 6B319 BB",
+      "marka": "CORTECO"
+    },
+    "2S6G6B321__": {
+      "barkod": "2S6G6B321",
+      "marka": null
+    },
+    "1S4Q6B319_BSG_": {
+      "barkod": "1S4Q6B319",
+      "marka": "BSG"
+    },
+    "6C1Q6B319_ORJ_": {
+      "barkod": "6C1Q6B319",
+      "marka": "ORJ"
+    },
+    "AV6Q 6B319 AA__": {
+      "barkod": "AV6Q 6B319 AA",
+      "marka": null
+    },
+    "9C1Q 6B319 AB_kentpar_": {
+      "barkod": "9C1Q 6B319 AB",
+      "marka": "kentpar"
+    },
+    "BK21 2M008 AC_DP_": {
+      "barkod": "BK21 2M008 AC",
+      "marka": "DP"
+    },
+    "BK21 2M008 AC_APETECH_": {
+      "barkod": "BK21 2M008 AC",
+      "marka": "APETECH"
+    },
+    "BK21 2M008 AC_KALE_": {
+      "barkod": "BK21 2M008 AC",
+      "marka": "KALE"
+    },
+    "BK21 2M008 AC_FORD_": {
+      "barkod": "BK21 2M008 AC",
+      "marka": "FORD"
+    },
+    "bk21 2m008 ac_BEŞER_": {
+      "barkod": "bk21 2m008 ac",
+      "marka": "BEŞER"
+    },
+    "BK21 2K021AB__": {
+      "barkod": "BK21 2K021AB",
+      "marka": null
+    },
+    "BK21 2K021AC__": {
+      "barkod": "BK21 2K021AC",
+      "marka": null
+    },
+    "93BB 2A451 AD__": {
+      "barkod": "93BB 2A451 AD",
+      "marka": null
+    },
+    "YC1W 4684AA__": {
+      "barkod": "YC1W 4684AA",
+      "marka": null
+    },
+    "bk2q 6b319_ades_": {
+      "barkod": "bk2q 6b319",
+      "marka": "ades"
+    },
+    "2L1W 4684 AA_TIRSAN_": {
+      "barkod": "2L1W 4684 AA",
+      "marka": "TIRSAN"
+    },
+    "7C169430BB_ORJ_": {
+      "barkod": "7C169430BB",
+      "marka": "ORJ"
+    },
+    "92FB 9155 AB_DP_": {
+      "barkod": "92FB 9155 AB",
+      "marka": "DP"
+    },
+    "89SF 9601 AA_DP_": {
+      "barkod": "89SF 9601 AA",
+      "marka": "DP"
+    },
+    "90AB9278AA_DP_": {
+      "barkod": "90AB9278AA",
+      "marka": "DP"
+    },
+    "1S61 3B438_DP_": {
+      "barkod": "1S61 3B438",
+      "marka": "DP"
+    },
+    "A970X 12280 MA_DP_": {
+      "barkod": "A970X 12280 MA",
+      "marka": "DP"
+    },
+    "95AX 3270 AA_DP_": {
+      "barkod": "95AX 3270 AA",
+      "marka": "DP"
+    },
+    "8C162A152CA_ORJ_": {
+      "barkod": "8C162A152CA",
+      "marka": "ORJ"
+    },
+    "YC15 2A152 EA_ERC_": {
+      "barkod": "YC15 2A152 EA",
+      "marka": "ERC"
+    },
+    "BK2T18456_BOSCH_": {
+      "barkod": "BK2T18456",
+      "marka": "BOSCH"
+    },
+    "6C11 2A152 CA_ERC_": {
+      "barkod": "6C11 2A152 CA",
+      "marka": "ERC"
+    },
+    "6C112A152 AD_ORJ_": {
+      "barkod": "6C112A152 AD",
+      "marka": "ORJ"
+    },
+    "6C11 2A152 FB_ORJ_": {
+      "barkod": "6C11 2A152 FB",
+      "marka": "ORJ"
+    },
+    "CC112A152DA_ORJ_": {
+      "barkod": "CC112A152DA",
+      "marka": "ORJ"
+    },
+    "YC152A152__": {
+      "barkod": "YC152A152",
+      "marka": null
+    },
+    "6C16 1104 BC_DP_": {
+      "barkod": "6C16 1104 BC",
+      "marka": "DP"
+    },
+    "BK3W 1109 HD_BSG_": {
+      "barkod": "BK3W 1109 HD",
+      "marka": "BSG"
+    },
+    "98VB2K031_ORJ_": {
+      "barkod": "98VB2K031",
+      "marka": "ORJ"
+    },
+    "BK3W1109JA_DP_": {
+      "barkod": "BK3W1109JA",
+      "marka": "DP"
+    },
+    "BK3W1109HA_DP_": {
+      "barkod": "BK3W1109HA",
+      "marka": "DP"
+    },
+    "5T16 9275 AF_ORJ_": {
+      "barkod": "5T16 9275 AF",
+      "marka": "ORJ"
+    },
+    "95AB 9C799_DP_": {
+      "barkod": "95AB 9C799",
+      "marka": "DP"
+    },
+    "95AB17260_TURTEL_": {
+      "barkod": "95AB17260",
+      "marka": "TURTEL"
+    },
+    "94AB 7K553__": {
+      "barkod": "94AB 7K553",
+      "marka": null
+    },
+    "98VB 2420 EC__": {
+      "barkod": "98VB 2420 EC",
+      "marka": null
+    },
+    "6C11 1104 AD_DP_": {
+      "barkod": "6C11 1104 AD",
+      "marka": "DP"
+    },
+    "6C11 1104 AD_FASE_": {
+      "barkod": "6C11 1104 AD",
+      "marka": "FASE"
+    },
+    "6C11 1104 AD_ONPER_": {
+      "barkod": "6C11 1104 AD",
+      "marka": "ONPER"
+    },
+    "YC1W1109_dp_": {
+      "barkod": "YC1W1109",
+      "marka": "dp"
+    },
+    "6C11 1109 DA_dp_": {
+      "barkod": "6C11 1109 DA",
+      "marka": "dp"
+    },
+    "YC15 1104 AA_dp_": {
+      "barkod": "YC15 1104 AA",
+      "marka": "dp"
+    },
+    "YC15 1104 AA_AYK_": {
+      "barkod": "YC15 1104 AA",
+      "marka": "AYK"
+    },
+    "BK312K328ag_ONPER_": {
+      "barkod": "BK312K328ag",
+      "marka": "ONPER"
+    },
+    "BK212K327BB__": {
+      "barkod": "BK212K327BB",
+      "marka": null
+    },
+    "1C1J 2200 AA_BEŞER_": {
+      "barkod": "1C1J 2200 AA",
+      "marka": "BEŞER"
+    },
+    "91AB 2200 L2A_KALE_": {
+      "barkod": "91AB 2200 L2A",
+      "marka": "KALE"
+    },
+    "98FX4A084CA_MKS_": {
+      "barkod": "98FX4A084CA",
+      "marka": "MKS"
+    },
+    "77T3A331FA_MKS_": {
+      "barkod": "77T3A331FA",
+      "marka": "MKS"
+    },
+    "95AB 3K155 AD_ORJ_": {
+      "barkod": "95AB 3K155 AD",
+      "marka": "ORJ"
+    },
+    "BK212K328BB__": {
+      "barkod": "BK212K328BB",
+      "marka": null
+    },
+    "FSE 11502016_FASE_": {
+      "barkod": "FSE 11502016",
+      "marka": "FASE"
+    },
+    "91AB 3L519 CB_DELPHİ_": {
+      "barkod": "91AB 3L519 CB",
+      "marka": "DELPHİ"
+    },
+    "938M 6766 BC_DP_": {
+      "barkod": "938M 6766 BC",
+      "marka": "DP"
+    },
+    "94AB 5484 AB_DP_": {
+      "barkod": "94AB 5484 AB",
+      "marka": "DP"
+    },
+    "78EB 5484 AC_DP_": {
+      "barkod": "78EB 5484 AC",
+      "marka": "DP"
+    },
+    "95AB 5789 AA_GLOBAL_": {
+      "barkod": "95AB 5789 AA",
+      "marka": "GLOBAL"
+    },
+    "FO-302_TEKNOROT_": {
+      "barkod": "FO-302",
+      "marka": "TEKNOROT"
+    },
+    "FO-301_TEKNOROT_": {
+      "barkod": "FO-301",
+      "marka": "TEKNOROT"
+    },
+    "89FB 3395 AB_AUTOPART_": {
+      "barkod": "89FB 3395 AB",
+      "marka": "AUTOPART"
+    },
+    "DİREKSİYON YAĞI_OTOZONE_": {
+      "barkod": "DİREKSİYON YAĞI",
+      "marka": "OTOZONE"
+    },
+    "BK31 13B382 BB_fortec_": {
+      "barkod": "BK31 13B382 BB",
+      "marka": "fortec"
+    },
+    "bk3113b381bb_Fortec_": {
+      "barkod": "bk3113b381bb",
+      "marka": "Fortec"
+    },
+    "BK3113B382AD__": {
+      "barkod": "BK3113B382AD",
+      "marka": null
+    },
+    "BK31 13B381 AD__": {
+      "barkod": "BK31 13B381 AD",
+      "marka": null
+    },
+    "BK31 17K740 BA__": {
+      "barkod": "BK31 17K740 BA",
+      "marka": null
+    },
+    "BK31 17A700 AB__": {
+      "barkod": "BK31 17A700 AB",
+      "marka": null
+    },
+    "86VB 6038 BB_ATY_": {
+      "barkod": "86VB 6038 BB",
+      "marka": "ATY"
+    },
+    "BK31 17A741_HMPX_": {
+      "barkod": "BK31 17A741",
+      "marka": "HMPX"
+    },
+    "BK3117C718AB__": {
+      "barkod": "BK3117C718AB",
+      "marka": null
+    },
+    "864F 8610_ORJ_": {
+      "barkod": "864F 8610",
+      "marka": "ORJ"
+    },
+    "86VB 5484 AB_DP_": {
+      "barkod": "86VB 5484 AB",
+      "marka": "DP"
+    },
+    "92VB 5484 BA_DP_": {
+      "barkod": "92VB 5484 BA",
+      "marka": "DP"
+    },
+    "MKS2022_mks_": {
+      "barkod": "MKS2022",
+      "marka": "mks"
+    },
+    "3C11 4A084 AC_MKS_": {
+      "barkod": "3C11 4A084 AC",
+      "marka": "MKS"
+    },
+    "6C11 1K018 BA_HMPX_": {
+      "barkod": "6C11 1K018 BA",
+      "marka": "HMPX"
+    },
+    "8C11 4826AA_ECEM_": {
+      "barkod": "8C11 4826AA",
+      "marka": "ECEM"
+    },
+    "974F 6K105 BBB_KING_": {
+      "barkod": "974F 6K105 BBB",
+      "marka": "KING"
+    },
+    "8C11 4826 AB__": {
+      "barkod": "8C11 4826 AB",
+      "marka": null
+    },
+    "2M3420014EA_KALE_": {
+      "barkod": "2M3420014EA",
+      "marka": "KALE"
+    },
+    "8C1V2M008_beşer_": {
+      "barkod": "8C1V2M008",
+      "marka": "beşer"
+    },
+    "2T14 4A084 DA_bsg_": {
+      "barkod": "2T14 4A084 DA",
+      "marka": "bsg"
+    },
+    "YC15 2200 AF_dp_": {
+      "barkod": "YC15 2200 AF",
+      "marka": "dp"
+    },
+    "93vx2k021bb_orj_": {
+      "barkod": "93vx2k021bb",
+      "marka": "orj"
+    },
+    "YC15 2K021 BA_ATY_": {
+      "barkod": "YC15 2K021 BA",
+      "marka": "ATY"
+    },
+    "6C1Q 6A228 BC__": {
+      "barkod": "6C1Q 6A228 BC",
+      "marka": null
+    },
+    "4C11 6A002 AE_DP_": {
+      "barkod": "4C11 6A002 AE",
+      "marka": "DP"
+    },
+    "2T14 4A084 CA_bsg_": {
+      "barkod": "2T14 4A084 CA",
+      "marka": "bsg"
+    },
+    "954f9n27_ATİK_": {
+      "barkod": "954f9n27",
+      "marka": "ATİK"
+    },
+    "JWT 2A604_TURTEL_": {
+      "barkod": "JWT 2A604",
+      "marka": "TURTEL"
+    },
+    "98VB 2B195 DC_DP_": {
+      "barkod": "98VB 2B195 DC",
+      "marka": "DP"
+    },
+    "YC15 2005 CB_DP_": {
+      "barkod": "YC15 2005 CB",
+      "marka": "DP"
+    },
+    "1C1O 7540 AF_VALEO_": {
+      "barkod": "1C1O 7540 AF",
+      "marka": "VALEO"
+    },
+    "YC15 3K185 AN_ONPER_": {
+      "barkod": "YC15 3K185 AN",
+      "marka": "ONPER"
+    },
+    "YC15 3K186 AN_ONPER_": {
+      "barkod": "YC15 3K186 AN",
+      "marka": "ONPER"
+    },
+    "98VB2B195_SMC_": {
+      "barkod": "98VB2B195",
+      "marka": "SMC"
+    },
+    "YC153K186AN__": {
+      "barkod": "YC153K186AN",
+      "marka": null
+    },
+    "6C113K186LH__": {
+      "barkod": "6C113K186LH",
+      "marka": null
+    },
+    "7C1Q6375AD_ORJ_": {
+      "barkod": "7C1Q6375AD",
+      "marka": "ORJ"
+    },
+    "8C116477AA__": {
+      "barkod": "8C116477AA",
+      "marka": null
+    },
+    "BK3Q 6375 AC__": {
+      "barkod": "BK3Q 6375 AC",
+      "marka": null
+    },
+    "LUK 415 0628 10_LUK_": {
+      "barkod": "LUK 415 0628 10",
+      "marka": "LUK"
+    },
+    "YC15 2078 EA__": {
+      "barkod": "YC15 2078 EA",
+      "marka": null
+    },
+    "YC152078FB_DP_": {
+      "barkod": "YC152078FB",
+      "marka": "DP"
+    },
+    "YC15 2078_TİES_": {
+      "barkod": "YC15 2078",
+      "marka": "TİES"
+    },
+    "1C14 6477 CD_dp_": {
+      "barkod": "1C14 6477 CD",
+      "marka": "dp"
+    },
+    "1C1Q 6615 BA_ORJ_": {
+      "barkod": "1C1Q 6615 BA",
+      "marka": "ORJ"
+    },
+    "2s6118a116ad_GLOBAL_": {
+      "barkod": "2s6118a116ad",
+      "marka": "GLOBAL"
+    },
+    "92VB3069AA__": {
+      "barkod": "92VB3069AA",
+      "marka": null
+    },
+    "dene_dene_": {
+      "barkod": "dene",
+      "marka": "dene"
+    },
+    "XS7Q6K614AB__": {
+      "barkod": "XS7Q6K614AB",
+      "marka": null
+    },
+    "86VB3530AE__": {
+      "barkod": "86VB3530AE",
+      "marka": null
+    },
+    "94VB3432_MKS-ECEM_": {
+      "barkod": "94VB3432",
+      "marka": "MKS-ECEM"
+    },
+    "92vb3k155ad__": {
+      "barkod": "92vb3k155ad",
+      "marka": null
+    },
+    "7T16 3K155 AA_DP_": {
+      "barkod": "7T16 3K155 AA",
+      "marka": "DP"
+    },
+    "5C11 18183 AA__": {
+      "barkod": "5C11 18183 AA",
+      "marka": null
+    },
+    "BK2118183AB_DİTAŞ_": {
+      "barkod": "BK2118183AB",
+      "marka": "DİTAŞ"
+    },
+    "BK2118183AB_FORD_": {
+      "barkod": "BK2118183AB",
+      "marka": "FORD"
+    },
+    "86VB 2A032 DA_QUAYT_": {
+      "barkod": "86VB 2A032 DA",
+      "marka": "QUAYT"
+    },
+    "95VB6038BF_DİTAŞ_": {
+      "barkod": "95VB6038BF",
+      "marka": "DİTAŞ"
+    },
+    "95VB 6B032 BD_FORBO_": {
+      "barkod": "95VB 6B032 BD",
+      "marka": "FORBO"
+    },
+    "EGZZASKLAST15__": {
+      "barkod": "EGZZASKLAST15",
+      "marka": null
+    }
+  },
+  "satisGecmisi": [
+    {
+      "id": "md5jvdyhb31ci",
+      "tarih": "2025-07-16T05:58:08.489Z",
+      "barkod": "YC15 2261 AA",
+      "urunAdi": "Arka Fren Silindiri",
+      "marka": "Naiba",
+      "miktar": 1,
+      "fiyat": 320,
+      "alisFiyati": 320,
+      "toplam": 320,
+      "borc": false,
+      "musteriId": null,
+      "aciklama": null
+    },
+    {
+      "id": "md5luqubiuylg",
+      "tarih": "2025-07-16T06:53:37.763Z",
+      "barkod": "313502",
+      "urunAdi": "Ön Amortisör",
+      "marka": "SACHS",
+      "miktar": 1,
+      "fiyat": 1100,
+      "alisFiyati": 1878,
+      "toplam": 1100,
+      "borc": false,
+      "musteriId": null,
+      "aciklama": null
+    },
+    {
+      "id": "md5lwg6kh080i",
+      "tarih": "2025-07-16T06:54:57.260Z",
+      "barkod": "313502",
+      "urunAdi": "Ön Amortisör",
+      "marka": "SACHS",
+      "miktar": 1,
+      "fiyat": 1878,
+      "alisFiyati": 1878,
+      "toplam": 1878,
+      "borc": false,
+      "musteriId": null,
+      "aciklama": null
+    },
+    {
+      "id": "md797j7czhlj3",
+      "tarih": "2025-07-17T10:35:11.736Z",
+      "barkod": "VKBA1465",
+      "urunAdi": "Ön Teker Bilya Kiti",
+      "marka": "skf",
+      "miktar": 2,
+      "fiyat": 3400,
+      "alisFiyati": 1230,
+      "toplam": 6800,
+      "borc": false,
+      "musteriId": null,
+      "aciklama": ""
+    },
+    {
+      "id": "md79bahdms9dk",
+      "tarih": "2025-07-17T10:38:07.057Z",
+      "barkod": "10-30",
+      "urunAdi": "motor yağı 10 30",
+      "marka": "opet",
+      "miktar": 1,
+      "fiyat": 1000,
+      "alisFiyati": 1000,
+      "toplam": 1000,
+      "borc": true,
+      "musteriId": "musteri_md78oe7rvfxlr",
+      "aciklama": null
+    },
+    {
+      "id": "md79ebmij1q52",
+      "tarih": "2025-07-17T10:40:28.506Z",
+      "barkod": "atf",
+      "urunAdi": "direksiyon yağı",
+      "marka": "",
+      "miktar": 1,
+      "fiyat": 150,
+      "alisFiyati": 150,
+      "toplam": 150,
+      "borc": true,
+      "musteriId": "musteri_md78oe7rvfxlr",
+      "aciklama": ""
+    },
+    {
+      "id": "md79jybfif78i",
+      "tarih": "2025-07-17T10:44:51.195Z",
+      "barkod": "XS7Q6744A1A",
+      "urunAdi": "Yağ Filtresi Kağıt",
+      "marka": "Champıon",
+      "miktar": 1,
+      "fiyat": 200,
+      "alisFiyati": 75,
+      "toplam": 200,
+      "borc": false,
+      "musteriId": "musteri_md78oe7rvfxlr",
+      "aciklama": ""
+    },
+    {
+      "id": "mde5quqbvhc9h",
+      "tarih": "2025-07-22T06:32:37.907Z",
+      "barkod": "10-30",
+      "urunAdi": "motor yağı 10 30",
+      "marka": "opet",
+      "miktar": 3,
+      "fiyat": 1000,
+      "alisFiyati": 1000,
+      "toplam": 3000,
+      "borc": false,
+      "musteriId": null,
+      "aciklama": null
+    },
+    {
+      "id": "mdfza3lgrxy6d",
+      "tarih": "2025-07-23T13:07:10.900Z",
+      "barkod": "BM51 13405",
+      "urunAdi": "FOKUS 2011 VE SONRASI STOP LAMBASI SOL",
+      "marka": "",
+      "miktar": 1,
+      "fiyat": 2250,
+      "alisFiyati": 3850,
+      "toplam": 2250,
+      "borc": false,
+      "musteriId": null,
+      "aciklama": ""
+    },
+    {
+      "id": "mdiklovpmg8pr",
+      "tarih": "2025-07-25T08:39:35.989Z",
+      "barkod": "5T16 9275 AF",
+      "urunAdi": "YAKIT DEPO ŞAMANDIRASI KORNET ORJ",
+      "marka": "ORJ",
+      "miktar": 1,
+      "fiyat": 6000,
+      "alisFiyati": 3700,
+      "toplam": 6000,
+      "borc": false,
+      "musteriId": null,
+      "aciklama": null
+    },
+    {
+      "id": "mdiu0ydrocdin",
+      "tarih": "2025-07-25T13:03:24.687Z",
+      "barkod": "8V51 3B438",
+      "urunAdi": "Z rotu Ditaş",
+      "marka": "Ditaş",
+      "miktar": 2,
+      "fiyat": 600,
+      "alisFiyati": 210,
+      "toplam": 1200,
+      "borc": false,
+      "musteriId": null,
+      "aciklama": ""
+    },
+    {
+      "id": "mdixn5zu4mm31",
+      "tarih": "2025-07-25T14:44:39.834Z",
+      "barkod": "6C1113404AC",
+      "urunAdi": "STOP LAMBASI - SAĞ",
+      "marka": "DP",
+      "miktar": 1,
+      "fiyat": 500,
+      "alisFiyati": 414,
+      "toplam": 500,
+      "borc": false,
+      "musteriId": null,
+      "aciklama": null
+    },
+    {
+      "id": "mdmq7d97s4vij",
+      "tarih": "2025-07-28T06:27:30.139Z",
+      "barkod": "343865",
+      "urunAdi": "RADYATÖR YEDEK SU DEPOSU KAPAKLI  V184",
+      "marka": "KALE",
+      "miktar": 1,
+      "fiyat": 1000,
+      "alisFiyati": 0,
+      "toplam": 1000,
+      "borc": false,
+      "musteriId": null,
+      "aciklama": null
+    },
+    {
+      "id": "mdms3874sf977",
+      "tarih": "2025-07-28T07:20:16.192Z",
+      "barkod": "5C16 18N344",
+      "urunAdi": "ÇİFTLİ BORU V184",
+      "marka": "DP",
+      "miktar": 1,
+      "fiyat": 600,
+      "alisFiyati": 400,
+      "toplam": 600,
+      "borc": false,
+      "musteriId": null,
+      "aciklama": null
+    },
+    {
+      "id": "mdpl1rxdqoto5",
+      "tarih": "2025-07-30T06:26:29.665Z",
+      "barkod": "SCH 290837",
+      "urunAdi": "AMORTİSÖR ÖN SAĞ",
+      "marka": "SACHS",
+      "miktar": 1,
+      "fiyat": 3200,
+      "alisFiyati": 1450,
+      "toplam": 3200,
+      "borc": false,
+      "musteriId": null,
+      "aciklama": null
+    }
+  ],
+  "musteriler": {
+    "musteri_md78oe7rvfxlr": {
+      "ad": "Mehmet Karadaş",
+      "telefon": "507 317 73155",
+      "adres": null,
+      "aciklama": "Cumartesi yada Pazartesi\n1650 toplam 650 borç"
+    }
+  },
+  "borclarim": {}
+}

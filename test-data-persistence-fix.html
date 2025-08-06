@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veri Kalıcılığı Testi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .data-display {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Veri Kalıcılığı Testi</h1>
+        <p>Bu sayfa, verilerin sayfa yenilendikten sonra kaybolup kaybolmadığını test eder.</p>
+        
+        <div class="test-section">
+            <h3>📊 Mevcut LocalStorage Verisi</h3>
+            <div id="currentData" class="data-display">Yükleniyor...</div>
+            <button onclick="checkLocalStorage()">LocalStorage Kontrol Et</button>
+            <button onclick="clearLocalStorage()">LocalStorage Temizle</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>➕ Test Verisi Ekle</h3>
+            <p>Bu verileri ekleyip sayfayı yenileyin:</p>
+            <button onclick="addTestData()">Test Verisi Ekle</button>
+            <button onclick="addSampleProducts()">Örnek Ürünler Ekle</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔄 Sayfa Yenileme Testi</h3>
+            <p>Veri ekledikten sonra bu butona tıklayın:</p>
+            <button onclick="reloadPage()">Sayfayı Yenile</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>📈 Test Sonuçları</h3>
+            <div id="testResults"></div>
+        </div>
+    </div>
+
+    <script>
+        // Test verileri
+        const testData = {
+            stokListesi: {
+                "TEST001": {
+                    barkod: "TEST001",
+                    ad: "Test Ürün 1",
+                    marka: "Test Marka",
+                    miktar: 5,
+                    alisFiyati: 10.50
+                },
+                "TEST002": {
+                    barkod: "TEST002", 
+                    ad: "Test Ürün 2",
+                    marka: "Test Marka",
+                    miktar: 3,
+                    alisFiyati: 15.75
+                }
+            },
+            satisGecmisi: [
+                {
+                    id: "sale1",
+                    barkod: "TEST001",
+                    urunAdi: "Test Ürün 1",
+                    miktar: 1,
+                    fiyat: 12.00,
+                    tarih: new Date().toISOString()
+                }
+            ],
+            musteriler: {
+                "musteri1": {
+                    id: "musteri1",
+                    ad: "Test Müşteri",
+                    telefon: "555-1234"
+                }
+            },
+            borclarim: {},
+            lastSync: new Date().toISOString(),
+            source: 'test'
+        };
+
+        // Sayfa yüklendiğinde
+        window.onload = function() {
+            checkLocalStorage();
+            logTestResult('✅ Test sayfası yüklendi');
+        };
+
+        // LocalStorage kontrolü
+        function checkLocalStorage() {
+            const data = localStorage.getItem('saban_data');
+            const display = document.getElementById('currentData');
+            
+            if (data) {
+                try {
+                    const parsed = JSON.parse(data);
+                    const stokCount = Object.keys(parsed.stokListesi || {}).length;
+                    const satisCount = (parsed.satisGecmisi || []).length;
+                    const musteriCount = Object.keys(parsed.musteriler || {}).length;
+                    
+                    display.innerHTML = `✅ LocalStorage'da veri bulundu:
+Stok: ${stokCount} ürün
+Satış: ${satisCount} kayıt  
+Müşteri: ${musteriCount} kişi
+Son Güncelleme: ${parsed.lastSync || 'Bilinmiyor'}`;
+                    
+                    logTestResult('✅ LocalStorage verisi mevcut');
+                } catch (e) {
+                    display.innerHTML = `❌ LocalStorage verisi bozuk: ${e.message}`;
+                    logTestResult('❌ LocalStorage verisi bozuk');
+                }
+            } else {
+                display.innerHTML = '⚠️ LocalStorage\'da veri bulunamadı';
+                logTestResult('⚠️ LocalStorage boş');
+            }
+        }
+
+        // Test verisi ekle
+        function addTestData() {
+            try {
+                localStorage.setItem('saban_data', JSON.stringify(testData));
+                logTestResult('✅ Test verisi eklendi');
+                checkLocalStorage();
+            } catch (e) {
+                logTestResult('❌ Test verisi eklenemedi: ' + e.message);
+            }
+        }
+
+        // Örnek ürünler ekle
+        function addSampleProducts() {
+            const sampleData = {
+                stokListesi: {
+                    "ACP1 2C299": {
+                        barkod: "ACP1 2C299",
+                        ad: "ARKA TEKER PORYA VOE",
+                        marka: "-",
+                        miktar: 1,
+                        alisFiyati: 0
+                    },
+                    "SS24080": {
+                        barkod: "SS24080",
+                        ad: "ARKA AMORTİSÖR",
+                        marka: "DP",
+                        miktar: 1,
+                        alisFiyati: 0
+                    },
+                    "93BB 2A451 AD": {
+                        barkod: "93BB 2A451 AD",
+                        ad: "VAKUM POMPASI CONNECT M.MARELLI",
+                        marka: "-",
+                        miktar: 1,
+                        alisFiyati: 0
+                    }
+                },
+                satisGecmisi: [],
+                musteriler: {},
+                borclarim: {},
+                lastSync: new Date().toISOString(),
+                source: 'sample'
+            };
+            
+            try {
+                localStorage.setItem('saban_data', JSON.stringify(sampleData));
+                logTestResult('✅ Örnek ürünler eklendi');
+                checkLocalStorage();
+            } catch (e) {
+                logTestResult('❌ Örnek ürünler eklenemedi: ' + e.message);
+            }
+        }
+
+        // LocalStorage temizle
+        function clearLocalStorage() {
+            localStorage.removeItem('saban_data');
+            logTestResult('🗑️ LocalStorage temizlendi');
+            checkLocalStorage();
+        }
+
+        // Sayfa yenile
+        function reloadPage() {
+            logTestResult('🔄 Sayfa yenileniyor...');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+
+        // Test sonuçlarını logla
+        function logTestResult(message) {
+            const results = document.getElementById('testResults');
+            const timestamp = new Date().toLocaleTimeString();
+            results.innerHTML += `[${timestamp}] ${message}\n`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        // Sayfa kapanmadan önce uyarı
+        window.addEventListener('beforeunload', function(e) {
+            const data = localStorage.getItem('saban_data');
+            if (data) {
+                logTestResult('💾 Sayfa kapanmadan önce veri kaydedildi');
+            }
+        });
+    </script>
+</body>
+</html>
