@@ -2066,14 +2066,8 @@
             <i class="fas fa-database"></i>
             <span>Veri Yönetimi</span>
         </div>
-        <div class="menu-item" onclick="loadTestData()">
-            <i class="fas fa-flask"></i>
-            <span>Test Verisi</span>
-        </div>
-        <div class="menu-item" onclick="exportToExcel()">
-            <i class="fas fa-file-excel"></i>
-            <span>Excel Aktar</span>
-        </div>
+        
+        
         <div class="menu-item" onclick="openQRConnection()">
             <i class="fas fa-qrcode"></i>
             <span>QR Bağlantı</span>
@@ -2231,9 +2225,7 @@
                         <button class="btn btn-warning" onclick="barkodBas(document.getElementById('barkod').value)">
                             <i class="fas fa-barcode"></i> Barkod Bas
                         </button>
-                        <button class="btn btn-info" onclick="exportToExcel('stock')">
-                            <i class="fas fa-file-excel"></i> Excel'e Aktar
-                        </button>
+                        
                     </div>
                 </div>
             </div>
@@ -2342,9 +2334,7 @@
                         <input type="date" id="endDate">
                         <button class="btn btn-primary" onclick="filterByDate()">Filtrele</button>
                     </div>
-                    <button class="btn btn-info" onclick="exportToExcel('sales')">
-                        <i class="fas fa-file-excel"></i> Excel'e Aktar
-                    </button>
+                    
                 </div>
             </div>
 
@@ -2438,9 +2428,7 @@
                         <button class="btn btn-secondary" id="musteriIptalBtn" onclick="musteriDuzenlemeIptal()" style="display: none;">
                             <i class="fas fa-times"></i> Düzenlemeyi İptal Et
                         </button>
-                        <button class="btn btn-info" onclick="exportToExcel('customers')">
-                            <i class="fas fa-file-excel"></i> Excel'e Aktar
-                        </button>
+                        
                     </div>
                 </div>
             </div>
@@ -2517,9 +2505,7 @@
                         <button class="btn btn-outline" onclick="borcFormTemizle()">
                             <i class="fas fa-times"></i> Temizle
                         </button>
-                        <button class="btn btn-info" onclick="exportToExcel('debts')">
-                            <i class="fas fa-file-excel"></i> Excel'e Aktar
-                        </button>
+                        
                     </div>
                 </div>
             </div>
@@ -2783,10 +2769,10 @@
                 </div>
                 
                 <div>
-                    <h3>Verileri Excel'e Aktar</h3>
-                    <p>Tüm verilerinizi Excel formatında indirin:</p>
-                    <button class="btn btn-info" onclick="exportAllToExcel()">
-                        <i class="fas fa-file-excel"></i> Tüm Verileri Excel'e Aktar
+                    <h3>Veri Analizi ve Uyumluluk</h3>
+                    <p>Yedek dosyasındaki alanları tarayıp sistem şemasına eşler, fazladan/farklı alanları raporlar.</p>
+                    <button class="btn btn-info" onclick="analyzeBackupSchema()">
+                        <i class="fas fa-search"></i> Yedek Şema Analizi
                     </button>
                 </div>
             </div>
@@ -5650,7 +5636,6 @@
             // Show the modal
             document.getElementById('barcodeModal').style.display = 'flex';
         }
-        
         // Barkod yazdırma
         function printBarcode() {
             try {
@@ -6428,7 +6413,6 @@
                 </li>
             `).join('');
         }
-        
         // Sort best sellers
         function sortBestSellers() {
             if (!window.bestSellersData) return;
@@ -7215,7 +7199,6 @@
             
             Swal.fire('Başarılı!', 'Verileriniz başarıyla indirildi.', 'success');
         }
-        
         // Manuel yedekleme
         async function manuelYedekleme() {
             try {
@@ -7792,7 +7775,6 @@
                 console.error('❌ Tab değiştirme hatası:', error);
             }
         };
-        
         console.log('✅ switchTab fonksiyonu global scope\'a eklendi');
         
         // Sayfa yüklendiğinde gerekli işlemleri başlat
