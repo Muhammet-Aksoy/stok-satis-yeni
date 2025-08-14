@@ -2065,6 +2065,206 @@
         [data-theme="dark"] .action-btn:hover {
             background: var(--button-hover, #4a4a4a) !important;
         }
+
+        /* Dark theme tüm text visibility düzeltmeleri */
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .card-body,
+        [data-theme="dark"] .panel,
+        [data-theme="dark"] .content-panel {
+            background: var(--card-bg, #1a1a1a) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border: 1px solid var(--border-color, #404040) !important;
+        }
+
+        [data-theme="dark"] .card-header,
+        [data-theme="dark"] .panel-header {
+            background: var(--bg-secondary, #2a2a2a) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border-bottom: 1px solid var(--border-color, #404040) !important;
+        }
+
+        [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, 
+        [data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6 {
+            color: var(--text-primary, #ffffff) !important;
+        }
+
+        [data-theme="dark"] p, [data-theme="dark"] span, [data-theme="dark"] div,
+        [data-theme="dark"] label, [data-theme="dark"] small, [data-theme="dark"] strong {
+            color: var(--text-primary, #ffffff) !important;
+        }
+
+        [data-theme="dark"] .text-muted {
+            color: var(--text-secondary, #e0e0e0) !important;
+        }
+
+        /* Dark theme table improvements */
+        [data-theme="dark"] table,
+        [data-theme="dark"] .table {
+            background: var(--table-bg, #1a1a1a) !important;
+            color: var(--text-primary, #ffffff) !important;
+        }
+
+        [data-theme="dark"] th,
+        [data-theme="dark"] td {
+            background: var(--table-bg, #1a1a1a) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border-color: var(--table-border, #404040) !important;
+        }
+
+        [data-theme="dark"] tr:hover {
+            background: var(--table-hover, #2a2a2a) !important;
+        }
+
+        [data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+            background: var(--bg-secondary, #2a2a2a) !important;
+        }
+
+        /* Dark theme statistics ve info panels */
+        [data-theme="dark"] .stat-card,
+        [data-theme="dark"] .info-panel,
+        [data-theme="dark"] .summary-panel {
+            background: var(--stats-bg, #2a2a2a) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border: 1px solid var(--stats-border, #404040) !important;
+        }
+
+        [data-theme="dark"] .stat-value,
+        [data-theme="dark"] .stat-label {
+            color: var(--text-primary, #ffffff) !important;
+        }
+
+        /* Dark theme search ve filter inputs */
+        [data-theme="dark"] .search-input,
+        [data-theme="dark"] .filter-input,
+        [data-theme="dark"] .search-box {
+            background: var(--input-bg, #2a2a2a) !important;
+            color: var(--input-text, #ffffff) !important;
+            border: 1px solid var(--input-border, #505050) !important;
+        }
+
+        /* Dark theme badges ve tags */
+        [data-theme="dark"] .badge,
+        [data-theme="dark"] .tag {
+            background: var(--primary, #3b82f6) !important;
+            color: #ffffff !important;
+        }
+
+        [data-theme="dark"] .badge-secondary {
+            background: var(--secondary, #6c757d) !important;
+            color: #ffffff !important;
+        }
+
+        [data-theme="dark"] .badge-success {
+            background: var(--success, #10b981) !important;
+            color: #ffffff !important;
+        }
+
+        [data-theme="dark"] .badge-warning {
+            background: var(--warning, #f59e0b) !important;
+            color: #ffffff !important;
+        }
+
+        [data-theme="dark"] .badge-danger {
+            background: var(--danger, #ef4444) !important;
+            color: #ffffff !important;
+        }
+
+        /* Dark theme alerts ve notifications */
+        [data-theme="dark"] .alert {
+            background: var(--notification-bg, #2a2a2a) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border: 1px solid var(--notification-border, #505050) !important;
+        }
+
+        [data-theme="dark"] .alert-info {
+            background: rgba(59, 130, 246, 0.2) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border-color: var(--info, #3b82f6) !important;
+        }
+
+        [data-theme="dark"] .alert-success {
+            background: rgba(16, 185, 129, 0.2) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border-color: var(--success, #10b981) !important;
+        }
+
+        [data-theme="dark"] .alert-warning {
+            background: rgba(245, 158, 11, 0.2) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border-color: var(--warning, #f59e0b) !important;
+        }
+
+        [data-theme="dark"] .alert-danger {
+            background: rgba(239, 68, 68, 0.2) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border-color: var(--danger, #ef4444) !important;
+        }
+
+        /* Dark theme specific text classes */
+        [data-theme="dark"] .text-primary {
+            color: var(--primary, #3b82f6) !important;
+        }
+
+        [data-theme="dark"] .text-secondary {
+            color: var(--text-secondary, #e0e0e0) !important;
+        }
+
+        [data-theme="dark"] .text-success {
+            color: var(--success, #10b981) !important;
+        }
+
+        [data-theme="dark"] .text-danger {
+            color: var(--danger, #ef4444) !important;
+        }
+
+        [data-theme="dark"] .text-warning {
+            color: var(--warning, #f59e0b) !important;
+        }
+
+        [data-theme="dark"] .text-info {
+            color: var(--info, #3b82f6) !important;
+        }
+
+        [data-theme="dark"] .text-dark {
+            color: var(--text-primary, #ffffff) !important;
+        }
+
+        [data-theme="dark"] .text-light {
+            color: var(--text-secondary, #e0e0e0) !important;
+        }
+
+        /* Dark theme satış paneli özel düzeltmeleri */
+        [data-theme="dark"] .sales-panel,
+        [data-theme="dark"] .customer-panel,
+        [data-theme="dark"] .product-panel {
+            background: var(--panel-bg, #2a2a2a) !important;
+            color: var(--panel-text, #ffffff) !important;
+            border: 1px solid var(--panel-border, #505050) !important;
+        }
+
+        [data-theme="dark"] .sales-item,
+        [data-theme="dark"] .product-item {
+            background: var(--card-bg, #1a1a1a) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border: 1px solid var(--border-color, #404040) !important;
+        }
+
+        [data-theme="dark"] .sales-item:hover,
+        [data-theme="dark"] .product-item:hover {
+            background: var(--table-hover, #2a2a2a) !important;
+        }
+
+        /* Dark theme için contrast artırılmış text */
+        [data-theme="dark"] .low-contrast-text {
+            color: var(--text-primary, #ffffff) !important;
+            text-shadow: 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Force high contrast for important elements */
+        [data-theme="dark"] .force-visible {
+            color: #ffffff !important;
+            background: var(--bg-secondary, #2a2a2a) !important;
+        }
         
 
     </style>
@@ -5290,8 +5490,15 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                         return;
                     }
                     
+                    console.log('💰 Ana satış modalı fiyat kontrolü:', { 
+                        inputValue: document.getElementById('satisFiyati').value,
+                        parsedValue: satisFiyati,
+                        isValid: !isNaN(satisFiyati) && satisFiyati > 0 
+                    });
+                    
                     if (isNaN(satisFiyati) || satisFiyati <= 0) {
-                        Swal.fire('Uyarı', 'Geçerli bir satış fiyatı giriniz.', 'warning');
+                        const inputVal = document.getElementById('satisFiyati').value;
+                        Swal.fire('Uyarı', `Geçerli bir satış fiyatı giriniz. Girilen değer: "${inputVal}"`, 'warning');
                         return;
                     }
                     
@@ -5303,17 +5510,19 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         async function tamamlaSatis(key, miktar, musteriId, aciklama, satisFiyati, borc = false) {
             const urun = stokListesi[key];
             
-            // Fiyat ve miktar kontrolü
-            const fiyat = parseFloat(satisFiyati) || 0;
-            const miktarSayi = parseInt(miktar) || 0;
+            // Fiyat ve miktar kontrolü - İyileştirilmiş validasyon
+            const fiyat = parseFloat(satisFiyati);
+            const miktarSayi = parseInt(miktar);
             
-            if (fiyat <= 0) {
-                Swal.fire('Hata', 'Geçerli bir satış fiyatı giriniz.', 'error');
+            console.log('💰 Satış fiyatı kontrolü:', { satisFiyati, fiyat, isValid: !isNaN(fiyat) && fiyat > 0 });
+            
+            if (isNaN(fiyat) || fiyat <= 0) {
+                Swal.fire('Hata', `Geçerli bir satış fiyatı giriniz. Girilen değer: "${satisFiyati}"`, 'error');
                 return;
             }
             
-            if (miktarSayi <= 0) {
-                Swal.fire('Hata', 'Geçerli bir miktar giriniz.', 'error');
+            if (isNaN(miktarSayi) || miktarSayi <= 0) {
+                Swal.fire('Hata', `Geçerli bir miktar giriniz. Girilen değer: "${miktar}"`, 'error');
                 return;
             }
             
