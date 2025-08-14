@@ -2997,13 +2997,10 @@ app.post('/urunler', async (req, res) => {
         }
         
         const transaction = db.transaction(() => {
-            // Clear existing stock
-            db.prepare('DELETE FROM stok').run();
-            
-            // Insert new stock data
-            const insertStok = db.prepare(`
-                INSERT INTO stok (barkod, ad, marka, miktar, alisFiyati, satisFiyati, kategori, aciklama, varyant_id) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            // Instead of deleting all products, use INSERT OR REPLACE to preserve unique IDs and prevent data loss
+            const insertOrReplaceStok = db.prepare(`
+                INSERT OR REPLACE INTO stok (urun_id, barkod, ad, marka, miktar, alisFiyati, satisFiyati, kategori, aciklama, varyant_id, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             `);
             
             let insertedCount = 0;
@@ -3013,7 +3010,11 @@ app.post('/urunler', async (req, res) => {
                     // Ensure we use the actual barcode from the product object
                     const barkod = urun.barkod || key;
                     
-                    insertStok.run(
+                    // Generate unique urun_id if not exists
+                    const urun_id = urun.urun_id || `urun_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    
+                    insertOrReplaceStok.run(
+                        urun_id,
                         barkod,
                         urun.ad || '',
                         urun.marka || '',
