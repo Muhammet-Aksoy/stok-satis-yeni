@@ -371,6 +371,21 @@ io.on('connection', (socket) => {
                         });
                         
                         satisGecmisi = uniqueSales;
+                        // Enrich missing purchase prices for sales from stock (display-only)
+                        try {
+                            const getAlisFromStock = db.prepare('SELECT alisFiyati FROM stok WHERE barkod = ?');
+                            satisGecmisi.forEach(sale => {
+                                const currentAlis = parseFloat(sale.alisFiyati) || 0;
+                                if ((currentAlis === 0 || Number.isNaN(currentAlis)) && sale.barkod) {
+                                    const row = getAlisFromStock.get(sale.barkod);
+                                    if (row && (row.alisFiyati || row.alisFiyati === 0)) {
+                                        sale.alisFiyati = row.alisFiyati || 0;
+                                    }
+                                }
+                            });
+                        } catch (e) {
+                            console.warn('⚠️ Could not enrich sales with purchase prices:', e.message);
+                        }
                         console.log(`📊 Loaded ${satisGecmisi.length} unique sales from database`);
                         
                     } catch (e) {
@@ -1059,6 +1074,21 @@ app.get('/api/tum-veriler', async (req, res) => {
                 });
                 
                 satisGecmisi = uniqueSales;
+                // Enrich missing purchase prices for sales from stock (display-only)
+                try {
+                    const getAlisFromStock = db.prepare('SELECT alisFiyati FROM stok WHERE barkod = ?');
+                    satisGecmisi.forEach(sale => {
+                        const currentAlis = parseFloat(sale.alisFiyati) || 0;
+                        if ((currentAlis === 0 || Number.isNaN(currentAlis)) && sale.barkod) {
+                            const row = getAlisFromStock.get(sale.barkod);
+                            if (row && (row.alisFiyati || row.alisFiyati === 0)) {
+                                sale.alisFiyati = row.alisFiyati || 0;
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.warn('⚠️ Could not enrich sales with purchase prices:', e.message);
+                }
                 console.log(`📊 Loaded ${satisGecmisi.length} unique sales from database`);
                 
             } catch (e) {
@@ -3468,7 +3498,7 @@ app.post('/api/yedek-yukle-eski', async (req, res) => {
                         `).get(satis.barkod, satis.tarih, satis.miktar, satis.fiyat);
                         
                         if (!existingSale) {
-                            const alisFiyati = parseFloat(satis.alisFiyati) || 0;
+                            const alisFiyati = parseFloat(satis.alisFiyati) || (db.prepare('SELECT alisFiyati FROM stok WHERE barkod = ?').get(satis.barkod)?.alisFiyati || 0);
                             const miktar = parseInt(satis.miktar) || 0;
                             const fiyat = parseFloat(satis.fiyat) || 0;
                             const toplam = parseFloat(satis.toplam) || (fiyat * miktar) || 0;

@@ -1484,120 +1484,6 @@
         .notification.error {
             background: var(--danger);
         }
-        
-        .notification.warning {
-            background: var(--warning);
-        }
-        
-        /* Context Menu */
-        .context-menu {
-            position: absolute;
-            background: var(--dropdown-bg, white);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            z-index: 1000;
-            min-width: 180px;
-            display: none;
-        }
-        
-        .context-menu-item {
-            padding: 10px 15px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 14px;
-            color: var(--text-primary);
-        }
-        
-        .context-menu-item:hover {
-            background-color: var(--dropdown-hover, #f0f0f0);
-        }
-
-        /* Dark theme context menu */
-        [data-theme="dark"] .context-menu {
-            background: var(--dropdown-bg);
-            border-color: var(--border-color);
-        }
-
-        [data-theme="dark"] .context-menu-item:hover {
-            background-color: var(--dropdown-hover);
-        }
-        
-        /* Dark theme menu improvements */
-        [data-theme="dark"] .main-menu-dropdown {
-            background-color: var(--menu-bg);
-            border: 1px solid var(--menu-border);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
-        }
-        
-        [data-theme="dark"] .menu-item {
-            color: var(--menu-text);
-            border-bottom: 1px solid var(--menu-border);
-        }
-        
-        [data-theme="dark"] .menu-item:hover {
-            background-color: var(--menu-hover);
-        }
-        
-        [data-theme="dark"] .sync-status-indicator {
-            border-top: 1px solid var(--menu-border);
-            color: var(--menu-text);
-            background-color: var(--menu-bg);
-        }
-        
-        /* Dark theme borç tablosu iyileştirmeleri */
-        [data-theme="dark"] .my-debts-table th {
-            background: #f39c12;
-            color: white;
-        }
-        
-        [data-theme="dark"] .my-debt-item {
-            background: #2a2a2a;
-            color: var(--text-primary);
-        }
-        
-        /* Dark theme form iyileştirmeleri */
-        [data-theme="dark"] select.form-control {
-            background-color: var(--input-bg);
-            border-color: var(--input-border);
-            color: var(--input-text);
-        }
-        [data-theme="dark"] select.form-control option {
-            background-color: var(--input-bg);
-            color: var(--input-text);
-        }
-        
-        /* Dark theme modal iyileştirmeleri */
-        [data-theme="dark"] .modal-body h3 {
-            color: var(--text-primary);
-        }
-        
-        [data-theme="dark"] .modal-body p {
-            color: var(--text-secondary);
-        }
-        
-        /* Dark theme notification iyileştirmeleri */
-        [data-theme="dark"] .notification {
-            background: var(--card-bg);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-        
-        [data-theme="dark"] .notification.success {
-            background: var(--success);
-            color: white;
-        }
-        
-        [data-theme="dark"] .notification.error {
-            background: var(--danger);
-            color: white;
-        }
-        [data-theme="dark"] .notification.warning {
-            background: var(--warning);
-            color: white;
-        }
-        
-        /* Dark theme button improvements */
         [data-theme="dark"] .btn {
             background-color: var(--button-bg);
             color: var(--button-text);
@@ -2091,21 +1977,6 @@
         <span id="notificationText"></span>
     </div>
     
-    <!-- Context Menu -->
-    <div class="context-menu" id="contextMenu">
-        <div class="context-menu-item" id="contextBarcodeSearchAtilgan">
-            <i class="fas fa-search"></i> Atilgan'da Ara
-        </div>
-        <div class="context-menu-item" id="contextBarcodeSearchPrensoto">
-            <i class="fas fa-search"></i> Prensoto'da Ara
-        </div>
-        <div class="context-menu-item" id="contextBarcodeSearchBasbug">
-            <i class="fas fa-search"></i> Başbuğ'da Ara
-        </div>
-        <div class="context-menu-item" id="contextProductDetails">
-            <i class="fas fa-info-circle"></i> Ürün Detayları
-        </div>
-    </div>
     <div class="container">
         <!-- Logo ve Başlık - Düzeltilmiş -->
         <div class="header-section">
@@ -4161,16 +4032,16 @@
                     const kayitliToplam = parseFloat(satis.toplam) || 0;
                     const hesaplananToplam = fiyat * miktar;
                     const toplam = kayitliToplam > 0 ? kayitliToplam : hesaplananToplam;
-                    const alis = (parseFloat(satis.alisFiyati) || parseFloat(stokListesi[satis.barkod]?.alisFiyati) || 0);
+                    const alis = (parseFloat(satis.alisFiyati) || 0);
                     
                     tr.innerHTML = `
                         <td>${tarihStr}</td>
                         <td>${barkodGoster}</td>
                         <td title="Orijinal: ${satis.urunAdi}">${currentProductName}</td>
                         <td>${miktar}</td>
-                        <td>${alis > 0 ? alis.toFixed(2) : '-'}</td>
-                        <td>${fiyat.toFixed(2)}</td>
-                        <td>${toplam.toFixed(2)}</td>
+                        <td>${(parseFloat(satis.alisFiyati) || 0) > 0 ? (parseFloat(satis.alisFiyati)).toFixed(2) : '-'}</td>
+                        <td>${(parseFloat(satis.fiyat) || 0).toFixed(2)}</td>
+                        <td>${(parseFloat(satis.toplam) || ((parseFloat(satis.fiyat) || 0) * (parseInt(satis.miktar) || 0))).toFixed(2)}</td>
                         <td>${satis.borc ? '<span class="credit-indicator">Borç</span>' : 'Nakit'}</td>
                         <td>${musteriAdi}</td>
                         <td>
@@ -4430,7 +4301,6 @@
             
             const urun = stokListesi[key];
             const alisFiyati = parseFloat(urun.alisFiyati) || 0;
-            const onerilenFiyat = alisFiyati > 0 ? Math.round(alisFiyati * 1.2) : 0; // %20 kar marjı
             
             Swal.fire({
                 title: 'Satışı onayla',
@@ -4445,11 +4315,9 @@
                             <label for="satisFiyati">Satış Fiyatı (₺)</label>
                             <input type="number" id="satisFiyati" class="form-control" min="0" step="0.01" placeholder="Fiyat giriniz">
                             <small style="color: #666;">
-                                Alış fiyatı: ${alisFiyati.toFixed(2)} ₺ | 
-                                Önerilen fiyat: ${onerilenFiyat} ₺ (%20 kar marjı)
+                                Alış fiyatı: ${alisFiyati.toFixed(2)} ₺
                             </small>
                         </div>
-                        <!-- Otomatik fiyat kaldırıldı: kullanıcı girişi zorunlu -->
                         <div id="customer-selection" style="margin-top: 10px;">
                             <label>Müşteri Seçin</label>
                             <div style="display: flex; gap: 10px;">
@@ -5558,7 +5426,7 @@
                         <td>${satis.barkod}</td>
                         <td>${satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-'))}</td>
                         <td>${satis.miktar}</td>
-                        <td>${(parseFloat(satis.alisFiyati) || parseFloat(stokListesi[satis.barkod]?.alisFiyati) || 0) > 0 ? (parseFloat(satis.alisFiyati) || parseFloat(stokListesi[satis.barkod]?.alisFiyati)).toFixed(2) : '-'}</td>
+                        <td>${(parseFloat(satis.alisFiyati) || 0) > 0 ? (parseFloat(satis.alisFiyati)).toFixed(2) : '-'}</td>
                         <td>${(parseFloat(satis.fiyat) || 0).toFixed(2)}</td>
                         <td>${(parseFloat(satis.toplam) || ((parseFloat(satis.fiyat) || 0) * (parseInt(satis.miktar) || 0))).toFixed(2)}</td>
                         <td>${satis.borc ? '<span class="credit-indicator">Borç</span>' : 'Nakit'}</td>
@@ -6277,7 +6145,7 @@
                         <td>${satis.barkod}</td>
                         <td>${satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-'))}</td>
                         <td>${satis.miktar}</td>
-                        <td>${(parseFloat(satis.alisFiyati) || parseFloat(stokListesi[satis.barkod]?.alisFiyati) || 0) > 0 ? (parseFloat(satis.alisFiyati) || parseFloat(stokListesi[satis.barkod]?.alisFiyati)).toFixed(2) : '-'}</td>
+                        <td>${(parseFloat(satis.alisFiyati) || 0) > 0 ? (parseFloat(satis.alisFiyati)).toFixed(2) : '-'}</td>
                         <td>${(parseFloat(satis.fiyat) || 0).toFixed(2)}</td>
                         <td>${(parseFloat(satis.toplam) || ((parseFloat(satis.fiyat) || 0) * (parseInt(satis.miktar) || 0))).toFixed(2)}</td>
                         <td>${satis.borc ? '<span class="credit-indicator">Borç</span>' : 'Nakit'}</td>
@@ -7775,7 +7643,6 @@
             }
         };
         console.log('✅ switchTab fonksiyonu global scope\'a eklendi');
-        
         // Sayfa yüklendiğinde gerekli işlemleri başlat
         window.onload = async function() {
             console.log('🚀 Sayfa yükleniyor...');
