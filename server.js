@@ -28,6 +28,17 @@ const io = socketIo(server, {
 // Database configuration - ULTRA OPTIMIZED
 const dbPath = path.join(__dirname, 'veriler', 'veritabani.db');
 let db = null;
+// Migration: if legacy root database exists but new path doesn't, copy it once
+const legacyDbPath = path.join(__dirname, 'veritabani.db');
+try {
+    if (fs.existsSync(legacyDbPath) && !fs.existsSync(dbPath)) {
+        fs.ensureDirSync(path.dirname(dbPath));
+        fs.copyFileSync(legacyDbPath, dbPath);
+        console.log('📦 Migrated legacy database from veritabani.db to veriler/veritabani.db');
+    }
+} catch (e) {
+    console.warn('⚠️ Legacy DB migration warning:', e.message);
+}
 
 // Performance optimizations - Geliştirilmiş
 const CACHE_SIZE = 2000; // Cache size for frequently accessed data
@@ -449,6 +460,15 @@ io.on('connection', (socket) => {
                         
                     case 'stok-add':
                     case 'stok-update':
+                        // Eğer kayıt zaten DB id'sine sahipse, DB'ye tekrar yazma, yalnızca yayınla
+                        if (data.data && data.data.id) {
+                            io.emit('dataUpdated', {
+                                type: data.type,
+                                data: data.data,
+                                timestamp: new Date().toISOString()
+                            });
+                            break;
+                        }
                         // Stok güncelleme - FIX: varyantlar barkod bazında ezilmesin
                         const stokData = data.data;
                         const targetId = stokData.id || stokData.urun_id || null;

@@ -196,7 +196,6 @@
             filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
             transition: all 0.3s ease;
         }
-        
         .logo-image:hover {
             transform: scale(1.1);
             filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.5));
@@ -391,7 +390,6 @@
             width: 16px;
             text-align: center;
         }
-
         .sync-status-indicator {
             display: flex;
             align-items: center;
@@ -592,7 +590,6 @@
         .form-group {
             margin-bottom: 15px;
         }
-
         .form-group label {
             display: block;
             margin-bottom: 8px;
@@ -791,7 +788,6 @@
         th:hover {
             background-color: rgba(0, 0, 0, 0.1);
         }
-
         th.sorted-asc::after {
             content: " \25B2";
             font-size: 12px;
@@ -986,7 +982,6 @@
             gap: 20px;
             margin-bottom: 30px;
         }
-
         .stat-card {
             background: var(--card-bg);
             border-radius: 10px;
@@ -1182,7 +1177,6 @@
         .btn-copy:hover {
             background: var(--success-hover);
         }
-        
         .barcode-container {
             display: flex;
             align-items: center;
@@ -1372,7 +1366,6 @@
                 min-width: 160px;
             }
         }
-
         @media (max-width: 480px) {
             .main-menu-button {
                 padding: 8px 12px;
@@ -1570,7 +1563,6 @@
             border-color: var(--input-border);
             color: var(--input-text);
         }
-        
         [data-theme="dark"] select.form-control option {
             background-color: var(--input-bg);
             color: var(--input-text);
@@ -1769,7 +1761,6 @@
         .customer-sales-list th {
             background-color: #f8f9fa;
         }
-
         /* Barcode search buttons */
         .barcode-search-buttons {
             display: flex;
@@ -1970,7 +1961,6 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             transform-origin: center;
         }
-        
         /* Hamburger animasyonu - açık durumda */
         .modern-menu-button.active .hamburger-icon span:nth-child(1) {
             transform: rotate(45deg) translate(6px, 6px);
@@ -2124,7 +2114,6 @@
             <i class="fas fa-info-circle"></i> Ürün Detayları
         </div>
     </div>
-    
     <div class="container">
         <!-- Logo ve Başlık - Düzeltilmiş -->
         <div class="header-section">
@@ -2312,7 +2301,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Satış Geçmişi Paneli -->
         <div id="sales-panel" style="display: none;">
             <div class="sales-summary">
@@ -2487,7 +2475,6 @@
                 </div>
             </div>
         </div>
-        
         <!-- Borçlarım Paneli -->
         <div id="debts-panel" style="display: none;">
             <div class="card">
@@ -2661,7 +2648,6 @@
             </div>
         </div>
     </div>
-    
     <!-- Ürün Detayları Modal -->
     <div class="modal" id="productDetailsModal">
         <div class="modal-content">
@@ -2859,7 +2845,6 @@
             // İlk bağlantıda fresh data al
             socket.emit('requestData');
         });
-        
         socket.on('dataUpdated', (data) => {
             // console.log('📡 Veri güncellendi:', data);
             
@@ -3036,7 +3021,6 @@
                     break;
             }
         });
-        
         socket.on('dataResponse', (response) => {
             if (response.success && response.data) {
                 console.log('📄 Fresh data alındı:', response.count);
@@ -3051,16 +3035,12 @@
                 musteriTablosunuGuncelle();
                 guncelleIstatistikler();
                 
-                // console.log('✅ Veriler başarıyla yüklendi');
-                
                 // Başarılı senkronizasyon bildirimi - SADECE GERÇEK DEĞİŞİKLİKLERDE
                 if (response.count && response.count.stok > 0) {
                     lastSyncTime = Date.now();
                     const now = Date.now();
                     // Sadece gerçek değişikliklerde bildirim göster
                     if (now - lastNotificationTime > NOTIFICATION_COOLDOWN && response.count.stok > 0) {
-                        // Bildirim gösterme - çok rahatsız edici
-                        // showNotification(`🔄 ${response.count.stok} ürün, ${response.count.satis} satış senkronize edildi`, 'success');
                         lastNotificationTime = now;
                     }
                 }
@@ -3072,7 +3052,6 @@
         
         socket.on('syncResponse', (response) => {
             if (response.success && response.data) {
-                // console.log('🔄 Sync response alındı');
                 stokListesi = response.data.stokListesi || {};
                 satisGecmisi = response.data.satisGecmisi || [];
                 musteriler = response.data.musteriler || {};
@@ -3087,7 +3066,6 @@
                 lastSyncTime = Date.now();
                 const now = Date.now();
                 if (now - lastNotificationTime > NOTIFICATION_COOLDOWN && syncNotificationShown) {
-                    // showNotification('🔄 Veriler senkronize edildi', 'success');
                     lastNotificationTime = now;
                     syncNotificationShown = false; // Reset
                 }
@@ -3198,7 +3176,6 @@
                         satis: satisCount,
                         musteri: musteriCount
                     });
-                    
                     // Backend verilerini öncelikli olarak kullan
                     if (stokCount > 0 || satisCount > 0 || musteriCount > 0) {
                         // Stok verilerini backend'den tamamen al (duplicate önleme)
@@ -3392,7 +3369,6 @@
                 console.error('❌ LocalStorage kaydetme hatası:', error);
             }
         }
-        
         // Setup sync status indicator timer
         function setupSyncStatusTimer() {
             const syncStatusIndicator = document.querySelector('.sync-status-indicator');
@@ -3573,7 +3549,6 @@
                 return false;
             }
         }
-        
         // Gelişmiş yedek yükleme sistemi
         async function yedekVerileriYukleGelismis() {
             try {
@@ -3765,7 +3740,6 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
-        
         // Bildirim göster
         function showNotification(message, type = 'info') {
             const notification = document.getElementById('notification');
@@ -3825,6 +3799,11 @@
             
             if (salesArray && salesArray.length > 0) {
                 salesArray.forEach(satis => {
+                    // Kullanıcı girişi olmayan otomatik öneri fiyatlı satışları hariç tut
+                    const isAutoSuggested = (parseFloat(satis.alisFiyati) || 0) > 0 
+                        && Math.round((parseFloat(satis.alisFiyati) || 0) * 1.2) === Math.round(parseFloat(satis.fiyat) || 0);
+                    if (isAutoSuggested) return;
+                    
                     // Toplam hesaplama - öncelik: kayıtlı toplam > hesaplanan toplam
                     const kayitliToplam = parseFloat(satis.toplam) || 0;
                     const hesaplananToplam = (parseFloat(satis.fiyat) || 0) * (parseInt(satis.miktar) || 0);
@@ -3945,7 +3924,6 @@
                         </div>
                     </td>
                 `;
-                
                 tbody.appendChild(tr);
                 
                 // Kart görünümü oluştur
@@ -4115,8 +4093,12 @@
                         return 0;
                     });
                 }
-                
                 sortedSales.forEach(satis => {
+                    // Otomatik öneri fiyatı ile oluşan satışları gösterme
+                    const isAutoSuggested = (parseFloat(satis.alisFiyati) || 0) > 0 
+                        && Math.round((parseFloat(satis.alisFiyati) || 0) * 1.2) === Math.round(parseFloat(satis.fiyat) || 0);
+                    if (isAutoSuggested) return;
+                    
                     const tr = document.createElement('tr');
                     const tarih = new Date(satis.tarih);
                     const tarihStr = `${tarih.getDate().toString().padStart(2, '0')}.${(tarih.getMonth()+1).toString().padStart(2, '0')}.${tarih.getFullYear()} ${tarih.getHours().toString().padStart(2, '0')}:${tarih.getMinutes().toString().padStart(2, '0')}`;
@@ -4295,7 +4277,6 @@
                 borcBody.appendChild(tr);
             }
         }
-        
         // Müşteri ekle
         async function musteriEkle() {
             const ad = document.getElementById('musteriAdi').value.trim();
@@ -4483,7 +4464,6 @@
                 }
             });
         }
-        
         // Satışı tamamla
         async function tamamlaSatis(key, miktar, musteriId, aciklama, satisFiyati, borc = false) {
             const urun = stokListesi[key];
@@ -4537,23 +4517,23 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Check if this sale already exists locally to prevent duplicates
+                    // Server dönen kaydı kullan
+                    const savedSale = result.data || satis;
                     const existingSale = satisGecmisi.find(sale => 
-                        sale.id === satis.id || 
-                        (sale.barkod === satis.barkod && 
-                         sale.tarih === satis.tarih && 
-                         sale.miktar === satis.miktar)
+                        sale.id === savedSale.id || 
+                        (sale.barkod === savedSale.barkod && 
+                         sale.tarih === savedSale.tarih && 
+                         sale.miktar === savedSale.miktar)
                     );
                     
                     if (!existingSale) {
-                        // Local data'ya ekle
-                        satisGecmisi.push(satis);
+                        satisGecmisi.push(savedSale);
                     }
                     
-                    // Real-time sync to other clients
+                    // Real-time sync to other clients (server zaten yayınlıyor olsa da local için koruyoruz)
                     socket.emit('dataUpdate', {
                         type: 'satis-add',
-                        data: satis
+                        data: savedSale
                     });
                     
                     // Local storage'a kaydet
@@ -4842,7 +4822,6 @@
                 });
             });
         }
-
         // Ürün kaydetme fonksiyonu (Real-time API kullanır) - ULTRA OPTIMIZED
         window.urunKaydet = async function() {
             // console.log('🔄 urunKaydet fonksiyonu başlatıldı'); // PERFORMANCE: Log kaldırıldı
@@ -5195,7 +5174,6 @@
             
             editingBarkod = null;
         }
-        
         // Düşük stoklu ürünleri göster
         function showLowStockProducts() {
             const lowStockBody = document.getElementById('lowStockBody');
@@ -5395,7 +5373,6 @@
                         }
                     }
                 }, 100);
-                
                 console.log('✅ Tab değiştirildi:', tabName);
             } catch (error) {
                 console.error('❌ Tab değiştirme hatası:', error);
@@ -5564,7 +5541,6 @@
             
             updateSalesSummary(filteredSales);
         }
-        
         // Barkod basma fonksiyonu
         function barkodBas(barkod) {
             if (!barkod) {
@@ -5766,7 +5742,6 @@
                 }
             });
         }
-        
         // Müşteri tablosunu sırala
         function sortCustomerTable(column) {
             // Sıralama yönünü belirle
@@ -5949,7 +5924,6 @@
                 confirmButtonText: 'Tamam'
             });
         }
-        
         // Satış düzenle fonksiyonu
         function satisDuzenle(satisId) {
             const satisIndex = satisGecmisi.findIndex(s => s.id === satisId);
@@ -6148,7 +6122,6 @@
                 styles: { fontSize: 10 },
                 headStyles: { fillColor: [44, 111, 187] }
             });
-            
             // Toplamları ekle
             const toplamNakit = musteriSatislari.filter(s => !s.borc).reduce((sum, s) => sum + s.toplam, 0);
             const toplamBorc = musteriSatislari.filter(s => s.borc).reduce((sum, s) => sum + s.toplam, 0);
@@ -6337,7 +6310,6 @@
                 .filter(product => product.sales > 5) // Only show products sold more than 5 times
                 .sort((a, b) => b.sales - a.sales)
                 .slice(0, 15);
-            
             // Create modal with sorting options
             const modal = document.createElement('div');
             modal.className = 'modal';
@@ -6531,7 +6503,6 @@
             // En çok satış yapan müşteriler grafiği
             renderTopCustomersChart();
         }
-        
         // En çok satılan ürünler grafiği
         function renderTopProductsChart() {
             // Ürün bazında satış miktarlarını hesapla
@@ -6693,7 +6664,6 @@
             }
             searchBasbugWithBarcode(barkod);
         }
-        
         // Borç ekle - FIX: API entegrasyonu ile
         async function borcEkle() {
             const alacakli = document.getElementById('alacakliAdi').value.trim();
@@ -6878,7 +6848,6 @@
                 }
             });
         }
-        
         function urunIade(satisId) {
             console.log('🔄 Ürün iade:', satisId);
             
@@ -7042,7 +7011,6 @@
                 }
             });
         }
-        
         // Excel'e aktar
         function exportToExcel(type) {
             let data = [];
@@ -7240,7 +7208,6 @@
                 showNotification('❌ Manuel yedekleme hatası: ' + error.message, 'error');
             }
         }
-        
         // Veri geri yükle - GELİŞTİRİLMİŞ: Senkronizasyon ile
         async function restoreData(e) {
             const file = e.target.files[0];
@@ -7424,7 +7391,6 @@
                 return { updated: false, skipped: true };
             }
         }
-        
         // Satış senkronizasyonu - GELİŞTİRİLMİŞ: Tekrar kontrolü
         async function syncSale(satis) {
             try {
@@ -7583,7 +7549,6 @@
             document.getElementById('musteriKaydetBtn').innerHTML = '<i class="fas fa-save"></i> Güncelle';
             document.getElementById('musteriIptalBtn').style.display = 'inline-block';
         }
-
         // Müşteri silme fonksiyonu (eksik olanı ekliyorum)
         async function musteriSil(id) {
             if (!musteriler[id]) return;
@@ -7735,7 +7700,6 @@
             
             console.log('🎨 Tema yüklendi:', currentTheme);
         }
-
         // Global scope fonksiyonları hemen tanımla - ULTRA OPTIMIZED
         // switchTab fonksiyonunu global scope'a ekle
         window.switchTab = function(tabName) {
@@ -7917,7 +7881,6 @@
                 localStorage.setItem('offline_queue', JSON.stringify(offlineQueue));
                 console.log('📝 Offline queue\'ya eklendi:', action);
             }
-            
             function processOfflineQueue() {
                 if (offlineQueue.length === 0) return;
                 
@@ -8100,7 +8063,6 @@
                 console.log('💾 Sekme kapatılırken backup dosyası oluşturuldu');
             });
         };
-
         // Manuel senkronizasyon fonksiyonu
         async function manuelSenkronizasyon() {
             try {
