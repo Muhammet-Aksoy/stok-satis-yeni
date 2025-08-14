@@ -1926,6 +1926,345 @@
         [data-theme="dark"] .main-menu-dropdown .menu-item:hover {
             background: linear-gradient(135deg, #4c566a, #5e81ac);
         }
+
+        /* Dark theme SweetAlert styles */
+        [data-theme="dark"] .swal2-popup {
+            background: var(--modal-bg, #1a1a1a) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border: 1px solid var(--border-color, #404040) !important;
+        }
+
+        [data-theme="dark"] .swal2-title {
+            color: var(--text-primary, #ffffff) !important;
+        }
+
+        [data-theme="dark"] .swal2-content {
+            color: var(--text-secondary, #e0e0e0) !important;
+        }
+
+        [data-theme="dark"] .swal2-input, 
+        [data-theme="dark"] .swal2-textarea, 
+        [data-theme="dark"] .swal2-select {
+            background: var(--input-bg, #2a2a2a) !important;
+            color: var(--input-text, #ffffff) !important;
+            border: 1px solid var(--input-border, #505050) !important;
+        }
+
+        [data-theme="dark"] .swal2-input:focus, 
+        [data-theme="dark"] .swal2-textarea:focus, 
+        [data-theme="dark"] .swal2-select:focus {
+            border-color: var(--primary, #3b82f6) !important;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25) !important;
+        }
+
+        [data-theme="dark"] .swal2-confirm {
+            background: var(--primary, #3b82f6) !important;
+            border: none !important;
+        }
+
+        [data-theme="dark"] .swal2-cancel {
+            background: var(--danger, #ef4444) !important;
+            border: none !important;
+        }
+
+        [data-theme="dark"] .swal2-deny {
+            background: var(--warning, #f59e0b) !important;
+            border: none !important;
+        }
+
+        [data-theme="dark"] .swal2-html-container {
+            color: var(--text-primary, #ffffff) !important;
+        }
+
+        [data-theme="dark"] .swal2-html-container .form-group label {
+            color: var(--label-text, #ffffff) !important;
+        }
+
+        /* Dark theme için form input'ları */
+        [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select,
+        [data-theme="dark"] input[type="text"],
+        [data-theme="dark"] input[type="number"],
+        [data-theme="dark"] input[type="email"],
+        [data-theme="dark"] input[type="tel"],
+        [data-theme="dark"] input[type="date"],
+        [data-theme="dark"] textarea,
+        [data-theme="dark"] select {
+            background: var(--form-bg, #2a2a2a) !important;
+            color: var(--form-text, #ffffff) !important;
+            border: 1px solid var(--form-border, #505050) !important;
+        }
+
+        [data-theme="dark"] .form-control:focus,
+        [data-theme="dark"] .form-select:focus,
+        [data-theme="dark"] input:focus,
+        [data-theme="dark"] textarea:focus,
+        [data-theme="dark"] select:focus {
+            background: var(--form-bg, #2a2a2a) !important;
+            color: var(--form-text, #ffffff) !important;
+            border-color: var(--primary, #3b82f6) !important;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25) !important;
+        }
+
+        [data-theme="dark"] .form-control::placeholder,
+        [data-theme="dark"] input::placeholder,
+        [data-theme="dark"] textarea::placeholder {
+            color: var(--placeholder-text, #a0a0a0) !important;
+        }
+
+        /* Dark theme dropdown menüler */
+        [data-theme="dark"] select option {
+            background: var(--dropdown-bg, #2a2a2a) !important;
+            color: var(--text-primary, #ffffff) !important;
+        }
+
+        /* Dark theme modal'lar */
+        [data-theme="dark"] .modal {
+            background: var(--modal-overlay, rgba(0, 0, 0, 0.85)) !important;
+        }
+
+        [data-theme="dark"] .modal-content {
+            background: var(--modal-bg, #1a1a1a) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border: 1px solid var(--border-color, #404040) !important;
+        }
+
+        [data-theme="dark"] .modal-header {
+            border-bottom: 1px solid var(--border-color, #404040) !important;
+        }
+
+        [data-theme="dark"] .modal-footer {
+            border-top: 1px solid var(--border-color, #404040) !important;
+        }
+
+        /* Dark theme scroll bar */
+        [data-theme="dark"] ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        [data-theme="dark"] ::-webkit-scrollbar-track {
+            background: var(--bg-secondary, #1a1a1a);
+        }
+
+        [data-theme="dark"] ::-webkit-scrollbar-thumb {
+            background: var(--border-color, #404040);
+            border-radius: 4px;
+        }
+
+        [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary, #3b82f6);
+        }
+
+        /* Dark theme action buttons */
+        [data-theme="dark"] .action-btn {
+            background: var(--button-bg, #3a3a3a) !important;
+            color: var(--button-text, #ffffff) !important;
+            border: 1px solid var(--border-color, #505050) !important;
+        }
+
+        [data-theme="dark"] .action-btn:hover {
+            background: var(--button-hover, #4a4a4a) !important;
+        }
+
+        /* Dark theme tüm text visibility düzeltmeleri */
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .card-body,
+        [data-theme="dark"] .panel,
+        [data-theme="dark"] .content-panel {
+            background: var(--card-bg, #1a1a1a) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border: 1px solid var(--border-color, #404040) !important;
+        }
+
+        [data-theme="dark"] .card-header,
+        [data-theme="dark"] .panel-header {
+            background: var(--bg-secondary, #2a2a2a) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border-bottom: 1px solid var(--border-color, #404040) !important;
+        }
+
+        [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, 
+        [data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6 {
+            color: var(--text-primary, #ffffff) !important;
+        }
+
+        [data-theme="dark"] p, [data-theme="dark"] span, [data-theme="dark"] div,
+        [data-theme="dark"] label, [data-theme="dark"] small, [data-theme="dark"] strong {
+            color: var(--text-primary, #ffffff) !important;
+        }
+
+        [data-theme="dark"] .text-muted {
+            color: var(--text-secondary, #e0e0e0) !important;
+        }
+
+        /* Dark theme table improvements */
+        [data-theme="dark"] table,
+        [data-theme="dark"] .table {
+            background: var(--table-bg, #1a1a1a) !important;
+            color: var(--text-primary, #ffffff) !important;
+        }
+
+        [data-theme="dark"] th,
+        [data-theme="dark"] td {
+            background: var(--table-bg, #1a1a1a) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border-color: var(--table-border, #404040) !important;
+        }
+
+        [data-theme="dark"] tr:hover {
+            background: var(--table-hover, #2a2a2a) !important;
+        }
+
+        [data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+            background: var(--bg-secondary, #2a2a2a) !important;
+        }
+
+        /* Dark theme statistics ve info panels */
+        [data-theme="dark"] .stat-card,
+        [data-theme="dark"] .info-panel,
+        [data-theme="dark"] .summary-panel {
+            background: var(--stats-bg, #2a2a2a) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border: 1px solid var(--stats-border, #404040) !important;
+        }
+
+        [data-theme="dark"] .stat-value,
+        [data-theme="dark"] .stat-label {
+            color: var(--text-primary, #ffffff) !important;
+        }
+
+        /* Dark theme search ve filter inputs */
+        [data-theme="dark"] .search-input,
+        [data-theme="dark"] .filter-input,
+        [data-theme="dark"] .search-box {
+            background: var(--input-bg, #2a2a2a) !important;
+            color: var(--input-text, #ffffff) !important;
+            border: 1px solid var(--input-border, #505050) !important;
+        }
+
+        /* Dark theme badges ve tags */
+        [data-theme="dark"] .badge,
+        [data-theme="dark"] .tag {
+            background: var(--primary, #3b82f6) !important;
+            color: #ffffff !important;
+        }
+
+        [data-theme="dark"] .badge-secondary {
+            background: var(--secondary, #6c757d) !important;
+            color: #ffffff !important;
+        }
+
+        [data-theme="dark"] .badge-success {
+            background: var(--success, #10b981) !important;
+            color: #ffffff !important;
+        }
+
+        [data-theme="dark"] .badge-warning {
+            background: var(--warning, #f59e0b) !important;
+            color: #ffffff !important;
+        }
+
+        [data-theme="dark"] .badge-danger {
+            background: var(--danger, #ef4444) !important;
+            color: #ffffff !important;
+        }
+
+        /* Dark theme alerts ve notifications */
+        [data-theme="dark"] .alert {
+            background: var(--notification-bg, #2a2a2a) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border: 1px solid var(--notification-border, #505050) !important;
+        }
+
+        [data-theme="dark"] .alert-info {
+            background: rgba(59, 130, 246, 0.2) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border-color: var(--info, #3b82f6) !important;
+        }
+
+        [data-theme="dark"] .alert-success {
+            background: rgba(16, 185, 129, 0.2) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border-color: var(--success, #10b981) !important;
+        }
+
+        [data-theme="dark"] .alert-warning {
+            background: rgba(245, 158, 11, 0.2) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border-color: var(--warning, #f59e0b) !important;
+        }
+
+        [data-theme="dark"] .alert-danger {
+            background: rgba(239, 68, 68, 0.2) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border-color: var(--danger, #ef4444) !important;
+        }
+
+        /* Dark theme specific text classes */
+        [data-theme="dark"] .text-primary {
+            color: var(--primary, #3b82f6) !important;
+        }
+
+        [data-theme="dark"] .text-secondary {
+            color: var(--text-secondary, #e0e0e0) !important;
+        }
+
+        [data-theme="dark"] .text-success {
+            color: var(--success, #10b981) !important;
+        }
+
+        [data-theme="dark"] .text-danger {
+            color: var(--danger, #ef4444) !important;
+        }
+
+        [data-theme="dark"] .text-warning {
+            color: var(--warning, #f59e0b) !important;
+        }
+
+        [data-theme="dark"] .text-info {
+            color: var(--info, #3b82f6) !important;
+        }
+
+        [data-theme="dark"] .text-dark {
+            color: var(--text-primary, #ffffff) !important;
+        }
+
+        [data-theme="dark"] .text-light {
+            color: var(--text-secondary, #e0e0e0) !important;
+        }
+
+        /* Dark theme satış paneli özel düzeltmeleri */
+        [data-theme="dark"] .sales-panel,
+        [data-theme="dark"] .customer-panel,
+        [data-theme="dark"] .product-panel {
+            background: var(--panel-bg, #2a2a2a) !important;
+            color: var(--panel-text, #ffffff) !important;
+            border: 1px solid var(--panel-border, #505050) !important;
+        }
+
+        [data-theme="dark"] .sales-item,
+        [data-theme="dark"] .product-item {
+            background: var(--card-bg, #1a1a1a) !important;
+            color: var(--text-primary, #ffffff) !important;
+            border: 1px solid var(--border-color, #404040) !important;
+        }
+
+        [data-theme="dark"] .sales-item:hover,
+        [data-theme="dark"] .product-item:hover {
+            background: var(--table-hover, #2a2a2a) !important;
+        }
+
+        /* Dark theme için contrast artırılmış text */
+        [data-theme="dark"] .low-contrast-text {
+            color: var(--text-primary, #ffffff) !important;
+            text-shadow: 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Force high contrast for important elements */
+        [data-theme="dark"] .force-visible {
+            color: #ffffff !important;
+            background: var(--bg-secondary, #2a2a2a) !important;
+        }
         
 
     </style>
@@ -2069,10 +2408,7 @@
                             <label for="marka"><i class="fas fa-tag"></i> Marka</label>
                             <input type="text" id="marka" class="form-control" placeholder="Marka girin">
                         </div>
-                        <div class="form-group">
-                            <label for="kategori"><i class="fas fa-folder"></i> Kategori</label>
-                            <input type="text" id="kategori" class="form-control" placeholder="Kategori girin">
-                        </div>
+
                         <div class="form-group">
                             <label for="aciklama"><i class="fas fa-info-circle"></i> Açıklama</label>
                             <textarea id="aciklama" class="form-control" placeholder="Açıklama girin"></textarea>
@@ -2660,13 +2996,21 @@
         </div>
     </div>
     <script>
-        // Socket.IO connection - OPTIMIZED
+        // Socket.IO connection - ULTRA OPTIMIZED for Multi-Device Sync
         const socket = io({
             transports: ['websocket', 'polling'],
             upgrade: true,
             rememberUpgrade: true,
-            timeout: 20000,
-            forceNew: false
+            timeout: 10000,
+            forceNew: false,
+            autoConnect: true,
+            reconnection: true,
+            reconnectionAttempts: 20,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 3000,
+            maxHttpBufferSize: 2e6, // 2MB
+            pingTimeout: 30000,
+            pingInterval: 15000
         });
         
 
@@ -2690,8 +3034,8 @@
             socket.emit('requestData');
         });
         
-        socket.on('disconnect', () => {
-            console.log('❌ Socket.IO bağlantısı kesildi');
+        socket.on('disconnect', (reason) => {
+            console.log('❌ Socket.IO bağlantısı kesildi:', reason);
             
             // Update sync status indicator
             const syncIndicator = document.getElementById('syncIndicator');
@@ -2702,6 +3046,64 @@
             }
             if (syncText) {
                 syncText.textContent = 'Çevrimdışı';
+            }
+            
+            // Enhanced reconnection for multi-device support
+            if (reason === 'io server disconnect') {
+                console.log('🔄 Server initiated disconnect - attempting manual reconnection');
+                setTimeout(() => socket.connect(), 1000);
+            }
+        });
+        
+        socket.on('connect_error', (error) => {
+            console.error('❌ Socket bağlantı hatası:', error.message);
+            showNotification('⚠️ Bağlantı hatası - HTTP modunda çalışıyor', 'warning');
+        });
+        
+        socket.on('reconnect', (attemptNumber) => {
+            console.log('✅ Socket yeniden bağlandı, deneme:', attemptNumber);
+            showNotification('🔗 Bağlantı yeniden kuruldu', 'success');
+            // Fresh data sync after reconnection
+            setTimeout(() => tumVerileriYukle(), 500);
+        });
+        
+        socket.on('reconnect_error', (error) => {
+            console.error('❌ Yeniden bağlanma hatası:', error.message);
+        });
+        
+        socket.on('reconnect_failed', () => {
+            console.error('❌ Yeniden bağlanma başarısız - HTTP modunda devam ediliyor');
+            showNotification('❌ Sürekli bağlantı hatası - HTTP modu aktif', 'error');
+        });
+        
+        // Network state monitoring for better mobile/multi-device support
+        window.addEventListener('online', () => {
+            console.log('🌐 Ağ bağlantısı aktif');
+            if (!socket.connected) {
+                console.log('🔄 Ağ aktif oldu, socket yeniden bağlanıyor...');
+                socket.connect();
+            }
+            showNotification('🌐 İnternet bağlantısı aktif', 'success');
+        });
+        
+        window.addEventListener('offline', () => {
+            console.log('📵 Ağ bağlantısı kesildi');
+            showNotification('📵 İnternet bağlantısı yok - Offline moda geçiliyor', 'warning');
+        });
+        
+        // Enhanced page visibility handling for mobile devices
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                console.log('👁️ Sayfa görünür oldu');
+                if (!socket.connected) {
+                    console.log('🔄 Sayfa aktif oldu, socket bağlantısı kontrol ediliyor...');
+                    setTimeout(() => {
+                        if (!socket.connected) socket.connect();
+                    }, 1000);
+                } else {
+                    // Sync data when page becomes visible
+                    setTimeout(() => tumVerileriYukle(), 200);
+                }
             }
         });
         
@@ -4069,39 +4471,73 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             document.getElementById('mainMenuDropdown').classList.remove('show');
             
             Swal.fire({
-                title: '🏷️ Kategori Yönetimi',
+                title: '🏷️ Gelişmiş Kategori Yönetimi',
                 html: `
-                    <div style="text-align: left;">
-                        <div style="margin-bottom: 20px;">
-                            <h4>Otomatik Kategorizasyon</h4>
-                            <p>Ürün adlarına göre otomatik kategori atama:</p>
-                            <button class="btn btn-primary" onclick="autoCategorizeProducts()">
-                                <i class="fas fa-magic"></i> Otomatik Kategorize Et
-                            </button>
+                    <div style="text-align: left; max-height: 600px; overflow-y: auto;">
+                        <div style="margin-bottom: 25px; padding: 15px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(34, 197, 94, 0.1)); border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                            <h4 style="margin-bottom: 10px; color: #3b82f6; display: flex; align-items: center; gap: 8px;"><i class="fas fa-robot"></i> Akıllı Kategorizasyon</h4>
+                            <p style="margin-bottom: 15px; color: #666; font-size: 14px;">Ürün adlarına göre otomatik kategori atama sistemi</p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <button class="btn btn-primary" onclick="autoCategorizeProducts()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <i class="fas fa-magic"></i> Kategorize Et
+                                </button>
+                                <button class="btn btn-info" onclick="previewCategorization()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <i class="fas fa-eye"></i> Önizleme
+                                </button>
+                            </div>
                         </div>
                         
-                        <div style="margin-bottom: 20px;">
-                            <h4>Kategoriye Göre Filtrele</h4>
-                            <select id="categoryFilter" onchange="filterByCategory(this.value)">
-                                <option value="">Tüm Kategoriler</option>
-                            </select>
+                        <div style="margin-bottom: 25px; padding: 15px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(168, 85, 247, 0.1)); border-radius: 10px; border: 1px solid rgba(34, 197, 94, 0.2);">
+                            <h4 style="margin-bottom: 10px; color: #22c55e; display: flex; align-items: center; gap: 8px;"><i class="fas fa-filter"></i> Filtreleme & Arama</h4>
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <select id="categoryFilter" onchange="filterByCategory(this.value)" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
+                                    <option value="">🔍 Tüm Kategoriler Göster</option>
+                                </select>
+                                <button class="btn btn-outline" onclick="clearCategoryFilter()" style="min-width: 80px;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.5); padding: 8px; border-radius: 4px; font-size: 12px; color: #666;">
+                                <span id="filteredCount">0</span> ürün gösteriliyor • <span id="categoryCount">0</span> farklı kategori
+                            </div>
                         </div>
                         
-                        <div>
-                            <h4>Özel Kategori Ekleme</h4>
-                            <input type="text" id="customKeyword" placeholder="Ürün adında aranacak kelime" style="width: 100%; margin-bottom: 10px;">
-                            <input type="text" id="customCategory" placeholder="Kategori adı" style="width: 100%; margin-bottom: 10px;">
-                            <button class="btn btn-success" onclick="addCustomCategory()">
-                                <i class="fas fa-plus"></i> Kategori Ekle
+                        <div style="margin-bottom: 25px; padding: 15px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1)); border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                            <h4 style="margin-bottom: 10px; color: #f59e0b; display: flex; align-items: center; gap: 8px;"><i class="fas fa-plus-circle"></i> Özel Kategori Kuralı</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                                <input type="text" id="customKeyword" placeholder="Anahtar kelime (örn: fren)" style="padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
+                                <input type="text" id="customCategory" placeholder="Kategori adı" style="padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
+                            </div>
+                            <button class="btn btn-success" onclick="addCustomCategory()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <i class="fas fa-plus"></i> Kural Ekle ve Uygula
                             </button>
+                        </div>
+
+                        <div style="padding: 15px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(168, 85, 247, 0.1)); border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                            <h4 style="margin-bottom: 15px; color: #ef4444; display: flex; align-items: center; gap: 8px;"><i class="fas fa-tools"></i> Gelişmiş Araçlar</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                                <button class="btn btn-warning" onclick="resetAllCategories()" style="display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px;">
+                                    <i class="fas fa-undo"></i> Sıfırla
+                                </button>
+                                <button class="btn btn-info" onclick="exportCategorizedData()" style="display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px;">
+                                    <i class="fas fa-download"></i> İndir
+                                </button>
+                                <button class="btn btn-secondary" onclick="showCategoryStats()" style="display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px;">
+                                    <i class="fas fa-chart-bar"></i> İstatistik
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `,
-                width: 500,
+                width: 700,
                 showConfirmButton: false,
                 showCloseButton: true,
+                customClass: {
+                    popup: 'enhanced-category-modal'
+                },
                 didOpen: () => {
                     loadCategoryFilter();
+                    updateCategoryStats();
                 }
             });
         }
@@ -4236,6 +4672,218 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             stokListesi = Object.fromEntries(filteredProducts);
             stokTablosunuGuncelle();
             stokListesi = originalList; // Orijinal listeyi geri yükle
+        }
+
+        // Gelişmiş kategori fonksiyonları
+        async function previewCategorization() {
+            const categoryMappings = {
+                'amortisör': 'Amortisör',
+                'amortisor': 'Amortisör',
+                'fren': 'Fren Sistemi',
+                'balata': 'Fren Sistemi',
+                'disk': 'Fren Sistemi',
+                'motor': 'Motor Parçaları',
+                'yağ': 'Yağlar & Kimyasallar',
+                'filtre': 'Filtreler',
+                'lastik': 'Lastik & Jant',
+                'jant': 'Lastik & Jant',
+                'cam': 'Cam & Elektrik',
+                'lamba': 'Cam & Elektrik',
+                'elektrik': 'Cam & Elektrik',
+                'debriyaj': 'Şanzıman',
+                'şanzıman': 'Şanzıman',
+                'gömlek': 'Motor Parçaları'
+            };
+
+            let previewResults = {};
+            let totalMatches = 0;
+
+            for (const [key, product] of Object.entries(stokListesi)) {
+                const productName = product.ad || product.urun_adi || '';
+                for (const [keyword, category] of Object.entries(categoryMappings)) {
+                    if (productName.toLowerCase().includes(keyword.toLowerCase())) {
+                        if (!previewResults[category]) previewResults[category] = [];
+                        previewResults[category].push(productName);
+                        totalMatches++;
+                        break;
+                    }
+                }
+            }
+
+            const previewHTML = Object.entries(previewResults).map(([category, products]) => 
+                `<div style="margin: 10px 0; padding: 10px; background: rgba(59, 130, 246, 0.1); border-radius: 6px;">
+                    <strong style="color: #3b82f6;">${category} (${products.length} ürün)</strong>
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        ${products.slice(0, 3).join(', ')}${products.length > 3 ? ` +${products.length - 3} daha...` : ''}
+                    </div>
+                </div>`
+            ).join('');
+
+            Swal.fire({
+                title: '🔍 Kategorizasyon Önizlemesi',
+                html: `
+                    <div style="text-align: left; max-height: 400px; overflow-y: auto;">
+                        <div style="margin-bottom: 15px; text-align: center; background: #f8f9fa; padding: 10px; border-radius: 6px;">
+                            <strong>Toplam ${totalMatches} ürün kategorize edilecek</strong>
+                        </div>
+                        ${previewHTML || '<p>Kategorize edilecek ürün bulunamadı.</p>'}
+                    </div>
+                `,
+                width: 600,
+                confirmButtonText: 'Uygula',
+                cancelButtonText: 'İptal',
+                showCancelButton: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    autoCategorizeProducts();
+                }
+            });
+        }
+
+        function updateCategoryStats() {
+            const categories = {};
+            let uncategorized = 0;
+
+            for (const [key, product] of Object.entries(stokListesi)) {
+                const category = product.kategori || '';
+                if (category) {
+                    categories[category] = (categories[category] || 0) + 1;
+                } else {
+                    uncategorized++;
+                }
+            }
+
+            const categoryCountEl = document.getElementById('categoryCount');
+            const filteredCountEl = document.getElementById('filteredCount');
+            
+            if (categoryCountEl) categoryCountEl.textContent = Object.keys(categories).length;
+            if (filteredCountEl) filteredCountEl.textContent = Object.keys(stokListesi).length;
+        }
+
+        function clearCategoryFilter() {
+            const filterSelect = document.getElementById('categoryFilter');
+            if (filterSelect) {
+                filterSelect.value = '';
+                filterByCategory('');
+            }
+        }
+
+        async function resetAllCategories() {
+            const result = await Swal.fire({
+                title: '⚠️ Tüm Kategorileri Sıfırla',
+                text: 'Bu işlem tüm ürünlerin kategorilerini siler. Emin misiniz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet, Sıfırla',
+                cancelButtonText: 'İptal',
+                confirmButtonColor: '#ef4444'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    // Local olarak kategorileri sıfırla
+                    for (const key in stokListesi) {
+                        stokListesi[key].kategori = '';
+                    }
+                    
+                    showNotification('✅ Tüm kategoriler sıfırlandı', 'success');
+                    stokListesiniGetir();
+                    loadCategoryFilter();
+                    updateCategoryStats();
+                } catch (error) {
+                    console.error('Kategori sıfırlama hatası:', error);
+                    showNotification('❌ Kategori sıfırlanırken hata oluştu', 'error');
+                }
+            }
+        }
+
+        function exportCategorizedData() {
+            const categorizedData = {};
+            
+            for (const [key, product] of Object.entries(stokListesi)) {
+                const category = product.kategori || 'Kategorisiz';
+                if (!categorizedData[category]) categorizedData[category] = [];
+                categorizedData[category].push({
+                    barkod: product.barkod,
+                    ad: product.ad || product.urun_adi,
+                    marka: product.marka,
+                    miktar: product.miktar || product.stok_miktari,
+                    fiyat: product.satisFiyati || product.fiyat
+                });
+            }
+
+            const dataStr = JSON.stringify(categorizedData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `kategorili_urunler_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            showNotification('📥 Kategorili veriler indirildi', 'success');
+        }
+
+        function showCategoryStats() {
+            const categories = {};
+            let uncategorized = 0;
+            let totalValue = 0;
+
+            for (const [key, product] of Object.entries(stokListesi)) {
+                const category = product.kategori || 'Kategorisiz';
+                const quantity = product.miktar || product.stok_miktari || 0;
+                const price = product.satisFiyati || product.fiyat || 0;
+                const value = quantity * price;
+
+                if (!categories[category]) {
+                    categories[category] = { count: 0, value: 0, quantity: 0 };
+                }
+                categories[category].count++;
+                categories[category].value += value;
+                categories[category].quantity += quantity;
+                totalValue += value;
+                
+                if (!product.kategori) uncategorized++;
+            }
+
+            const statsHTML = Object.entries(categories)
+                .sort((a, b) => b[1].count - a[1].count)
+                .map(([category, stats]) => 
+                    `<tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 8px; font-weight: 500;">${category}</td>
+                        <td style="padding: 8px; text-align: center;">${stats.count}</td>
+                        <td style="padding: 8px; text-align: center;">${stats.quantity}</td>
+                        <td style="padding: 8px; text-align: right;">${stats.value.toFixed(2)} ₺</td>
+                    </tr>`
+                ).join('');
+
+            Swal.fire({
+                title: '📊 Kategori İstatistikleri',
+                html: `
+                    <div style="text-align: left;">
+                        <div style="margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 6px;">
+                            <strong>Özet:</strong> ${Object.keys(categories).length} kategori, ${uncategorized} kategorisiz ürün
+                        </div>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f8f9fa;">
+                                    <th style="padding: 10px; text-align: left;">Kategori</th>
+                                    <th style="padding: 10px; text-align: center;">Ürün</th>
+                                    <th style="padding: 10px; text-align: center;">Stok</th>
+                                    <th style="padding: 10px; text-align: right;">Değer</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${statsHTML}
+                            </tbody>
+                        </table>
+                    </div>
+                `,
+                width: 700,
+                showCloseButton: true,
+                showConfirmButton: false
+            });
         }
 
         // Özel kategori ekle
@@ -4842,8 +5490,15 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                         return;
                     }
                     
+                    console.log('💰 Ana satış modalı fiyat kontrolü:', { 
+                        inputValue: document.getElementById('satisFiyati').value,
+                        parsedValue: satisFiyati,
+                        isValid: !isNaN(satisFiyati) && satisFiyati > 0 
+                    });
+                    
                     if (isNaN(satisFiyati) || satisFiyati <= 0) {
-                        Swal.fire('Uyarı', 'Geçerli bir satış fiyatı giriniz.', 'warning');
+                        const inputVal = document.getElementById('satisFiyati').value;
+                        Swal.fire('Uyarı', `Geçerli bir satış fiyatı giriniz. Girilen değer: "${inputVal}"`, 'warning');
                         return;
                     }
                     
@@ -4855,17 +5510,19 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         async function tamamlaSatis(key, miktar, musteriId, aciklama, satisFiyati, borc = false) {
             const urun = stokListesi[key];
             
-            // Fiyat ve miktar kontrolü
-            const fiyat = parseFloat(satisFiyati) || 0;
-            const miktarSayi = parseInt(miktar) || 0;
+            // Fiyat ve miktar kontrolü - İyileştirilmiş validasyon
+            const fiyat = parseFloat(satisFiyati);
+            const miktarSayi = parseInt(miktar);
             
-            if (fiyat <= 0) {
-                Swal.fire('Hata', 'Geçerli bir satış fiyatı giriniz.', 'error');
+            console.log('💰 Satış fiyatı kontrolü:', { satisFiyati, fiyat, isValid: !isNaN(fiyat) && fiyat > 0 });
+            
+            if (isNaN(fiyat) || fiyat <= 0) {
+                Swal.fire('Hata', `Geçerli bir satış fiyatı giriniz. Girilen değer: "${satisFiyati}"`, 'error');
                 return;
             }
             
-            if (miktarSayi <= 0) {
-                Swal.fire('Hata', 'Geçerli bir miktar giriniz.', 'error');
+            if (isNaN(miktarSayi) || miktarSayi <= 0) {
+                Swal.fire('Hata', `Geçerli bir miktar giriniz. Girilen değer: "${miktar}"`, 'error');
                 return;
             }
             
@@ -5153,7 +5810,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             document.getElementById('miktar').value = urun.stok_miktari || urun.miktar || 0;
             document.getElementById('alisFiyati').value = urun.alisFiyati || '';
             document.getElementById('satisFiyati').value = urun.fiyat || urun.satisFiyati || '';
-            document.getElementById('kategori').value = urun.kategori || '';
+
             
             // Düzenlenen ürün key'ini kaydet
             editingBarkod = key;
@@ -5221,7 +5878,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 miktar: document.getElementById('miktar'),
                 alisFiyati: document.getElementById('alisFiyati'),
                 satisFiyati: document.getElementById('satisFiyati'),
-                kategori: document.getElementById('kategori'),
+
                 aciklama: document.getElementById('aciklama')
             };
             
@@ -5240,7 +5897,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 miktar: formElements.miktar ? parseFloat(formElements.miktar.value) || 0 : 0,
                 alisFiyati: formElements.alisFiyati ? parseFloat(formElements.alisFiyati.value) || 0 : 0,
                 satisFiyati: formElements.satisFiyati ? parseFloat(formElements.satisFiyati.value) || 0 : 0,
-                kategori: formElements.kategori ? formElements.kategori.value.trim() : '',
+                kategori: '',
                 aciklama: formElements.aciklama ? formElements.aciklama.value.trim() : ''
             };
             
@@ -5557,7 +6214,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             document.getElementById('miktar').value = '0';
             document.getElementById('alisFiyati').value = '';
             document.getElementById('satisFiyati').value = '';
-            document.getElementById('kategori').value = '';
+
             
             editingBarkod = null;
         }
@@ -6092,6 +6749,9 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                         <td>${(parseFloat(satis.toplam) || ((parseFloat(satis.fiyat)||0) * (parseInt(satis.miktar)||0))).toFixed(2)}</td>
                         <td>${satis.borc ? 'Borç' : 'Nakit'}</td>
                         <td>
+                            <button class="action-btn btn-edit" title="Düzenle" onclick="satisGecmisiDuzenle('${satis.id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
                             <button class="action-btn btn-return" title="İade" onclick="urunIade('${satis.id}')">
                                 <i class="fas fa-undo"></i>
                             </button>
@@ -6105,6 +6765,101 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             document.getElementById('customerSalesModal').style.display = 'flex';
         }
         
+        // Müşteri satış geçmişi düzenle
+        async function satisGecmisiDuzenle(satisId) {
+            try {
+                const satis = satisGecmisi.find(s => s.id == satisId);
+                if (!satis) {
+                    showNotification('❌ Satış kaydı bulunamadı', 'error');
+                    return;
+                }
+
+                const { value: formValues } = await Swal.fire({
+                    title: 'Satış Geçmişi Düzenle',
+                    html: `
+                        <div style="text-align: left;">
+                            <div class="form-group">
+                                <label for="edit-satis-urun">Ürün Adı:</label>
+                                <input type="text" id="edit-satis-urun" class="swal2-input" value="${satis.urunAdi || satis.urun_adi || ''}" style="margin: 5px 0;">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-satis-miktar">Miktar:</label>
+                                <input type="number" id="edit-satis-miktar" class="swal2-input" value="${satis.miktar || 1}" min="1" style="margin: 5px 0;">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-satis-fiyat">Birim Fiyat:</label>
+                                <input type="number" id="edit-satis-fiyat" class="swal2-input" value="${satis.fiyat || 0}" step="0.01" min="0" style="margin: 5px 0;">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-satis-tarih">Tarih:</label>
+                                <input type="date" id="edit-satis-tarih" class="swal2-input" value="${new Date(satis.tarih).toISOString().split('T')[0]}" style="margin: 5px 0;">
+                            </div>
+                        </div>
+                    `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'Güncelle',
+                    cancelButtonText: 'İptal',
+                    preConfirm: () => {
+                        const urunAdi = document.getElementById('edit-satis-urun').value;
+                        const miktar = parseInt(document.getElementById('edit-satis-miktar').value);
+                        const fiyat = parseFloat(document.getElementById('edit-satis-fiyat').value);
+                        const tarih = document.getElementById('edit-satis-tarih').value;
+
+                        if (!urunAdi.trim()) {
+                            Swal.showValidationMessage('Ürün adı gerekli');
+                            return false;
+                        }
+                        if (isNaN(miktar) || miktar <= 0) {
+                            Swal.showValidationMessage('Miktar 1 veya daha büyük olmalı');
+                            return false;
+                        }
+                        if (isNaN(fiyat) || fiyat < 0) {
+                            Swal.showValidationMessage('Fiyat 0 veya daha büyük olmalı');
+                            return false;
+                        }
+
+                        return { urunAdi, miktar, fiyat, tarih };
+                    }
+                });
+
+                if (formValues) {
+                    const updateData = {
+                        urunAdi: formValues.urunAdi,
+                        miktar: formValues.miktar,
+                        fiyat: formValues.fiyat,
+                        toplam: formValues.miktar * formValues.fiyat,
+                        tarih: formValues.tarih
+                    };
+
+                    const response = await fetch(`${API_BASE}/api/satis-guncelle/${satisId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        showNotification('✅ Satış kaydı başarıyla güncellendi', 'success');
+                        
+                        // Update local data
+                        const satisIndex = satisGecmisi.findIndex(s => s.id == satisId);
+                        if (satisIndex !== -1) {
+                            satisGecmisi[satisIndex] = { ...satisGecmisi[satisIndex], ...updateData };
+                        }
+                        
+                        // Refresh the customer sales view
+                        showCustomerSales(satis.musteriId);
+                    } else {
+                        showNotification('❌ Satış kaydı güncellenemedi: ' + (result.error || 'Bilinmeyen hata'), 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Satış düzenleme hatası:', error);
+                showNotification('❌ Satış düzenlenirken hata oluştu', 'error');
+            }
+        }
+
         // Müşteri arama
         function musteriAramaYap() {
             const aramaMetni = document.getElementById('customerSearchInput').value.toLowerCase().replace(/\s+/g, '');
