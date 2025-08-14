@@ -4484,7 +4484,11 @@
                         saleCustomer.appendChild(option);
                     }
                     
-                    // Otomatik fiyat kaldırıldı
+                    // Varsayılan fiyatı doldur (stok satış fiyatı > 0 ise onu, değilse önerilen fiyat)
+                    const satisInput = document.getElementById('satisFiyati');
+                    const stokFiyat = parseFloat(urun.satisFiyati || urun.fiyat) || 0;
+                    const defaultPrice = stokFiyat > 0 ? stokFiyat : (alisFiyati > 0 ? Math.round(alisFiyati * 1.2) : 0);
+                    if (defaultPrice > 0) satisInput.value = defaultPrice.toString();
                 }
             }).then(async result => {
                 if (result.isConfirmed) {
