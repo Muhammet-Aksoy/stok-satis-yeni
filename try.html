@@ -4024,22 +4024,79 @@
             });
         }
         
-        // Ürün detaylarını göster
-        function showProductDetails(barkod) {
-            const product = stokListesi[barkod];
-            
-            if (product) {
-                document.getElementById('detail-barkod').value = product.barkod;
-                document.getElementById('detail-urunAdi').value = product.urun_adi || product.ad || product.urunAdi || 'Ürün ' + (product.barkod || '');
-                document.getElementById('detail-marka').value = product.marka || '';
-                document.getElementById('detail-aciklama').value = product.aciklama || '';
-                document.getElementById('detail-miktar').value = product.stok_miktari || product.miktar || 0;
-                document.getElementById('detail-alisFiyati').value = product.alisFiyati || '';
-                document.getElementById('detail-eklenmeTarihi').value = product.eklenmeTarihi ? 
-                    new Date(product.eklenmeTarihi).toLocaleString('tr-TR') : '';
-                
-                document.getElementById('productDetailsModal').style.display = 'flex';
+        // Ürün detaylarını göster (birleştirilmiş ve güvenli)
+        function showProductDetails(barkodOrKey) {
+            let product = null;
+            // Doğrudan key ile
+            if (stokListesi[barkodOrKey]) {
+                product = stokListesi[barkodOrKey];
+            } else {
+                // Barkod ile tara
+                for (const [, urun] of Object.entries(stokListesi)) {
+                    if (urun.barkod === barkodOrKey) { product = urun; break; }
+                }
             }
+            if (!product) {
+                Swal.fire('Hata', 'Ürün bulunamadı!', 'error');
+                return;
+            }
+            // Alan normalizasyonu
+            const urunAdi = product.urun_adi || product.ad || product.urunAdi || `Ürün ${product.barkod || ''}`;
+            const marka = product.marka || '';
+            const aciklama = product.aciklama || '';
+            const miktar = product.stok_miktari ?? product.miktar ?? 0;
+            const alis = parseFloat(product.alisFiyati) || 0;
+            const satis = parseFloat(product.satisFiyati || product.fiyat) || 0;
+            const kategori = product.kategori || '';
+            const eklenme = product.eklenmeTarihi || product.created_at || '';
+            const guncelleme = product.guncellemeTarihi || product.updated_at || '';
+            
+            // Modern modal içerik
+            Swal.fire({
+                width: 700,
+                title: 'Ürün Detayları',
+                html: `
+                    <div style="text-align:left;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div>
+                            <div style="font-size:12px;color:#666;">Ürün Adı</div>
+                            <div style="font-weight:600;">${urunAdi}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;color:#666;">Barkod</div>
+                            <div style="font-weight:600;">${product.barkod || '-'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;color:#666;">Marka</div>
+                            <div style="font-weight:600;">${marka || '-'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;color:#666;">Kategori</div>
+                            <div style="font-weight:600;">${kategori || '-'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;color:#666;">Stok</div>
+                            <div style="font-weight:600;">${miktar}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;color:#666;">Alış / Satış</div>
+                            <div style="font-weight:600;">${alis.toFixed(2)} ₺ / ${satis.toFixed(2)} ₺</div>
+                        </div>
+                        <div style="grid-column:1 / -1;">
+                            <div style="font-size:12px;color:#666;">Açıklama</div>
+                            <div style="font-weight:600;white-space:pre-wrap;">${aciklama || '-'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;color:#666;">Eklenme</div>
+                            <div style="font-weight:600;">${eklenme ? new Date(eklenme).toLocaleString('tr-TR') : '-'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;color:#666;">Güncelleme</div>
+                            <div style="font-weight:600;">${guncelleme ? new Date(guncelleme).toLocaleString('tr-TR') : '-'}</div>
+                        </div>
+                    </div>
+                `,
+                confirmButtonText: 'Kapat'
+            });
         }
         
         // Satış geçmişini güncelle
@@ -4125,9 +4182,9 @@
                         <td>${barkodGoster}</td>
                         <td title="Orijinal: ${satis.urunAdi}">${currentProductName}</td>
                         <td>${miktar}</td>
-                        <td>${(parseFloat(satis.alisFiyati) || parseFloat(stokListesi[satis.barkod]?.alisFiyati) || 0) > 0 ? (parseFloat(satis.alisFiyati) || parseFloat(stokListesi[satis.barkod]?.alisFiyati)).toFixed(2) : '-'}</td>
-                        <td>${(parseFloat(satis.fiyat) || 0).toFixed(2)}</td>
-                        <td>${(parseFloat(satis.toplam) || ((parseFloat(satis.fiyat) || 0) * (parseInt(satis.miktar) || 0))).toFixed(2)}</td>
+                        <td>${alis > 0 ? alis.toFixed(2) : '-'}</td>
+                        <td>${fiyat.toFixed(2)}</td>
+                        <td>${toplam.toFixed(2)}</td>
                         <td>${satis.borc ? '<span class="credit-indicator">Borç</span>' : 'Nakit'}</td>
                         <td>${musteriAdi}</td>
                         <td>
@@ -6449,39 +6506,6 @@
                     // Perform the sale
                     urunSat(barkod, result.value);
                 }
-            });
-        }
-        
-        // Show product details
-        function showProductDetails(barkod) {
-            let product = null;
-            for (const [id, urun] of Object.entries(stokListesi)) {
-                if (urun.barkod === barkod || id === barkod) {
-                    product = urun;
-                    break;
-                }
-            }
-            
-            if (!product) {
-                Swal.fire('Hata', 'Ürün bulunamadı!', 'error');
-                return;
-            }
-            
-            Swal.fire({
-                title: 'Ürün Detayları',
-                html: `
-                    <div style="text-align: left;">
-                        <p><strong>Ürün Adı:</strong> ${product.ad}</p>
-                        <p><strong>Barkod:</strong> ${product.barkod}</p>
-                        <p><strong>Marka:</strong> ${product.marka || 'Belirtilmemiş'}</p>
-                        <p><strong>Kategori:</strong> ${product.kategori || 'Belirtilmemiş'}</p>
-                        <p><strong>Stok Miktarı:</strong> ${product.miktar}</p>
-                        <p><strong>Alış Fiyatı:</strong> ${product.alisFiyati} ₺</p>
-                        <p><strong>Satış Fiyatı:</strong> ${product.satisFiyati} ₺</p>
-                        <p><strong>Açıklama:</strong> ${product.aciklama || 'Açıklama yok'}</p>
-                    </div>
-                `,
-                confirmButtonText: 'Tamam'
             });
         }
         
