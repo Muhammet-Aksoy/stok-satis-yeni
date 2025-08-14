@@ -6,6 +6,7 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs-extra');
 const nodemailer = require('nodemailer');
+const XLSX = require('xlsx');
 
 // Server configuration - ULTRA OPTIMIZED
 const PORT = process.env.PORT || 3000;
@@ -856,18 +857,23 @@ app.get('/api/stok-kontrol', async (req, res) => {
 // GET endpoint for sale check - NEW: Satış kontrolü
 app.get('/api/satis-kontrol', async (req, res) => {
     try {
-        const { id } = req.query;
+        const { id, satisId } = req.query;
+        const saleId = id || satisId;
         
-        if (!id) {
-            return res.status(400).json({
-                success: false,
-                message: 'Satış ID parametresi gerekli',
+        // Eğer ID yoksa, tüm satışları getir
+        if (!saleId) {
+            const sales = db.prepare('SELECT * FROM satisGecmisi ORDER BY id DESC LIMIT 100').all();
+            return res.json({
+                success: true,
+                data: sales,
+                count: sales.length,
+                message: sales.length > 0 ? 'Satışlar bulundu' : 'Henüz satış yok',
                 timestamp: new Date().toISOString()
             });
         }
         
-        // Satışı kontrol et
-        const sale = db.prepare('SELECT * FROM satisGecmisi WHERE id = ?').get(id);
+        // Belirli satışı kontrol et
+        const sale = db.prepare('SELECT * FROM satisGecmisi WHERE id = ?').get(saleId);
         
         res.json({
             success: true,
@@ -890,18 +896,23 @@ app.get('/api/satis-kontrol', async (req, res) => {
 // GET endpoint for customer check - NEW: Müşteri kontrolü
 app.get('/api/musteri-kontrol', async (req, res) => {
     try {
-        const { id } = req.query;
+        const { id, musteriId } = req.query;
+        const customerId = id || musteriId;
         
-        if (!id) {
-            return res.status(400).json({
-                success: false,
-                message: 'Müşteri ID parametresi gerekli',
+        // Eğer ID yoksa, tüm müşterileri getir
+        if (!customerId) {
+            const customers = db.prepare('SELECT * FROM musteriler ORDER BY ad').all();
+            return res.json({
+                success: true,
+                data: customers,
+                count: customers.length,
+                message: customers.length > 0 ? 'Müşteriler bulundu' : 'Henüz müşteri yok',
                 timestamp: new Date().toISOString()
             });
         }
         
-        // Müşteriyi kontrol et
-        const customer = db.prepare('SELECT * FROM musteriler WHERE id = ?').get(id);
+        // Belirli müşteriyi kontrol et
+        const customer = db.prepare('SELECT * FROM musteriler WHERE id = ?').get(customerId);
         
         res.json({
             success: true,
@@ -1697,6 +1708,386 @@ app.post('/api/backup-manual', async (req, res) => {
     }
 });
 
+// Excel export endpoint
+app.post('/api/export-excel', async (req, res) => {
+    try {
+        console.log('📊 Excel export isteği alındı');
+        const { tables } = req.body; // ['stok', 'satisGecmisi', 'musteriler', 'borclarim']
+        
+        const workbook = XLSX.utils.book_new();
+        
+        // Stok verilerini export et
+        if (!tables || tables.includes('stok')) {
+            const stokData = db.prepare('SELECT * FROM stok ORDER BY id').all();
+            const stokWS = XLSX.utils.json_to_sheet(stokData);
+            XLSX.utils.book_append_sheet(workbook, stokWS, 'Stok');
+        }
+        
+        // Satış verilerini export et  
+        if (!tables || tables.includes('satisGecmisi')) {
+            const satisData = db.prepare('SELECT * FROM satisGecmisi ORDER BY id DESC').all();
+            const satisWS = XLSX.utils.json_to_sheet(satisData);
+            XLSX.utils.book_append_sheet(workbook, satisWS, 'Satış Geçmişi');
+        }
+        
+        // Müşteri verilerini export et
+        if (!tables || tables.includes('musteriler')) {
+            const musteriData = db.prepare('SELECT * FROM musteriler ORDER BY ad').all();
+            const musteriWS = XLSX.utils.json_to_sheet(musteriData);
+            XLSX.utils.book_append_sheet(workbook, musteriWS, 'Müşteriler');
+        }
+        
+        // Borç verilerini export et
+        if (!tables || tables.includes('borclarim')) {
+            const borcData = db.prepare('SELECT * FROM borclarim ORDER BY tarih DESC').all();
+            const borcWS = XLSX.utils.json_to_sheet(borcData);
+            XLSX.utils.book_append_sheet(workbook, borcWS, 'Borçlarım');
+        }
+        
+        // Özet sayfası ekle
+        const summary = {
+            'Rapor Tarihi': new Date().toLocaleString('tr-TR'),
+            'Toplam Ürün': db.prepare('SELECT COUNT(*) as count FROM stok').get().count,
+            'Toplam Satış': db.prepare('SELECT COUNT(*) as count FROM satisGecmisi').get().count,
+            'Toplam Müşteri': db.prepare('SELECT COUNT(*) as count FROM musteriler').get().count,
+            'Toplam Borç': db.prepare('SELECT COUNT(*) as count FROM borclarim').get().count,
+            'Toplam Stok Değeri': db.prepare('SELECT SUM(alisFiyati * miktar) as total FROM stok').get().total || 0
+        };
+        
+        const summaryWS = XLSX.utils.json_to_sheet([summary]);
+        XLSX.utils.book_append_sheet(workbook, summaryWS, 'Özet');
+        
+        // Dosya adı oluştur
+        const fileName = `Sabancioglu_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+        const filePath = path.join(__dirname, 'backups', fileName);
+        
+        // Backups klasörünü oluştur
+        await fs.ensureDir(path.join(__dirname, 'backups'));
+        
+        // Excel dosyasını kaydet
+        XLSX.writeFile(workbook, filePath);
+        
+        console.log('✅ Excel export tamamlandı:', fileName);
+        
+        res.json({
+            success: true,
+            message: 'Excel export başarıyla tamamlandı',
+            fileName: fileName,
+            filePath: filePath,
+            fileSize: (await fs.stat(filePath)).size,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ Excel export hatası:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Excel export hatası: ' + error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// Excel dosyasını download et
+app.get('/api/download-excel/:fileName', async (req, res) => {
+    try {
+        const { fileName } = req.params;
+        const filePath = path.join(__dirname, 'backups', fileName);
+        
+        if (!await fs.pathExists(filePath)) {
+            return res.status(404).json({
+                success: false,
+                error: 'Dosya bulunamadı'
+            });
+        }
+        
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+        
+    } catch (error) {
+        console.error('❌ Excel download hatası:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Download hatası: ' + error.message
+        });
+    }
+});
+
+// Kategori endpoint'leri
+app.get('/api/categories', async (req, res) => {
+    try {
+        // Mevcut kategorileri getir
+        const categories = db.prepare(`
+            SELECT kategori, COUNT(*) as count 
+            FROM stok 
+            WHERE kategori IS NOT NULL AND kategori != '' 
+            GROUP BY kategori 
+            ORDER BY count DESC
+        `).all();
+        
+        // Varsayılan kategoriler
+        const defaultCategories = [
+            'Amortisör', 'Fren Sistemi', 'Motor Parçaları', 'Elektrik',
+            'Kaporta', 'İç Aksam', 'Şanzıman', 'Direksiyon', 
+            'Yakıt Sistemi', 'Soğutma', 'Kalorifer', 'Lastik/Jant'
+        ];
+        
+        res.json({
+            success: true,
+            categories: categories,
+            defaultCategories: defaultCategories,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('❌ Kategori listesi hatası:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Kategori listesi alınamadı: ' + error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+app.post('/api/categorize-products', async (req, res) => {
+    try {
+        const { categoryMappings } = req.body; // { "keyword": "category" }
+        
+        let updateCount = 0;
+        const updateStmt = db.prepare('UPDATE stok SET kategori = ? WHERE ad LIKE ? OR aciklama LIKE ?');
+        
+        Object.entries(categoryMappings).forEach(([keyword, category]) => {
+            const likePattern = `%${keyword}%`;
+            const result = updateStmt.run(category, likePattern, likePattern);
+            updateCount += result.changes;
+        });
+        
+        res.json({
+            success: true,
+            message: `${updateCount} ürün kategorize edildi`,
+            updatedCount: updateCount,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('❌ Kategorizasyon hatası:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Kategorizasyon hatası: ' + error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+app.get('/api/products-by-category/:category', async (req, res) => {
+    try {
+        const { category } = req.params;
+        
+        const products = db.prepare('SELECT * FROM stok WHERE kategori = ? ORDER BY ad').all(category);
+        
+        res.json({
+            success: true,
+            category: category,
+            products: products,
+            count: products.length,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('❌ Kategoriye göre ürün getirme hatası:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Kategoriye göre ürün getirme hatası: ' + error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// Toplu satış endpoint'i
+app.post('/api/satis-toplu', async (req, res) => {
+    try {
+        const { items, musteriId, musteriAdi } = req.body;
+        // items: [{ barkod, miktar, urunAdi, fiyat, alisFiyati }]
+        
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Satış kalemi listesi gerekli',
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+        const salesResults = [];
+        const stockUpdates = [];
+        let totalAmount = 0;
+        
+        const transaction = db.transaction(() => {
+            for (const item of items) {
+                const { barkod, miktar, urunAdi, fiyat, alisFiyati } = item;
+                
+                // Stok kontrolü
+                const stockItem = db.prepare('SELECT * FROM stok WHERE barkod = ?').get(barkod);
+                if (!stockItem) {
+                    throw new Error(`Ürün bulunamadı: ${barkod}`);
+                }
+                
+                if (stockItem.miktar < miktar) {
+                    throw new Error(`Yetersiz stok: ${stockItem.ad} (Mevcut: ${stockItem.miktar}, İstenilen: ${miktar})`);
+                }
+                
+                // Satış kaydı ekle
+                const saleId = db.prepare(`
+                    INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, tarih, musteriId, musteriAdi, alisFiyati, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                `).run(barkod, urunAdi || stockItem.ad, miktar, fiyat, new Date().toISOString(), musteriId, musteriAdi, alisFiyati || stockItem.alisFiyati).lastInsertRowid;
+                
+                // Stok güncelle
+                const newStock = stockItem.miktar - miktar;
+                db.prepare('UPDATE stok SET miktar = ?, updated_at = CURRENT_TIMESTAMP WHERE barkod = ?').run(newStock, barkod);
+                
+                salesResults.push({
+                    saleId: saleId,
+                    barkod: barkod,
+                    urunAdi: urunAdi || stockItem.ad,
+                    miktar: miktar,
+                    fiyat: fiyat,
+                    newStock: newStock
+                });
+                
+                totalAmount += fiyat * miktar;
+            }
+        });
+        
+        transaction();
+        
+        console.log(`✅ Toplu satış tamamlandı: ${items.length} kalem, toplam: ${totalAmount.toFixed(2)} ₺`);
+        
+        res.json({
+            success: true,
+            message: `${items.length} ürün başarıyla satıldı`,
+            sales: salesResults,
+            totalAmount: totalAmount,
+            itemCount: items.length,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ Toplu satış hatası:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Toplu satış hatası: ' + error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// Gelişmiş backup analiz endpoint
+app.get('/api/backup-analysis', async (req, res) => {
+    try {
+        console.log('🔍 Backup analizi başlatılıyor...');
+        
+        const analysis = {
+            database: {
+                size: (await fs.stat(dbPath)).size,
+                tables: {},
+                lastModified: (await fs.stat(dbPath)).mtime
+            },
+            backup_files: [],
+            schema: {},
+            integrity: {}
+        };
+        
+        // Tablo analizi
+        const tables = ['stok', 'satisGecmisi', 'musteriler', 'borclarim'];
+        for (const table of tables) {
+            const count = db.prepare(`SELECT COUNT(*) as count FROM ${table}`).get().count;
+            
+            // Her tablo için schema kontrol et
+            const schema = db.prepare(`PRAGMA table_info(${table})`).all();
+            const hasUpdatedAt = schema.some(column => column.name === 'updated_at');
+            
+            analysis.database.tables[table] = {
+                records: count,
+                columns: schema.length,
+                last_updated: hasUpdatedAt ? 
+                    db.prepare(`SELECT MAX(updated_at) as last FROM ${table} WHERE updated_at IS NOT NULL`).get()?.last || null :
+                    'N/A (no updated_at column)'
+            };
+        }
+        
+        // Backup dosyaları analizi
+        const backupDir = path.join(__dirname, 'backups');
+        if (await fs.pathExists(backupDir)) {
+            const files = await fs.readdir(backupDir);
+            
+            for (const file of files) {
+                if (file.endsWith('.json') || file.endsWith('.db') || file.endsWith('.xlsx')) {
+                    const filePath = path.join(backupDir, file);
+                    const stats = await fs.stat(filePath);
+                    
+                    analysis.backup_files.push({
+                        name: file,
+                        size: stats.size,
+                        created: stats.birthtime,
+                        modified: stats.mtime,
+                        type: path.extname(file)
+                    });
+                }
+            }
+        }
+        
+        // Schema analizi
+        const schema = db.prepare("SELECT name, sql FROM sqlite_master WHERE type='table'").all();
+        analysis.schema = schema.reduce((acc, table) => {
+            acc[table.name] = table.sql;
+            return acc;
+        }, {});
+        
+        // Veri bütünlüğü kontrolü
+        analysis.integrity = {
+            orphaned_sales: db.prepare(`
+                SELECT COUNT(*) as count 
+                FROM satisGecmisi s 
+                LEFT JOIN stok st ON s.barkod = st.barkod 
+                WHERE st.barkod IS NULL
+            `).get().count,
+            
+            duplicate_barcodes: db.prepare(`
+                SELECT COUNT(*) as count 
+                FROM (
+                    SELECT barkod, COUNT(*) 
+                    FROM stok 
+                    GROUP BY barkod 
+                    HAVING COUNT(*) > 1
+                )
+            `).get().count,
+            
+            invalid_customers: db.prepare(`
+                SELECT COUNT(*) as count 
+                FROM satisGecmisi 
+                WHERE musteriId IS NOT NULL 
+                AND musteriId NOT IN (SELECT id FROM musteriler)
+            `).get().count
+        };
+        
+        console.log('✅ Backup analizi tamamlandı');
+        
+        res.json({
+            success: true,
+            analysis: analysis,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ Backup analizi hatası:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Analiz hatası: ' + error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
 // POST /api/stok-ekle - Tek ürün ekle
 app.post('/api/stok-ekle', async (req, res) => {
     try {
@@ -1911,6 +2302,7 @@ app.get('/api/stok-varyantlar/:barkod', async (req, res) => {
 app.delete('/api/stok-sil/:id', async (req, res) => {
     try {
         const { id } = req.params;
+        const { force } = req.query; // force=true ise satışlı ürünü de sil
         console.log('🗑️ Ürün siliniyor (ID):', id);
         
         // Get product info before deletion for sync
@@ -1918,10 +2310,26 @@ app.delete('/api/stok-sil/:id', async (req, res) => {
         
         if (!productToDelete) {
             return res.status(404).json({ 
-                success: false, 
+                success: false,
                 message: 'Ürün bulunamadı',
                 timestamp: new Date().toISOString()
             });
+        }
+        
+        // Satış kontrolü - eğer ürün satılmışsa uyar
+        if (!force) {
+            const salesCount = db.prepare('SELECT COUNT(*) as count FROM satisGecmisi WHERE barkod = ?').get(productToDelete.barkod).count;
+            
+            if (salesCount > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Bu ürün daha önce ${salesCount} kez satılmış. Silmek için force=true parametresi ekleyin veya ürünü iade işlemi yapın.`,
+                    barkod: productToDelete.barkod,
+                    salesCount: salesCount,
+                    canDelete: false,
+                    timestamp: new Date().toISOString()
+                });
+            }
         }
         
         const result = db.prepare('DELETE FROM stok WHERE id = ?').run(id);
@@ -1962,6 +2370,7 @@ app.delete('/api/stok-sil/:id', async (req, res) => {
 app.delete('/api/stok-sil-barkod/:barkod', async (req, res) => {
     try {
         const { barkod } = req.params;
+        const { force } = req.query; // force=true ise satışlı ürünü de sil
         console.log('🗑️ Ürün siliniyor (Barkod):', barkod);
         
         // Get products with this barcode before deletion
@@ -1969,10 +2378,26 @@ app.delete('/api/stok-sil-barkod/:barkod', async (req, res) => {
         
         if (productsToDelete.length === 0) {
             return res.status(404).json({ 
-                success: false, 
+                success: false,
                 message: 'Ürün bulunamadı',
                 timestamp: new Date().toISOString()
             });
+        }
+        
+        // Satış kontrolü - eğer ürün satılmışsa uyar
+        if (!force) {
+            const salesCount = db.prepare('SELECT COUNT(*) as count FROM satisGecmisi WHERE barkod = ?').get(barkod).count;
+            
+            if (salesCount > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Bu ürün daha önce ${salesCount} kez satılmış. Silmek için force=true parametresi ekleyin veya ürünü iade işlemi yapın.`,
+                    barkod: barkod,
+                    salesCount: salesCount,
+                    canDelete: false,
+                    timestamp: new Date().toISOString()
+                });
+            }
         }
         
         const result = db.prepare('DELETE FROM stok WHERE barkod = ?').run(barkod);
@@ -2303,15 +2728,29 @@ app.post('/api/satis-iade', async (req, res) => {
             });
         }
         
-        // Satışı veritabanından sil
-        const deleteResult = db.prepare('DELETE FROM satisGecmisi WHERE id = ?').run(satisId);
+        // Önce satışı kontrol et
+        const existingSale = db.prepare('SELECT * FROM satisGecmisi WHERE id = ? OR barkod = ?').get(satisId, barkod);
         
-        if (deleteResult.changes === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Satış bulunamadı',
-                timestamp: new Date().toISOString()
-            });
+        if (!existingSale) {
+            // Eğer satış ID ile bulunamadıysa, barkoda göre en son satışı bul
+            const latestSaleByBarcode = db.prepare('SELECT * FROM satisGecmisi WHERE barkod = ? ORDER BY id DESC LIMIT 1').get(barkod);
+            
+            if (!latestSaleByBarcode) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Bu ürün için satış kaydı bulunamadı',
+                    barkod: barkod,
+                    timestamp: new Date().toISOString()
+                });
+            }
+            
+            // En son satışı kullan
+            const deleteResult = db.prepare('DELETE FROM satisGecmisi WHERE id = ?').run(latestSaleByBarcode.id);
+            console.log(`✅ Barkod ${barkod} için en son satış (ID: ${latestSaleByBarcode.id}) iade edildi`);
+        } else {
+            // Satışı veritabanından sil
+            const deleteResult = db.prepare('DELETE FROM satisGecmisi WHERE id = ?').run(existingSale.id);
+            console.log(`✅ Satış ID ${existingSale.id} iade edildi`);
         }
         
         // Stok güncellemesi

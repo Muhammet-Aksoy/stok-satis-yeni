@@ -1859,10 +1859,7 @@
             transform: rotate(-45deg) translate(6px, -6px);
         }
         
-        .menu-text {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            letter-spacing: 0.5px;
-        }
+
         
         /* Responsive menü butonu */
         @media (max-width: 768px) {
@@ -1874,9 +1871,7 @@
                 font-size: 13px;
             }
             
-            .menu-text {
-                display: none;
-            }
+
             
             .hamburger-icon {
                 width: 18px;
@@ -1943,7 +1938,7 @@
             <span></span>
             <span></span>
         </div>
-        <span class="menu-text">Menü</span>
+
     </button>
     
     <!-- Ana Menü Dropdown - Sadeleştirilmiş -->
@@ -1953,6 +1948,15 @@
             <span>Veri Yönetimi</span>
         </div>
         
+        <div class="menu-item" onclick="openCategoryModal()">
+            <i class="fas fa-tags"></i>
+            <span>Kategori Yönetimi</span>
+        </div>
+        
+        <div class="menu-item" onclick="openBulkSaleModal()">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Toplu Satış</span>
+        </div>
         
         <div class="menu-item" onclick="openQRConnection()">
             <i class="fas fa-qrcode"></i>
@@ -2626,6 +2630,12 @@
                     </button>
                     <button class="btn btn-info" onclick="manuelYedekleme()" style="margin-left: 10px;">
                         <i class="fas fa-save"></i> Manuel Yedekleme
+                    </button>
+                    <button class="btn btn-success" onclick="excelExport()" style="margin-left: 10px;">
+                        <i class="fas fa-file-excel"></i> Excel Export
+                    </button>
+                    <button class="btn btn-warning" onclick="backupAnalysis()" style="margin-left: 10px;">
+                        <i class="fas fa-chart-line"></i> Backup Analizi
                     </button>
                 </div>
                 
@@ -3916,44 +3926,511 @@
                     <div style="text-align:left;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                         <div>
                             <div style="font-size:12px;color:#666;">Ürün Adı</div>
-                            <div style="font-weight:600;">${urunAdi}</div>
+                            <div style="font-weight:600;display:flex;align-items:center;gap:8px;">
+                                ${urunAdi}
+                                <button onclick="copyText('${urunAdi}')" style="background:none;border:none;color:#007bff;cursor:pointer;" title="Kopyala">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <div style="font-size:12px;color:#666;">Barkod</div>
-                            <div style="font-weight:600;">${product.barkod || '-'}</div>
+                            <div style="font-weight:600;display:flex;align-items:center;gap:8px;">
+                                ${product.barkod || '-'}
+                                <button onclick="copyText('${product.barkod || ''}')" style="background:none;border:none;color:#007bff;cursor:pointer;" title="Kopyala">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <div style="font-size:12px;color:#666;">Marka</div>
-                            <div style="font-weight:600;">${marka || '-'}</div>
+                            <div style="font-weight:600;display:flex;align-items:center;gap:8px;">
+                                ${marka || '-'}
+                                <button onclick="copyText('${marka || ''}')" style="background:none;border:none;color:#007bff;cursor:pointer;" title="Kopyala">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <div style="font-size:12px;color:#666;">Kategori</div>
-                            <div style="font-weight:600;">${kategori || '-'}</div>
+                            <div style="font-weight:600;display:flex;align-items:center;gap:8px;">
+                                ${kategori || '-'}
+                                <button onclick="copyText('${kategori || ''}')" style="background:none;border:none;color:#007bff;cursor:pointer;" title="Kopyala">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <div style="font-size:12px;color:#666;">Stok</div>
-                            <div style="font-weight:600;">${miktar}</div>
+                            <div style="font-weight:600;display:flex;align-items:center;gap:8px;">
+                                ${miktar}
+                                <button onclick="copyText('${miktar}')" style="background:none;border:none;color:#007bff;cursor:pointer;" title="Kopyala">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <div style="font-size:12px;color:#666;">Alış / Satış</div>
-                            <div style="font-weight:600;">${alis.toFixed(2)} ₺ / ${satis.toFixed(2)} ₺</div>
+                            <div style="font-weight:600;display:flex;align-items:center;gap:8px;">
+                                ${alis.toFixed(2)} ₺ / ${satis.toFixed(2)} ₺
+                                <button onclick="copyText('${alis.toFixed(2)} ₺ / ${satis.toFixed(2)} ₺')" style="background:none;border:none;color:#007bff;cursor:pointer;" title="Kopyala">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
                         </div>
                         <div style="grid-column:1 / -1;">
                             <div style="font-size:12px;color:#666;">Açıklama</div>
-                            <div style="font-weight:600;white-space:pre-wrap;">${aciklama || '-'}</div>
+                            <div style="font-weight:600;display:flex;align-items:center;gap:8px;white-space:pre-wrap;">
+                                ${aciklama || '-'}
+                                <button onclick="copyText('${(aciklama || '').replace(/'/g, "\\'")}')" style="background:none;border:none;color:#007bff;cursor:pointer;" title="Kopyala">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <div style="font-size:12px;color:#666;">Eklenme</div>
-                            <div style="font-weight:600;">${eklenme ? new Date(eklenme).toLocaleString('tr-TR') : '-'}</div>
+                            <div style="font-weight:600;display:flex;align-items:center;gap:8px;">
+                                ${eklenme ? new Date(eklenme).toLocaleString('tr-TR') : '-'}
+                                <button onclick="copyText('${eklenme ? new Date(eklenme).toLocaleString('tr-TR') : ''}')" style="background:none;border:none;color:#007bff;cursor:pointer;" title="Kopyala">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <div style="font-size:12px;color:#666;">Güncelleme</div>
-                            <div style="font-weight:600;">${guncelleme ? new Date(guncelleme).toLocaleString('tr-TR') : '-'}</div>
+                            <div style="font-weight:600;display:flex;align-items:center;gap:8px;">
+                                ${guncelleme ? new Date(guncelleme).toLocaleString('tr-TR') : '-'}
+                                <button onclick="copyText('${guncelleme ? new Date(guncelleme).toLocaleString('tr-TR') : ''}')" style="background:none;border:none;color:#007bff;cursor:pointer;" title="Kopyala">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div style="grid-column:1 / -1;text-align:center;margin-top:10px;">
+                            <button onclick="copyAllProductData('${JSON.stringify(product).replace(/'/g, "\\'")}', '${urunAdi}')" style="background:#28a745;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;" title="Tüm Ürün Bilgilerini Kopyala">
+                                <i class="fas fa-copy"></i> Tüm Bilgileri Kopyala
+                            </button>
                         </div>
                     </div>
                 `,
                 confirmButtonText: 'Kapat'
             });
+        }
+
+        // Metni kopyala
+        function copyText(text) {
+            if (!text) {
+                showNotification('Kopyalanacak metin bulunamadı', 'warning');
+                return;
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('📋 Kopyalandı: ' + text.substring(0, 30) + (text.length > 30 ? '...' : ''), 'success');
+            }).catch(err => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showNotification('📋 Kopyalandı: ' + text.substring(0, 30) + (text.length > 30 ? '...' : ''), 'success');
+            });
+        }
+
+        // Tüm ürün bilgilerini kopyala
+        function copyAllProductData(productJson, productName) {
+            try {
+                const product = JSON.parse(productJson);
+                const formattedData = `
+ÜRÜN BİLGİLERİ
+==============
+Ürün Adı: ${product.urun_adi || product.ad || productName || 'N/A'}
+Barkod: ${product.barkod || 'N/A'}
+Marka: ${product.marka || 'N/A'}
+Kategori: ${product.kategori || 'N/A'}
+Stok Miktarı: ${product.stok_miktari || product.miktar || 0}
+Alış Fiyatı: ${parseFloat(product.alisFiyati || 0).toFixed(2)} ₺
+Satış Fiyatı: ${parseFloat(product.satisFiyati || product.fiyat || 0).toFixed(2)} ₺
+Açıklama: ${product.aciklama || 'N/A'}
+Eklenme Tarihi: ${product.created_at ? new Date(product.created_at).toLocaleString('tr-TR') : 'N/A'}
+Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocaleString('tr-TR') : 'N/A'}
+Ürün ID: ${product.urun_id || product.id || 'N/A'}
+                `.trim();
+                
+                copyText(formattedData);
+            } catch (error) {
+                showNotification('❌ Ürün bilgileri kopyalanamadı', 'error');
+                console.error('Copy error:', error);
+            }
+        }
+
+        // Kategori modal'ını aç
+        function openCategoryModal() {
+            document.getElementById('mainMenuDropdown').classList.remove('show');
+            
+            Swal.fire({
+                title: '🏷️ Kategori Yönetimi',
+                html: `
+                    <div style="text-align: left;">
+                        <div style="margin-bottom: 20px;">
+                            <h4>Otomatik Kategorizasyon</h4>
+                            <p>Ürün adlarına göre otomatik kategori atama:</p>
+                            <button class="btn btn-primary" onclick="autoCategorizeProducts()">
+                                <i class="fas fa-magic"></i> Otomatik Kategorize Et
+                            </button>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <h4>Kategoriye Göre Filtrele</h4>
+                            <select id="categoryFilter" onchange="filterByCategory(this.value)">
+                                <option value="">Tüm Kategoriler</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <h4>Özel Kategori Ekleme</h4>
+                            <input type="text" id="customKeyword" placeholder="Ürün adında aranacak kelime" style="width: 100%; margin-bottom: 10px;">
+                            <input type="text" id="customCategory" placeholder="Kategori adı" style="width: 100%; margin-bottom: 10px;">
+                            <button class="btn btn-success" onclick="addCustomCategory()">
+                                <i class="fas fa-plus"></i> Kategori Ekle
+                            </button>
+                        </div>
+                    </div>
+                `,
+                width: 500,
+                showConfirmButton: false,
+                showCloseButton: true,
+                didOpen: () => {
+                    loadCategoryFilter();
+                }
+            });
+        }
+
+        // Toplu satış modal'ını aç
+        function openBulkSaleModal() {
+            document.getElementById('mainMenuDropdown').classList.remove('show');
+            
+            Swal.fire({
+                title: '🛒 Toplu Satış',
+                html: `
+                    <div style="text-align: left;">
+                        <div style="margin-bottom: 15px;">
+                            <h4>Satış Sepeti</h4>
+                            <div id="bulkSaleCart" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px;">
+                                <p style="text-align: center; color: #666;">Sepet boş</p>
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <input type="text" id="bulkSaleBarkod" placeholder="Barkod" style="flex: 2;">
+                                <input type="number" id="bulkSaleMiktar" placeholder="Miktar" min="1" value="1" style="flex: 1;">
+                                <input type="number" id="bulkSaleFiyat" placeholder="Fiyat" step="0.01" style="flex: 1;">
+                                <button class="btn btn-sm btn-primary" onclick="addToBulkCart()">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <h4>Müşteri Bilgileri (Opsiyonel)</h4>
+                            <select id="bulkSaleCustomer" style="width: 100%;">
+                                <option value="">Müşteri Seçin</option>
+                            </select>
+                        </div>
+                        
+                        <div style="text-align: center;">
+                            <div id="bulkSaleTotal" style="font-size: 18px; font-weight: bold; margin-bottom: 15px;">
+                                Toplam: 0.00 ₺
+                            </div>
+                            <button class="btn btn-success" onclick="completeBulkSale()" id="completeBulkSaleBtn" disabled>
+                                <i class="fas fa-check"></i> Satışı Tamamla
+                            </button>
+                            <button class="btn btn-danger" onclick="clearBulkCart()" style="margin-left: 10px;">
+                                <i class="fas fa-trash"></i> Sepeti Temizle
+                            </button>
+                        </div>
+                    </div>
+                `,
+                width: 600,
+                showConfirmButton: false,
+                showCloseButton: true,
+                didOpen: () => {
+                    loadCustomersForBulkSale();
+                }
+            });
+        }
+
+        // Kategori filtresini yükle
+        async function loadCategoryFilter() {
+            try {
+                const response = await fetch(`${API_BASE}/api/categories`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const select = document.getElementById('categoryFilter');
+                    result.categories.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat.kategori;
+                        option.textContent = `${cat.kategori} (${cat.count})`;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Kategori yükleme hatası:', error);
+            }
+        }
+
+        // Otomatik kategorizasyon
+        async function autoCategorizeProducts() {
+            try {
+                const categoryMappings = {
+                    'amortisör': 'Amortisör',
+                    'amortisor': 'Amortisör',
+                    'fren': 'Fren Sistemi',
+                    'balata': 'Fren Sistemi',
+                    'disk': 'Fren Sistemi',
+                    'far': 'Kaporta',
+                    'stop': 'Kaporta',
+                    'ayna': 'Kaporta',
+                    'panjur': 'Kaporta',
+                    'tampon': 'Kaporta',
+                    'motor': 'Motor Parçaları',
+                    'yağ': 'Motor Parçaları',
+                    'filtre': 'Motor Parçaları',
+                    'krank': 'Motor Parçaları',
+                    'gömlek': 'Motor Parçaları'
+                };
+
+                showNotification('🔄 Otomatik kategorizasyon başlatılıyor...', 'info');
+                
+                const response = await fetch(`${API_BASE}/api/categorize-products`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ categoryMappings })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(`✅ ${result.updatedCount} ürün kategorize edildi!`, 'success');
+                    stokListesiniGetir(); // Listeyi yenile
+                } else {
+                    showNotification('❌ Kategorizasyon başarısız: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showNotification('❌ Kategorizasyon hatası: ' + error.message, 'error');
+            }
+        }
+
+        // Kategoriye göre filtrele
+        function filterByCategory(category) {
+            if (!category) {
+                stokTablosunuGuncelle(); // Tüm ürünleri göster
+                return;
+            }
+            
+            const filteredProducts = Object.entries(stokListesi).filter(([key, product]) => 
+                product.kategori === category
+            );
+            
+            // Geçici olarak filtrelenmiş listeyi göster
+            const originalList = { ...stokListesi };
+            stokListesi = Object.fromEntries(filteredProducts);
+            stokTablosunuGuncelle();
+            stokListesi = originalList; // Orijinal listeyi geri yükle
+        }
+
+        // Özel kategori ekle
+        async function addCustomCategory() {
+            const keyword = document.getElementById('customKeyword').value.trim();
+            const category = document.getElementById('customCategory').value.trim();
+            
+            if (!keyword || !category) {
+                showNotification('❌ Kelime ve kategori adı gerekli', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/categorize-products`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ categoryMappings: { [keyword]: category } })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(`✅ "${keyword}" kelimesi için "${category}" kategorisi eklendi (${result.updatedCount} ürün)`, 'success');
+                    document.getElementById('customKeyword').value = '';
+                    document.getElementById('customCategory').value = '';
+                    stokListesiniGetir(); // Listeyi yenile
+                } else {
+                    showNotification('❌ Kategori ekleme başarısız: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showNotification('❌ Kategori ekleme hatası: ' + error.message, 'error');
+            }
+        }
+
+        // Toplu satış sepeti
+        let bulkSaleCart = [];
+
+        // Müşterileri toplu satış için yükle
+        async function loadCustomersForBulkSale() {
+            try {
+                const response = await fetch(`${API_BASE}/api/musteri-kontrol`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    const select = document.getElementById('bulkSaleCustomer');
+                    result.data.forEach(customer => {
+                        const option = document.createElement('option');
+                        option.value = customer.id;
+                        option.textContent = customer.ad;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Müşteri yükleme hatası:', error);
+            }
+        }
+
+        // Toplu satış sepetine ürün ekle
+        function addToBulkCart() {
+            const barkod = document.getElementById('bulkSaleBarkod').value.trim();
+            const miktar = parseInt(document.getElementById('bulkSaleMiktar').value) || 1;
+            const fiyat = parseFloat(document.getElementById('bulkSaleFiyat').value) || 0;
+            
+            if (!barkod) {
+                showNotification('❌ Barkod gerekli', 'error');
+                return;
+            }
+            
+            // Ürünü stokta kontrol et
+            const product = Object.values(stokListesi).find(p => p.barkod === barkod);
+            if (!product) {
+                showNotification('❌ Ürün bulunamadı', 'error');
+                return;
+            }
+            
+            if (product.miktar < miktar) {
+                showNotification(`❌ Yetersiz stok (Mevcut: ${product.miktar})`, 'error');
+                return;
+            }
+            
+            // Sepete ekle
+            const existingIndex = bulkSaleCart.findIndex(item => item.barkod === barkod);
+            if (existingIndex >= 0) {
+                bulkSaleCart[existingIndex].miktar += miktar;
+                bulkSaleCart[existingIndex].fiyat = fiyat || bulkSaleCart[existingIndex].fiyat;
+            } else {
+                bulkSaleCart.push({
+                    barkod: barkod,
+                    urunAdi: product.ad || product.urun_adi,
+                    miktar: miktar,
+                    fiyat: fiyat || product.satisFiyati || 0,
+                    alisFiyati: product.alisFiyati
+                });
+            }
+            
+            // Formu temizle
+            document.getElementById('bulkSaleBarkod').value = '';
+            document.getElementById('bulkSaleMiktar').value = '1';
+            document.getElementById('bulkSaleFiyat').value = '';
+            
+            updateBulkSaleCart();
+        }
+
+        // Toplu satış sepetini güncelle
+        function updateBulkSaleCart() {
+            const cartDiv = document.getElementById('bulkSaleCart');
+            const totalDiv = document.getElementById('bulkSaleTotal');
+            const completeBtn = document.getElementById('completeBulkSaleBtn');
+            
+            if (bulkSaleCart.length === 0) {
+                cartDiv.innerHTML = '<p style="text-align: center; color: #666;">Sepet boş</p>';
+                totalDiv.textContent = 'Toplam: 0.00 ₺';
+                completeBtn.disabled = true;
+                return;
+            }
+            
+            let total = 0;
+            let html = '';
+            
+            bulkSaleCart.forEach((item, index) => {
+                const itemTotal = item.fiyat * item.miktar;
+                total += itemTotal;
+                
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 1px solid #eee;">
+                        <div style="flex: 1;">
+                            <strong>${item.urunAdi}</strong><br>
+                            <small>${item.barkod} - ${item.miktar}x ${item.fiyat.toFixed(2)}₺</small>
+                        </div>
+                        <div>
+                            <strong>${itemTotal.toFixed(2)}₺</strong>
+                            <button onclick="removeFromBulkCart(${index})" style="background: none; border: none; color: red; margin-left: 10px;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            cartDiv.innerHTML = html;
+            totalDiv.textContent = `Toplam: ${total.toFixed(2)} ₺`;
+            completeBtn.disabled = false;
+        }
+
+        // Sepetten ürün çıkar
+        function removeFromBulkCart(index) {
+            bulkSaleCart.splice(index, 1);
+            updateBulkSaleCart();
+        }
+
+        // Sepeti temizle
+        function clearBulkCart() {
+            bulkSaleCart = [];
+            updateBulkSaleCart();
+        }
+
+        // Toplu satışı tamamla
+        async function completeBulkSale() {
+            if (bulkSaleCart.length === 0) {
+                showNotification('❌ Sepet boş', 'error');
+                return;
+            }
+            
+            try {
+                const customerSelect = document.getElementById('bulkSaleCustomer');
+                const musteriId = customerSelect.value;
+                const musteriAdi = customerSelect.selectedOptions[0]?.textContent;
+                
+                showNotification('🔄 Toplu satış işleniyor...', 'info');
+                
+                const response = await fetch(`${API_BASE}/api/satis-toplu`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        items: bulkSaleCart,
+                        musteriId: musteriId || null,
+                        musteriAdi: musteriAdi || null
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(`✅ ${result.itemCount} ürün başarıyla satıldı! Toplam: ${result.totalAmount.toFixed(2)}₺`, 'success');
+                    bulkSaleCart = [];
+                    updateBulkSaleCart();
+                    stokListesiniGetir(); // Stok listesini yenile
+                    satisGecmisiniGetir(); // Satış geçmişini yenile
+                    Swal.close();
+                } else {
+                    showNotification('❌ Toplu satış başarısız: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showNotification('❌ Toplu satış hatası: ' + error.message, 'error');
+            }
         }
         
         // Satış geçmişini güncelle
@@ -7087,6 +7564,150 @@
             } catch (error) {
                 console.error('Manuel yedekleme hatası:', error);
                 showNotification('❌ Manuel yedekleme hatası: ' + error.message, 'error');
+            }
+        }
+
+        // Excel Export
+        async function excelExport() {
+            try {
+                const { value: selectedTables } = await Swal.fire({
+                    title: '📊 Excel Export',
+                    html: `
+                        <div style="text-align: left;">
+                            <p>Hangi tabloları export etmek istiyorsunuz?</p>
+                            <label><input type="checkbox" id="table-stok" checked> Stok</label><br>
+                            <label><input type="checkbox" id="table-sales" checked> Satış Geçmişi</label><br>
+                            <label><input type="checkbox" id="table-customers" checked> Müşteriler</label><br>
+                            <label><input type="checkbox" id="table-debts" checked> Borçlarım</label>
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Export Et',
+                    cancelButtonText: 'İptal',
+                    preConfirm: () => {
+                        const tables = [];
+                        if (document.getElementById('table-stok').checked) tables.push('stok');
+                        if (document.getElementById('table-sales').checked) tables.push('satisGecmisi');
+                        if (document.getElementById('table-customers').checked) tables.push('musteriler');
+                        if (document.getElementById('table-debts').checked) tables.push('borclarim');
+                        return tables;
+                    }
+                });
+
+                if (!selectedTables) return;
+
+                showNotification('📊 Excel export başlatılıyor...', 'info');
+                
+                const response = await fetch(`${API_BASE}/api/export-excel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ tables: selectedTables })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification('✅ Excel export başarıyla tamamlandı!', 'success');
+                    
+                    // Download linkini göster
+                    Swal.fire({
+                        title: '✅ Export Tamamlandı',
+                        html: `
+                            <p>Dosya boyutu: ${(result.fileSize / 1024).toFixed(2)} KB</p>
+                            <a href="${API_BASE}/api/download-excel/${result.fileName}" download 
+                               class="btn btn-success">
+                                <i class="fas fa-download"></i> İndir
+                            </a>
+                        `,
+                        showConfirmButton: false,
+                        showCloseButton: true
+                    });
+                } else {
+                    showNotification('❌ Export başarısız: ' + result.error, 'error');
+                }
+                
+            } catch (error) {
+                showNotification('❌ Export hatası: ' + error.message, 'error');
+                console.error('Excel export hatası:', error);
+            }
+        }
+
+        // Backup Analizi
+        async function backupAnalysis() {
+            try {
+                showNotification('🔍 Backup analizi başlatılıyor...', 'info');
+                
+                const response = await fetch(`${API_BASE}/api/backup-analysis`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const analysis = result.analysis;
+                    
+                    let html = `
+                        <div style="text-align: left; max-height: 400px; overflow-y: auto;">
+                            <h4>📊 Veritabanı Durumu</h4>
+                            <p><strong>Dosya Boyutu:</strong> ${(analysis.database.size / 1024).toFixed(2)} KB</p>
+                            <p><strong>Son Güncelleme:</strong> ${new Date(analysis.database.lastModified).toLocaleString('tr-TR')}</p>
+                            
+                            <h4>📋 Tablo İstatistikleri</h4>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr style="background: #f0f0f0;">
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Tablo</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Kayıt</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Son Güncelleme</th>
+                                </tr>
+                    `;
+                    
+                    Object.entries(analysis.database.tables).forEach(([table, data]) => {
+                        html += `
+                            <tr>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${table}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${data.records}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${data.last_updated ? new Date(data.last_updated).toLocaleDateString('tr-TR') : 'N/A'}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `</table>`;
+                    
+                    html += `
+                        <h4>⚠️ Veri Bütünlüğü</h4>
+                        <p><strong>Orphaned Satışlar:</strong> ${analysis.integrity.orphaned_sales}</p>
+                        <p><strong>Duplicate Barkodlar:</strong> ${analysis.integrity.duplicate_barcodes}</p>
+                        <p><strong>Geçersiz Müşteri Ref:</strong> ${analysis.integrity.invalid_customers}</p>
+                        
+                        <h4>💾 Backup Dosyaları (${analysis.backup_files.length})</h4>
+                    `;
+                    
+                    analysis.backup_files.slice(0, 5).forEach(file => {
+                        html += `
+                            <p style="font-size: 12px;">
+                                📁 ${file.name} - ${(file.size / 1024).toFixed(2)} KB 
+                                (${new Date(file.created).toLocaleDateString('tr-TR')})
+                            </p>
+                        `;
+                    });
+                    
+                    html += `</div>`;
+                    
+                    Swal.fire({
+                        title: '🔍 Backup Analizi',
+                        html: html,
+                        width: 600,
+                        showCloseButton: true,
+                        showConfirmButton: false
+                    });
+                    
+                    showNotification('✅ Backup analizi tamamlandı!', 'success');
+                } else {
+                    showNotification('❌ Analiz başarısız: ' + result.error, 'error');
+                }
+                
+            } catch (error) {
+                showNotification('❌ Analiz hatası: ' + error.message, 'error');
+                console.error('Backup analizi hatası:', error);
             }
         }
         // Veri geri yükle - GELİŞTİRİLMİŞ: Senkronizasyon ile
