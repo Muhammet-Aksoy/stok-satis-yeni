@@ -12,8 +12,8 @@ function createWindow() {
     }
   });
 
-  // try.html localhost:3000'de açılacak
-  win.loadURL('http://localhost:3000');
+  // Yerel ağ erişimi için localhost yerine loopback bağımsız URL belirleyelim
+  win.loadURL(`http://127.0.0.1:3000`);
 }
 
 app.whenReady().then(() => {

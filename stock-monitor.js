@@ -3,7 +3,8 @@ const path = require('path');
 
 class StockMonitor {
     constructor() {
-        this.backupPath = path.join(__dirname, 'veriler', 'YEDEKVER?LER.json');
+        // FIX: doğru yedek dosya adı
+        this.backupPath = path.join(__dirname, 'veriler', 'tumVeriler_backup_1754133550759.json');
         this.currentPath = path.join(__dirname, 'veriler', 'tumVeriler.json');
         this.logPath = path.join(__dirname, 'veriler', 'stock-monitor.log');
     }

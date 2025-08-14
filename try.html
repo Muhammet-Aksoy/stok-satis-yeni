@@ -3825,14 +3825,24 @@
             
             if (salesArray && salesArray.length > 0) {
                 salesArray.forEach(satis => {
+                    // Toplam hesaplama - öncelik: kayıtlı toplam > hesaplanan toplam
+                    const kayitliToplam = parseFloat(satis.toplam) || 0;
+                    const hesaplananToplam = (parseFloat(satis.fiyat) || 0) * (parseInt(satis.miktar) || 0);
+                    const toplam = kayitliToplam > 0 ? kayitliToplam : hesaplananToplam;
+                    
                     if (satis.borc) {
-                        creditTotal += satis.toplam;
+                        creditTotal += toplam;
                     } else {
-                        cashTotal += satis.toplam;
+                        cashTotal += toplam;
                     }
                     
-                    if (satis.alisFiyati !== undefined && satis.fiyat !== undefined) {
-                        toplamKarZarar += (satis.fiyat - satis.alisFiyati) * satis.miktar;
+                    // Kar/zarar hesaplama
+                    const alisFiyati = parseFloat(satis.alisFiyati) || 0;
+                    const satisFiyati = parseFloat(satis.fiyat) || 0;
+                    const miktar = parseInt(satis.miktar) || 0;
+                    
+                    if (alisFiyati > 0 && satisFiyati > 0 && miktar > 0) {
+                        toplamKarZarar += (satisFiyati - alisFiyati) * miktar;
                     }
                 });
             }
@@ -4121,17 +4131,19 @@
                     let currentProductName = satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-'));
                     let barkodGoster = satis.barkod || '-';
                     
-                    // Toplam hesaplama - NaN kontrolü
+                    // Toplam hesaplama - öncelik: kayıtlı toplam > hesaplanan toplam
                     const fiyat = parseFloat(satis.fiyat) || 0;
                     const miktar = parseInt(satis.miktar) || 0;
-                    const toplam = fiyat * miktar;
+                    const kayitliToplam = parseFloat(satis.toplam) || 0;
+                    const hesaplananToplam = fiyat * miktar;
+                    const toplam = kayitliToplam > 0 ? kayitliToplam : hesaplananToplam;
                     
                     tr.innerHTML = `
                         <td>${tarihStr}</td>
                         <td>${barkodGoster}</td>
                         <td title="Orijinal: ${satis.urunAdi}">${currentProductName}</td>
                         <td>${miktar}</td>
-                        <td>${satis.alisFiyati ? parseFloat(satis.alisFiyati).toFixed(2) : '-'}</td>
+                        <td>${satis.alisFiyati && !isNaN(parseFloat(satis.alisFiyati)) ? parseFloat(satis.alisFiyati).toFixed(2) : '-'}</td>
                         <td>${fiyat.toFixed(2)}</td>
                         <td>${toplam.toFixed(2)}</td>
                         <td>${satis.borc ? '<span class="credit-indicator">Borç</span>' : 'Nakit'}</td>
@@ -4191,7 +4203,10 @@
                 if (satisGecmisi && satisGecmisi.length > 0) {
                     satisGecmisi.forEach(satis => {
                         if (satis.musteriId === id && satis.borc) {
-                            toplamBorc += satis.toplam;
+                            const satisToplam = parseFloat(satis.toplam) || 0;
+                            if (!isNaN(satisToplam) && satisToplam > 0) {
+                                toplamBorc += satisToplam;
+                            }
                         }
                     });
                 }
@@ -4200,12 +4215,18 @@
                 let satinAlinanUrunler = [];
                 
                 if (satisGecmisi && satisGecmisi.length > 0) {
+                    const productMap = new Map();
                     satisGecmisi.forEach(satis => {
                         if (satis.musteriId === id) {
-                            // Get current product name from sales record or stock
-                            let currentProductName = satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-'));
-                            satinAlinanUrunler.push(`${currentProductName} (${satis.miktar} adet)`);
+                            const currentProductName = satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-'));
+                            const key = `${satis.barkod}__${currentProductName}`;
+                            const prev = productMap.get(key) || 0;
+                            productMap.set(key, prev + (parseInt(satis.miktar) || 0));
                         }
+                    });
+                    satinAlinanUrunler = Array.from(productMap.entries()).map(([key, qty]) => {
+                        const name = key.split('__')[1];
+                        return `${name} (${qty} adet)`;
                     });
                 }
                 
@@ -4398,17 +4419,13 @@
                         </div>
                         <div class="form-group">
                             <label for="satisFiyati">Satış Fiyatı (₺)</label>
-                            <input type="number" id="satisFiyati" class="form-control" min="0" step="0.01" value="${onerilenFiyat}" placeholder="Fiyat giriniz">
+                            <input type="number" id="satisFiyati" class="form-control" min="0" step="0.01" placeholder="Fiyat giriniz">
                             <small style="color: #666;">
                                 Alış fiyatı: ${alisFiyati.toFixed(2)} ₺ | 
                                 Önerilen fiyat: ${onerilenFiyat} ₺ (%20 kar marjı)
                             </small>
                         </div>
-                        <div class="form-group">
-                            <label for="otomatikFiyat">
-                                <input type="checkbox" id="otomatikFiyat" checked> Otomatik fiyat hesaplama kullan
-                            </label>
-                        </div>
+                        <!-- Otomatik fiyat kaldırıldı: kullanıcı girişi zorunlu -->
                         <div id="customer-selection" style="margin-top: 10px;">
                             <label>Müşteri Seçin</label>
                             <div style="display: flex; gap: 10px;">
@@ -4419,6 +4436,11 @@
                                     <i class="fas fa-plus"></i> Yeni Müşteri Ekle
                                 </button>
                             </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 10px;">
+                            <label>
+                                <input type="checkbox" id="borcSatis"> Borçlu satış (müşteri hesabına yaz)
+                            </label>
                         </div>
                     </div>
                 `,
@@ -4438,43 +4460,32 @@
                         saleCustomer.appendChild(option);
                     }
                     
-                    // Otomatik fiyat hesaplama kontrolü
-                    const otomatikFiyatCheckbox = document.getElementById('otomatikFiyat');
-                    const satisFiyatiInput = document.getElementById('satisFiyati');
-                    
-                    otomatikFiyatCheckbox.addEventListener('change', function() {
-                        if (this.checked) {
-                            satisFiyatiInput.value = onerilenFiyat;
-                        } else {
-                            satisFiyatiInput.value = '';
-                            satisFiyatiInput.placeholder = 'Fiyat giriniz';
-                        }
-                    });
+                    // Otomatik fiyat kaldırıldı
                 }
             }).then(async result => {
                 if (result.isConfirmed) {
                     const satisMiktari = parseInt(document.getElementById('satisMiktari').value) || 1;
                     let satisFiyati = parseFloat(document.getElementById('satisFiyati').value);
                     const customerId = document.getElementById('sale-customer').value || null;
-                    const otomatikFiyatKullan = document.getElementById('otomatikFiyat').checked;
+                    const isDebtSale = document.getElementById('borcSatis').checked;
                     
                     if (satisMiktari <= 0) {
                         Swal.fire('Hata', 'Satış miktarı 1 veya daha büyük olmalıdır.', 'error');
                         return;
                     }
                     
-                    // Otomatik fiyat hesaplama
-                    if (otomatikFiyatKullan || isNaN(satisFiyati) || satisFiyati <= 0) {
-                        satisFiyati = onerilenFiyat;
+                    if (isNaN(satisFiyati) || satisFiyati <= 0) {
+                        Swal.fire('Uyarı', 'Geçerli bir satış fiyatı giriniz.', 'warning');
+                        return;
                     }
                     
-                    await tamamlaSatis(key, satisMiktari, customerId, null, satisFiyati);
+                    await tamamlaSatis(key, satisMiktari, customerId, null, satisFiyati, isDebtSale);
                 }
             });
         }
         
         // Satışı tamamla
-        async function tamamlaSatis(key, miktar, musteriId, aciklama, satisFiyati) {
+        async function tamamlaSatis(key, miktar, musteriId, aciklama, satisFiyati, borc = false) {
             const urun = stokListesi[key];
             
             // Fiyat ve miktar kontrolü
@@ -4509,7 +4520,7 @@
                 fiyat: fiyat,
                 alisFiyati: parseFloat(urun.alisFiyati) || 0,
                 toplam: toplam,
-                borc: false,
+                borc: !!borc,
                 musteriId: musteriId,
                 aciklama: aciklama,
                 odemeTarihi: null // Borç ödeme tarihi - null olarak başlat

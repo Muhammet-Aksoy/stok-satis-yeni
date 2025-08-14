@@ -57,7 +57,8 @@ try {
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(express.static('.'));
+// Statik dosyalar: index ve istemci için tüm cihazlara servis
+app.use(express.static(path.join(__dirname)));
 
 // Ana sayfa yönlendirmesi
 app.get('/', (req, res) => {
@@ -159,6 +160,23 @@ function initializeDatabase() {
             console.log('✅ Database indexes created for faster queries');
         } catch (error) {
             console.warn('⚠️ Index creation error:', error.message);
+        }
+
+        // Schema migration: ensure satisGecmisi has borc, toplam, alisFiyati columns
+        try {
+            const satisCols = db.prepare("PRAGMA table_info(satisGecmisi)").all();
+            const colNames = new Set(satisCols.map(c => c.name));
+            if (!colNames.has('borc')) {
+                db.exec("ALTER TABLE satisGecmisi ADD COLUMN borc INTEGER DEFAULT 0");
+            }
+            if (!colNames.has('toplam')) {
+                db.exec("ALTER TABLE satisGecmisi ADD COLUMN toplam REAL DEFAULT 0");
+            }
+            if (!colNames.has('alisFiyati')) {
+                db.exec("ALTER TABLE satisGecmisi ADD COLUMN alisFiyati REAL DEFAULT 0");
+            }
+        } catch (error) {
+            console.warn('⚠️ Schema migration warning (satisGecmisi):', error.message);
         }
         
         // Update existing products to have urun_id if missing
@@ -431,35 +449,43 @@ io.on('connection', (socket) => {
                         
                     case 'stok-add':
                     case 'stok-update':
-                        // Stok güncelleme
+                        // Stok güncelleme - FIX: varyantlar barkod bazında ezilmesin
                         const stokData = data.data;
-                        const existingStok = db.prepare('SELECT * FROM stok WHERE barkod = ?').get(stokData.barkod);
-                        
-                        if (existingStok) {
-                            // Güncelle
+                        const targetId = stokData.id || stokData.urun_id || null;
+                        let targetProduct = null;
+                        if (targetId) {
+                            targetProduct = db.prepare('SELECT * FROM stok WHERE id = ? OR urun_id = ?').get(targetId, targetId);
+                        }
+                        if (!targetProduct) {
+                            // Try composite match
+                            targetProduct = db.prepare('SELECT * FROM stok WHERE barkod = ? AND (marka = ? OR (? IS NULL AND marka IS NULL)) AND (varyant_id = ? OR (? IS NULL AND varyant_id IS NULL))')
+                                .get(stokData.barkod, stokData.marka || null, stokData.marka || null, stokData.varyant_id || null, stokData.varyant_id || null);
+                        }
+                        if (targetProduct) {
                             db.prepare(`
                                 UPDATE stok SET 
                                     ad = ?, marka = ?, miktar = ?, alisFiyati = ?, 
                                     satisFiyati = ?, kategori = ?, aciklama = ?, 
                                     varyant_id = ?, updated_at = CURRENT_TIMESTAMP
-                                WHERE barkod = ?
+                                WHERE id = ?
                             `).run(
                                 stokData.urun_adi || stokData.ad,
-                                stokData.marka,
-                                stokData.stok_miktari || stokData.miktar,
-                                stokData.alisFiyati,
-                                stokData.fiyat || stokData.satisFiyati,
-                                stokData.kategori,
-                                stokData.aciklama || '',
-                                stokData.varyant_id || '',
-                                stokData.barkod
+                                stokData.marka || targetProduct.marka || '',
+                                stokData.stok_miktari || stokData.miktar || targetProduct.miktar || 0,
+                                stokData.alisFiyati ?? targetProduct.alisFiyati ?? 0,
+                                (stokData.fiyat ?? stokData.satisFiyati) ?? targetProduct.satisFiyati ?? 0,
+                                stokData.kategori ?? targetProduct.kategori ?? '',
+                                stokData.aciklama ?? targetProduct.aciklama ?? '',
+                                stokData.varyant_id ?? targetProduct.varyant_id ?? '',
+                                targetProduct.id
                             );
                         } else {
                             // Yeni ekle
                             db.prepare(`
-                                INSERT INTO stok (barkod, ad, marka, miktar, alisFiyati, satisFiyati, kategori, aciklama, varyant_id)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                INSERT INTO stok (urun_id, barkod, ad, marka, miktar, alisFiyati, satisFiyati, kategori, aciklama, varyant_id)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                             `).run(
+                                generateUrunId(),
                                 stokData.barkod,
                                 stokData.urun_adi || stokData.ad,
                                 stokData.marka || '',
@@ -1944,7 +1970,21 @@ app.post('/api/satis-ekle', async (req, res) => {
         // Transaction ile güvenli işlem
         const result = db.transaction(() => {
             // 1. Stok kontrolü ve güncelleme
-            const stokUrunu = db.prepare('SELECT * FROM stok WHERE barkod = ?').get(satis.barkod);
+            // FIX: doğru varyantı seçmek için marka/varyant_id ve/veya id ile eşleştir
+            let stokUrunu = null;
+            if (satis.id) {
+                stokUrunu = db.prepare('SELECT * FROM stok WHERE id = ?').get(satis.id);
+            }
+            if (!stokUrunu) {
+                stokUrunu = db.prepare('SELECT * FROM stok WHERE barkod = ? AND (marka = ? OR (? IS NULL AND marka IS NULL)) AND (varyant_id = ? OR (? IS NULL AND varyant_id IS NULL))')
+                    .get(
+                        satis.barkod,
+                        satis.marka || null,
+                        satis.marka || null,
+                        satis.varyant_id || null,
+                        satis.varyant_id || null
+                    );
+            }
             
             if (!stokUrunu) {
                 throw new Error('Ürün bulunamadı');
@@ -1956,7 +1996,7 @@ app.post('/api/satis-ekle', async (req, res) => {
             
             // Stok miktarını güncelle
             const yeniMiktar = stokUrunu.miktar - satis.miktar;
-            db.prepare('UPDATE stok SET miktar = ?, updated_at = CURRENT_TIMESTAMP WHERE barkod = ?').run(yeniMiktar, satis.barkod);
+            db.prepare('UPDATE stok SET miktar = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(yeniMiktar, stokUrunu.id);
             
             // 2. Duplicate satış kontrolü
             const existingSale = db.prepare(`
@@ -1975,14 +2015,20 @@ app.post('/api/satis-ekle', async (req, res) => {
             }
             
             // 3. Satışı ekle
+            const toplam = (parseFloat(satis.fiyat) || 0) * (parseInt(satis.miktar) || 0);
+            const alisFiyati = parseFloat(satis.alisFiyati ?? stokUrunu.alisFiyati ?? 0) || 0;
+            const borc = satis.borc ? 1 : 0;
             const satisResult = db.prepare(`
-                INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, tarih, musteriId, musteriAdi)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, alisFiyati, toplam, borc, tarih, musteriId, musteriAdi)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).run(
                 satis.barkod,
                 satis.urunAdi || stokUrunu.ad,
                 satis.miktar,
                 satis.fiyat,
+                alisFiyati,
+                toplam,
+                borc,
                 satis.tarih,
                 satis.musteriId || '',
                 satis.musteriAdi || ''
@@ -4408,8 +4454,8 @@ app.post('/api/yedek-yukle-veriler-json', async (req, res) => {
 
 
 
-// Server startup
-server.listen(PORT, '0.0.0.0', () => {
+// Server startup (disabled duplicate listener - consolidated earlier)
+/* server.listen(PORT, '0.0.0.0', () => {
     console.log('🚀 StokV1 Server running on port', PORT);
     console.log('📱 Local: http://localhost:' + PORT);
     console.log('🌐 Network: http://0.0.0.0:' + PORT);
@@ -4430,7 +4476,7 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('🔄 Günlük yedekleme başlatılıyor...');
     setInterval(sendDailyBackup, 24 * 60 * 60 * 1000); // 24 saat
     setInterval(sendDailyBackup, 6 * 60 * 60 * 1000); // 6 saat
-});
+}); */
 
 // Stok temizleme endpoint'i
 app.post('/api/stok-temizle', async (req, res) => {
@@ -4701,7 +4747,7 @@ app.post('/api/musteri-yukle-veriler-json', async (req, res) => {
     }
 });
 
-// Stok yükleme endpoint'i (veriler.json'dan)
+// Stok yükleme endpoint'i (veriler.json'dan) - EKSİK VERİLERİ OTOMATİK EKLE
 app.post('/api/stok-yukle-veriler-json', async (req, res) => {
     try {
         console.log('🔄 Veriler.json dosyasından stok yükleme başlatılıyor...');
@@ -4749,24 +4795,73 @@ app.post('/api/stok-yukle-veriler-json', async (req, res) => {
                         return;
                     }
                     
-                    const urunId = generateUrunId();
-                    
-                    db.prepare(`
-                        INSERT INTO stok (urun_id, barkod, ad, marka, miktar, alisFiyati, satisFiyati, kategori, aciklama, varyant_id)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    `).run(
-                        urunId,
-                        urun.barkod,
-                        urun.ad || `${urun.barkod} ${urun.marka || ''}`.trim() || 'Bilinmeyen Ürün',
-                        urun.marka || '',
-                        urun.miktar || 1,
-                        urun.alisFiyati || 0,
-                        urun.satisFiyati || urun.alisFiyati || 0,
-                        urun.kategori || '',
-                        urun.aciklama || '',
-                        urun.varyant_id || ''
+                    // Ürün zaten mevcut mu kontrol et (barkod + marka + varyant kombinasyonu)
+                    const existingProduct = db.prepare('SELECT * FROM stok WHERE barkod = ? AND (marka = ? OR (? IS NULL AND marka IS NULL)) AND (varyant_id = ? OR (? IS NULL AND varyant_id IS NULL))').get(
+                        urun.barkod, 
+                        urun.marka || null, 
+                        urun.marka || null,
+                        urun.varyant_id || null,
+                        urun.varyant_id || null
                     );
-                    insertedCount++;
+                    
+                    if (!existingProduct) {
+                        // Yeni ürün ekle
+                        const urunId = generateUrunId();
+                        const satisFiyati = urun.satisFiyati || (urun.alisFiyati ? Math.round(urun.alisFiyati * 1.2) : 0);
+                        
+                        db.prepare(`
+                            INSERT INTO stok (urun_id, barkod, ad, marka, miktar, alisFiyati, satisFiyati, kategori, aciklama, varyant_id)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        `).run(
+                            urunId,
+                            urun.barkod,
+                            urun.ad || `${urun.barkod} ${urun.marka || ''}`.trim() || 'Bilinmeyen Ürün',
+                            urun.marka || '',
+                            urun.miktar || 1,
+                            urun.alisFiyati || 0,
+                            satisFiyati,
+                            urun.kategori || '',
+                            urun.aciklama || '',
+                            urun.varyant_id || ''
+                        );
+                        insertedCount++;
+                        console.log(`✅ Yeni ürün eklendi: ${urun.ad || urun.barkod} (${urun.barkod})`);
+                    } else {
+                        // Mevcut ürünü güncelle (sadece eksik alanları)
+                        const updateFields = [];
+                        const updateValues = [];
+                        
+                        if (existingProduct.alisFiyati === null && urun.alisFiyati) {
+                            updateFields.push('alisFiyati = ?');
+                            updateValues.push(urun.alisFiyati);
+                        }
+                        if (existingProduct.satisFiyati === null && urun.satisFiyati) {
+                            updateFields.push('satisFiyati = ?');
+                            updateValues.push(urun.satisFiyati);
+                        } else if (existingProduct.satisFiyati === null && urun.alisFiyati) {
+                            // Satış fiyatı yoksa alış fiyatından %20 kar marjı ile hesapla
+                            updateFields.push('satisFiyati = ?');
+                            updateValues.push(Math.round(urun.alisFiyati * 1.2));
+                        }
+                        if (existingProduct.miktar === null && urun.miktar) {
+                            updateFields.push('miktar = ?');
+                            updateValues.push(urun.miktar);
+                        }
+                        if (existingProduct.marka === null && urun.marka) {
+                            updateFields.push('marka = ?');
+                            updateValues.push(urun.marka);
+                        }
+                        if (existingProduct.aciklama === null && urun.aciklama) {
+                            updateFields.push('aciklama = ?');
+                            updateValues.push(urun.aciklama);
+                        }
+                        
+                        if (updateFields.length > 0) {
+                            updateValues.push(existingProduct.id);
+                            db.prepare(`UPDATE stok SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(...updateValues);
+                            console.log(`🔄 Ürün güncellendi: ${urun.ad || urun.barkod} (${urun.barkod})`);
+                        }
+                    }
                 } catch (error) {
                     console.error('❌ Stok yükleme hatası:', error);
                     errorCount++;
@@ -4805,8 +4900,8 @@ app.post('/api/stok-yukle-veriler-json', async (req, res) => {
     }
 });
 
-// Server startup
-server.listen(PORT, '0.0.0.0', () => {
+// Server startup (disabled duplicate listener - consolidated earlier)
+/* server.listen(PORT, '0.0.0.0', () => {
     console.log('🚀 StokV1 Server running on port', PORT);
     console.log('📱 Local: http://localhost:' + PORT);
     console.log('🌐 Network: http://0.0.0.0:' + PORT);
@@ -4827,4 +4922,4 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('🔄 Günlük yedekleme başlatılıyor...');
     setInterval(sendDailyBackup, 24 * 60 * 60 * 1000); // 24 saat
     setInterval(sendDailyBackup, 6 * 60 * 60 * 1000); // 6 saat
-});
+}); */
