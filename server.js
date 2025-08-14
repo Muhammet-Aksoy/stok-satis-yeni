@@ -439,14 +439,22 @@ io.on('connection', (socket) => {
                         
                         if (!existingSale) {
                             // Satışı ekle
+                            const alisFiyati = parseFloat(data.data.alisFiyati) || 0;
+                            const miktar = parseInt(data.data.miktar) || 0;
+                            const fiyat = parseFloat(data.data.fiyat) || 0;
+                            const toplam = parseFloat(data.data.toplam) || (fiyat * miktar) || 0;
+                            const borc = data.data.borc ? 1 : 0;
                             const result = db.prepare(`
-                                INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, tarih, musteriId, musteriAdi)
-                                VALUES (?, ?, ?, ?, ?, ?, ?)
+                                INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, alisFiyati, toplam, borc, tarih, musteriId, musteriAdi)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                             `).run(
                                 data.data.barkod,
                                 data.data.urunAdi || '',
-                                data.data.miktar,
-                                data.data.fiyat,
+                                miktar,
+                                fiyat,
+                                alisFiyati,
+                                toplam,
+                                borc,
                                 data.data.tarih,
                                 data.data.musteriId || '',
                                 data.data.musteriAdi || ''
@@ -3350,7 +3358,8 @@ app.post('/api/yedek-yukle-eski', async (req, res) => {
         const backupFiles = [
             'tumVeriler_backup_1754133550759.json',
             'tumVeriler_fixed_backup.json',
-            'tumVeriler.json'
+            'tumVeriler.json',
+            path.join('..', 'backup.json')
         ];
         
         let yedekData = null;
@@ -3714,7 +3723,8 @@ app.post('/api/yedek-yukle-gelismis', async (req, res) => {
         const backupFiles = [
             'tumVeriler_backup_1754133550759.json',
             'tumVeriler_fixed_backup.json',
-            'tumVeriler.json'
+            'tumVeriler.json',
+            path.join('..', 'backup.json')
         ];
         
         let yedekData = null;

@@ -794,7 +794,6 @@
             position: absolute;
             right: 8px;
         }
-
         th.sorted-desc::after {
             content: " \25BC";
             font-size: 12px;
@@ -1593,7 +1592,6 @@
             background: var(--danger);
             color: white;
         }
-        
         [data-theme="dark"] .notification.warning {
             background: var(--warning);
             color: white;
@@ -2912,7 +2910,8 @@
                             sale.id === data.data.id || 
                             (sale.barkod === data.data.barkod && 
                              sale.tarih === data.data.tarih && 
-                             sale.miktar === data.data.miktar)
+                             sale.miktar === data.data.miktar && 
+                             sale.fiyat === data.data.fiyat)
                         );
                         
                         if (!existingSale) {
@@ -3188,7 +3187,8 @@
                                 sale.id === backendSale.id || 
                                 (sale.barkod === backendSale.barkod && 
                                  sale.tarih === backendSale.tarih && 
-                                 sale.miktar === backendSale.miktar)
+                                 sale.miktar === backendSale.miktar &&
+                                 sale.fiyat === backendSale.fiyat)
                             );
                             if (!existingSale) {
                                 mergedSatisGecmisi.push(backendSale);
@@ -3582,7 +3582,6 @@
                 return false;
             }
         }
-        
         // Eski yedekleme sistemi - Yedek verilerden yükleme
         async function yedekVerileriYukleEski() {
             try {
@@ -4119,15 +4118,16 @@
                     const kayitliToplam = parseFloat(satis.toplam) || 0;
                     const hesaplananToplam = fiyat * miktar;
                     const toplam = kayitliToplam > 0 ? kayitliToplam : hesaplananToplam;
+                    const alis = (parseFloat(satis.alisFiyati) || parseFloat(stokListesi[satis.barkod]?.alisFiyati) || 0);
                     
                     tr.innerHTML = `
                         <td>${tarihStr}</td>
                         <td>${barkodGoster}</td>
                         <td title="Orijinal: ${satis.urunAdi}">${currentProductName}</td>
                         <td>${miktar}</td>
-                        <td>${satis.alisFiyati && !isNaN(parseFloat(satis.alisFiyati)) ? parseFloat(satis.alisFiyati).toFixed(2) : '-'}</td>
-                        <td>${fiyat.toFixed(2)}</td>
-                        <td>${toplam.toFixed(2)}</td>
+                        <td>${(parseFloat(satis.alisFiyati) || parseFloat(stokListesi[satis.barkod]?.alisFiyati) || 0) > 0 ? (parseFloat(satis.alisFiyati) || parseFloat(stokListesi[satis.barkod]?.alisFiyati)).toFixed(2) : '-'}</td>
+                        <td>${(parseFloat(satis.fiyat) || 0).toFixed(2)}</td>
+                        <td>${(parseFloat(satis.toplam) || ((parseFloat(satis.fiyat) || 0) * (parseInt(satis.miktar) || 0))).toFixed(2)}</td>
                         <td>${satis.borc ? '<span class="credit-indicator">Borç</span>' : 'Nakit'}</td>
                         <td>${musteriAdi}</td>
                         <td>
@@ -5516,8 +5516,9 @@
                         <td>${satis.barkod}</td>
                         <td>${satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-'))}</td>
                         <td>${satis.miktar}</td>
-                        <td>${satis.alisFiyati ? satis.alisFiyati.toFixed(2) : '-'}</td>
-                        <td>${satis.fiyat.toFixed(2)}</td>
+                        <td>${(parseFloat(satis.alisFiyati) || parseFloat(stokListesi[satis.barkod]?.alisFiyati) || 0) > 0 ? (parseFloat(satis.alisFiyati) || parseFloat(stokListesi[satis.barkod]?.alisFiyati)).toFixed(2) : '-'}</td>
+                        <td>${(parseFloat(satis.fiyat) || 0).toFixed(2)}</td>
+                        <td>${(parseFloat(satis.toplam) || ((parseFloat(satis.fiyat) || 0) * (parseInt(satis.miktar) || 0))).toFixed(2)}</td>
                         <td>${satis.borc ? '<span class="credit-indicator">Borç</span>' : 'Nakit'}</td>
                         <td>${musteriAdi}</td>
                         <td>
@@ -5684,11 +5685,16 @@
             if (musteriSatislari.length === 0) {
                 customerSalesBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Bu müşteriye ait satış bulunamadı.</td></tr>';
             } else {
-                musteriSatislari.forEach(satis => {
+                // Duplicate satışları filtrele (barkod+tarih+miktar+fiyat)
+                const uniq = new Map();
+                musteriSatislari.forEach(s => {
+                    const key = `${s.barkod}_${s.tarih}_${s.miktar}_${s.fiyat}`;
+                    if (!uniq.has(key)) uniq.set(key, s);
+                });
+                Array.from(uniq.values()).forEach(satis => {
                     const tarih = new Date(satis.tarih);
                     const tarihStr = `${tarih.getDate().toString().padStart(2, '0')}.${(tarih.getMonth()+1).toString().padStart(2, '0')}.${tarih.getFullYear()}`;
                     
-                    // Get current product name from stock if available
                     let currentProductName = satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-'));
                     
                     const tr = document.createElement('tr');
@@ -5696,8 +5702,8 @@
                         <td>${tarihStr}</td>
                         <td title="Orijinal: ${satis.urunAdi}">${currentProductName}</td>
                         <td>${satis.miktar}</td>
-                        <td>${satis.fiyat.toFixed(2)}</td>
-                        <td>${satis.toplam.toFixed(2)}</td>
+                        <td>${(parseFloat(satis.fiyat) || 0).toFixed(2)}</td>
+                        <td>${(parseFloat(satis.toplam) || ((parseFloat(satis.fiyat)||0) * (parseInt(satis.miktar)||0))).toFixed(2)}</td>
                         <td>${satis.borc ? 'Borç' : 'Nakit'}</td>
                         <td>
                             <button class="action-btn btn-return" title="İade" onclick="urunIade('${satis.id}')">
@@ -6230,8 +6236,9 @@
                         <td>${satis.barkod}</td>
                         <td>${satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-'))}</td>
                         <td>${satis.miktar}</td>
-                        <td>${satis.alisFiyati ? satis.alisFiyati.toFixed(2) : '-'}</td>
-                        <td>${satis.fiyat.toFixed(2)}</td>
+                        <td>${(parseFloat(satis.alisFiyati) || parseFloat(stokListesi[satis.barkod]?.alisFiyati) || 0) > 0 ? (parseFloat(satis.alisFiyati) || parseFloat(stokListesi[satis.barkod]?.alisFiyati)).toFixed(2) : '-'}</td>
+                        <td>${(parseFloat(satis.fiyat) || 0).toFixed(2)}</td>
+                        <td>${(parseFloat(satis.toplam) || ((parseFloat(satis.fiyat) || 0) * (parseInt(satis.miktar) || 0))).toFixed(2)}</td>
                         <td>${satis.borc ? '<span class="credit-indicator">Borç</span>' : 'Nakit'}</td>
                         <td>${musteriAdi}</td>
                         <td>
@@ -7430,7 +7437,6 @@
                 return { updated: false, skipped: true };
             }
         }
-        
         // Müşteri senkronizasyonu - GELİŞTİRİLMİŞ: Tekrar kontrolü
         async function syncCustomer(musteri) {
             try {
