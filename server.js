@@ -2673,6 +2673,62 @@ app.delete('/api/musteri-sil/:id', async (req, res) => {
     }
 });
 
+// PUT /api/satis-guncelle/:id - Satış güncelle
+app.put('/api/satis-guncelle/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { urunAdi, miktar, fiyat, toplam, tarih } = req.body;
+        console.log('🔄 Satış güncelleniyor:', id);
+        
+        const updateData = {
+            urunAdi: urunAdi || null,
+            miktar: parseInt(miktar) || 1,
+            fiyat: parseFloat(fiyat) || 0,
+            toplam: parseFloat(toplam) || (parseInt(miktar) * parseFloat(fiyat)),
+            tarih: tarih || new Date().toISOString()
+        };
+        
+        const result = db.prepare(`
+            UPDATE satisGecmisi 
+            SET urunAdi = ?, miktar = ?, fiyat = ?, toplam = ?, tarih = ?
+            WHERE id = ?
+        `).run(updateData.urunAdi, updateData.miktar, updateData.fiyat, updateData.toplam, updateData.tarih, id);
+        
+        if (result.changes > 0) {
+            // Get updated record
+            const updatedSale = db.prepare('SELECT * FROM satisGecmisi WHERE id = ?').get(id);
+            
+            // Real-time sync to all clients
+            io.emit('dataUpdated', {
+                type: 'satis-update',
+                data: updatedSale,
+                timestamp: new Date().toISOString()
+            });
+            
+            res.json({ 
+                success: true,
+                message: 'Satış başarıyla güncellendi',
+                data: updatedSale,
+                timestamp: new Date().toISOString()
+            });
+        } else {
+            res.status(404).json({ 
+                success: false,
+                message: 'Satış bulunamadı',
+                timestamp: new Date().toISOString()
+            });
+        }
+    } catch (error) {
+        console.error('❌ Error updating sale:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Satış güncellenirken hata oluştu',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
 // DELETE /api/satis-sil/:id - Satış sil
 app.delete('/api/satis-sil/:id', async (req, res) => {
     try {
