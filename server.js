@@ -178,15 +178,24 @@ function initializeDatabase() {
         try {
             const satisCols = db.prepare("PRAGMA table_info(satisGecmisi)").all();
             const colNames = new Set(satisCols.map(c => c.name));
+            console.log('📊 Satış geçmişi tablo sütunları:', colNames);
+            
             if (!colNames.has('borc')) {
+                console.log('➕ Borc sütunu ekleniyor...');
                 db.exec("ALTER TABLE satisGecmisi ADD COLUMN borc INTEGER DEFAULT 0");
             }
             if (!colNames.has('toplam')) {
+                console.log('➕ Toplam sütunu ekleniyor...');
                 db.exec("ALTER TABLE satisGecmisi ADD COLUMN toplam REAL DEFAULT 0");
             }
             if (!colNames.has('alisFiyati')) {
+                console.log('➕ AlisFiyati sütunu ekleniyor...');
                 db.exec("ALTER TABLE satisGecmisi ADD COLUMN alisFiyati REAL DEFAULT 0");
             }
+            
+            // Son durumu kontrol et
+            const finalCols = db.prepare("PRAGMA table_info(satisGecmisi)").all();
+            console.log('✅ Final satış geçmişi tablo sütunları:', finalCols.map(c => c.name));
         } catch (error) {
             console.warn('⚠️ Schema migration warning (satisGecmisi):', error.message);
         }
@@ -2453,23 +2462,51 @@ app.post('/api/satis-ekle', async (req, res) => {
         // Transaction ile güvenli işlem
         const result = db.transaction(() => {
             // 1. Stok kontrolü ve güncelleme
-            // FIX: doğru varyantı seçmek için marka/varyant_id ve/veya id ile eşleştir
+            console.log('🔍 Ürün aranıyor:', { 
+                barkod: satis.barkod, 
+                marka: satis.marka, 
+                varyant_id: satis.varyant_id,
+                id: satis.id 
+            });
+            
             let stokUrunu = null;
             if (satis.id) {
                 stokUrunu = db.prepare('SELECT * FROM stok WHERE id = ?').get(satis.id);
+                console.log('🔍 ID ile arama sonucu:', stokUrunu ? 'Bulundu' : 'Bulunamadı');
             }
             if (!stokUrunu) {
-                stokUrunu = db.prepare('SELECT * FROM stok WHERE barkod = ? AND (marka = ? OR (? IS NULL AND marka IS NULL)) AND (varyant_id = ? OR (? IS NULL AND varyant_id IS NULL))')
-                    .get(
-                        satis.barkod,
-                        satis.marka || null,
-                        satis.marka || null,
-                        satis.varyant_id || null,
-                        satis.varyant_id || null
-                    );
+                // Önce sadece barkod ile ara
+                stokUrunu = db.prepare('SELECT * FROM stok WHERE barkod = ?').get(satis.barkod);
+                console.log('🔍 Barkod ile arama sonucu:', stokUrunu ? 'Bulundu' : 'Bulunamadı');
+                
+                if (stokUrunu) {
+                    console.log('🔍 Bulunan ürün:', { 
+                        id: stokUrunu.id, 
+                        barkod: stokUrunu.barkod, 
+                        ad: stokUrunu.ad,
+                        marka: stokUrunu.marka,
+                        miktar: stokUrunu.miktar
+                    });
+                }
+                
+                // Eğer bulunamadıysa ve marka/varyant bilgisi varsa detaylı ara
+                if (!stokUrunu && (satis.marka || satis.varyant_id)) {
+                    stokUrunu = db.prepare('SELECT * FROM stok WHERE barkod = ? AND (marka = ? OR (? IS NULL AND marka IS NULL)) AND (varyant_id = ? OR (? IS NULL AND varyant_id IS NULL))')
+                        .get(
+                            satis.barkod,
+                            satis.marka || null,
+                            satis.marka || null,
+                            satis.varyant_id || null,
+                            satis.varyant_id || null
+                        );
+                    console.log('🔍 Detaylı arama sonucu:', stokUrunu ? 'Bulundu' : 'Bulunamadı');
+                }
             }
             
             if (!stokUrunu) {
+                console.log('❌ Ürün bulunamadı. Mevcut ürünler:');
+                const allProducts = db.prepare('SELECT id, barkod, ad, marka FROM stok LIMIT 5').all();
+                allProducts.forEach(p => console.log('  -', p));
                 throw new Error('Ürün bulunamadı');
             }
             
@@ -2501,6 +2538,20 @@ app.post('/api/satis-ekle', async (req, res) => {
             const toplam = (parseFloat(satis.fiyat) || 0) * (parseInt(satis.miktar) || 0);
             const alisFiyati = parseFloat(satis.alisFiyati ?? stokUrunu.alisFiyati ?? 0) || 0;
             const borc = satis.borc ? 1 : 0;
+            
+            console.log('💰 Satış ekleme detayları:', {
+                barkod: satis.barkod,
+                urunAdi: satis.urunAdi || stokUrunu.ad,
+                miktar: satis.miktar,
+                fiyat: satis.fiyat,
+                alisFiyati: alisFiyati,
+                toplam: toplam,
+                borc: borc,
+                tarih: satis.tarih,
+                musteriId: satis.musteriId || '',
+                musteriAdi: satis.musteriAdi || ''
+            });
+            
             const satisResult = db.prepare(`
                 INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, alisFiyati, toplam, borc, tarih, musteriId, musteriAdi)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -5371,7 +5422,7 @@ app.post('/api/stok-yukle-veriler-json', async (req, res) => {
                     if (!existingProduct) {
                         // Yeni ürün ekle
                         const urunId = generateUrunId();
-                        const satisFiyati = urun.satisFiyati || (urun.alisFiyati ? Math.round(urun.alisFiyati * 1.2) : 0);
+                        const satisFiyati = urun.satisFiyati || 0;
                         
                         db.prepare(`
                             INSERT INTO stok (urun_id, barkod, ad, marka, miktar, alisFiyati, satisFiyati, kategori, aciklama, varyant_id)
@@ -5405,7 +5456,7 @@ app.post('/api/stok-yukle-veriler-json', async (req, res) => {
                         } else if (existingProduct.satisFiyati === null && urun.alisFiyati) {
                             // Satış fiyatı yoksa alış fiyatından %20 kar marjı ile hesapla
                             updateFields.push('satisFiyati = ?');
-                            updateValues.push(Math.round(urun.alisFiyati * 1.2));
+                            updateValues.push(urun.satisFiyati || 0);
                         }
                         if (existingProduct.miktar === null && urun.miktar) {
                             updateFields.push('miktar = ?');

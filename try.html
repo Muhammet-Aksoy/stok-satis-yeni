@@ -12,6 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         :root {
             --primary: #2c6fbb;
@@ -38,64 +39,69 @@
             --card-bg: #ffffff;
         }
 
-        /* Dark theme variables - Geliştirilmiş */
+        /* Dark theme variables - Geliştirilmiş ve Renklendirilmiş */
         [data-theme="dark"] {
-            --bg-primary: #0a0a0a;
-            --bg-secondary: #1a1a1a;
+            --bg-primary: #0f0f23;
+            --bg-secondary: #1a1a2e;
             --text-primary: #ffffff;
             --text-secondary: #e0e0e0;
-            --border-color: #404040;
-            --card-bg: #1a1a1a;
-            --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
-            --input-bg: #2a2a2a;
-            --input-border: #505050;
+            --border-color: #2d2d44;
+            --card-bg: #16213e;
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+            --input-bg: #1e1e3f;
+            --input-border: #3d3d5f;
             --input-text: #ffffff;
-            --table-bg: #1a1a1a;
-            --table-border: #404040;
-            --table-hover: #2a2a2a;
-            --modal-bg: #1a1a1a;
-            --modal-overlay: rgba(0, 0, 0, 0.85);
-            --dropdown-bg: #2a2a2a;
-            --dropdown-hover: #3a3a3a;
-            --tooltip-bg: #2a2a2a;
+            --table-bg: #16213e;
+            --table-border: #2d2d44;
+            --table-hover: #1e1e3f;
+            --modal-bg: #16213e;
+            --modal-overlay: rgba(0, 0, 0, 0.9);
+            --dropdown-bg: #1e1e3f;
+            --dropdown-hover: #2d2d44;
+            --tooltip-bg: #1e1e3f;
             --tooltip-text: #ffffff;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --info: #3b82f6;
-            --primary: #3b82f6;
-            --primary-dark: #1d4ed8;
-            --menu-bg: #2a2a2a;
-            --menu-hover: #3a3a3a;
+            --success: #00d4aa;
+            --danger: #ff6b6b;
+            --warning: #ffd93d;
+            --info: #4ecdc4;
+            --primary: #6c5ce7;
+            --primary-dark: #5f3dc4;
+            --menu-bg: #1e1e3f;
+            --menu-hover: #2d2d44;
             --menu-text: #ffffff;
-            --menu-border: #505050;
-            --button-bg: #3a3a3a;
-            --button-hover: #4a4a4a;
+            --menu-border: #3d3d5f;
+            --button-bg: #6c5ce7;
+            --button-hover: #5f3dc4;
             --button-text: #ffffff;
-            --link-color: #60a5fa;
-            --link-hover: #93c5fd;
-            --panel-bg: #2a2a2a;
+            --link-color: #74b9ff;
+            --link-hover: #0984e3;
+            --panel-bg: #1e1e3f;
             --panel-text: #ffffff;
-            --panel-border: #505050;
-            --form-bg: #2a2a2a;
+            --panel-border: #3d3d5f;
+            --form-bg: #1e1e3f;
             --form-text: #ffffff;
-            --form-border: #505050;
+            --form-border: #3d3d5f;
             --label-text: #ffffff;
             --placeholder-text: #a0a0a0;
-            --tab-bg: #2a2a2a;
-            --tab-active: #3b82f6;
-            --tab-hover: #3a3a3a;
+            --tab-bg: #1e1e3f;
+            --tab-active: #6c5ce7;
+            --tab-hover: #2d2d44;
             --tab-text: #ffffff;
-            --tab-border: #505050;
-            --header-bg: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            --tab-border: #3d3d5f;
+            --header-bg: linear-gradient(135deg, #6c5ce7 0%, #5f3dc4 100%);
             --header-text: #ffffff;
-            --stats-bg: #2a2a2a;
-            --stats-border: #404040;
-            --notification-bg: #2a2a2a;
-            --notification-border: #505050;
-            --context-menu-bg: #2a2a2a;
-            --context-menu-hover: #3a3a3a;
-            --context-menu-border: #505050;
+            --stats-bg: #16213e;
+            --stats-border: #2d2d44;
+            --notification-bg: #1e1e3f;
+            --notification-border: #3d3d5f;
+            --context-menu-bg: #1e1e3f;
+            --context-menu-hover: #2d2d44;
+            --context-menu-border: #3d3d5f;
+            --accent-1: #fd79a8;
+            --accent-2: #fdcb6e;
+            --accent-3: #00b894;
+            --accent-4: #e84393;
+            --accent-5: #00cec9;
         }
 
         * {
@@ -1780,7 +1786,7 @@
             background: #fff8e1;
         }
         
-        /* Modern Hamburger Menü Butonu - Geliştirilmiş */
+        /* Modern Hamburger Menü Butonu - Küçültülmüş */
         .modern-menu-button {
             position: fixed;
             top: 20px;
@@ -1788,19 +1794,20 @@
             z-index: 10000;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             border: none;
-            border-radius: 50px;
-            padding: 12px 20px;
+            border-radius: 12px;
+            padding: 8px;
             color: white;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
             cursor: pointer;
             box-shadow: 0 4px 20px rgba(44, 111, 187, 0.3);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             backdrop-filter: blur(10px);
-            min-width: 120px;
+            width: 40px;
+            height: 40px;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
@@ -1827,12 +1834,12 @@
             box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
         }
 
-        /* Hamburger Icon */
+        /* Hamburger Icon - Küçültülmüş */
         .hamburger-icon {
             display: flex;
             flex-direction: column;
-            width: 20px;
-            height: 16px;
+            width: 18px;
+            height: 14px;
             justify-content: space-between;
             position: relative;
         }
@@ -1841,7 +1848,7 @@
             width: 100%;
             height: 2px;
             background-color: white;
-            border-radius: 2px;
+            border-radius: 1px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             transform-origin: center;
         }
@@ -1866,28 +1873,28 @@
             .modern-menu-button {
                 top: 15px;
                 right: 15px;
-                padding: 10px 16px;
-                min-width: 100px;
-                font-size: 13px;
-            }
-            
-
-            
-            .hamburger-icon {
-                width: 18px;
-                height: 14px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .modern-menu-button {
-                padding: 8px 12px;
-                min-width: 80px;
+                padding: 6px;
+                width: 36px;
+                height: 36px;
+                font-size: 11px;
             }
             
             .hamburger-icon {
                 width: 16px;
                 height: 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .modern-menu-button {
+                padding: 5px;
+                width: 32px;
+                height: 32px;
+            }
+            
+            .hamburger-icon {
+                width: 14px;
+                height: 10px;
             }
         }
         
@@ -3572,6 +3579,9 @@
                 console.log(`⚡ Veri yükleme süresi: ${performanceMetrics.loadTime.toFixed(2)}ms`);
                 console.log('✅ Veri başlatma tamamlandı');
                 
+                // Network bilgilerini yükle
+                await loadNetworkInfo();
+                
             } catch (error) {
                 console.error('❌ Veri başlatma hatası:', error);
                 showNotification('Veri yükleme hatası: ' + error.message, 'error');
@@ -3970,7 +3980,7 @@
                     console.log('✅ Toplu senkronizasyon tamamlandı');
                     guncellenenVerileriKaydet();
                     lastSyncTime = Date.now();
-                    showNotification('Veriler senkronize edildi', 'success');
+                    // showNotification('Veriler senkronize edildi', 'success');
                 } else {
                     throw new Error(result.message || result.error || 'Bilinmeyen hata');
                 }
@@ -4067,10 +4077,7 @@
             
             if (salesArray && salesArray.length > 0) {
                 salesArray.forEach(satis => {
-                    // Kullanıcı girişi olmayan otomatik öneri fiyatlı satışları hariç tut
-                    const isAutoSuggested = (parseFloat(satis.alisFiyati) || 0) > 0 
-                        && Math.round((parseFloat(satis.alisFiyati) || 0) * 1.2) === Math.round(parseFloat(satis.fiyat) || 0);
-                    if (isAutoSuggested) return;
+                    // Tüm satışları dahil et
                     
                     // Toplam hesaplama - öncelik: kayıtlı toplam > hesaplanan toplam
                     const kayitliToplam = parseFloat(satis.toplam) || 0;
@@ -4941,7 +4948,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             }
         }
 
-        // Toplu satış sepetine ürün ekle
+        // Toplu satış sepetine ürün ekle - Geliştirilmiş
         function addToBulkCart() {
             const barkod = document.getElementById('bulkSaleBarkod').value.trim();
             const miktar = parseInt(document.getElementById('bulkSaleMiktar').value) || 1;
@@ -4952,31 +4959,55 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 return;
             }
             
-            // Ürünü stokta kontrol et
-            const product = Object.values(stokListesi).find(p => p.barkod === barkod);
+            // Ürünü stokta kontrol et - Geliştirilmiş barkod arama
+            let product = null;
+            for (const [key, p] of Object.entries(stokListesi)) {
+                if (p.barkod === barkod || key === barkod) {
+                    product = p;
+                    break;
+                }
+            }
+            
             if (!product) {
                 showNotification('❌ Ürün bulunamadı', 'error');
                 return;
             }
             
-            if (product.miktar < miktar) {
-                showNotification(`❌ Yetersiz stok (Mevcut: ${product.miktar})`, 'error');
+            // Stok kontrolü - Geliştirilmiş
+            const currentStock = product.stok_miktari || product.miktar || 0;
+            if (currentStock < miktar) {
+                showNotification(`❌ Yetersiz stok (Mevcut: ${currentStock})`, 'error');
                 return;
             }
             
-            // Sepete ekle
+            // Sepete ekle - Aynı barkod kontrolü ile
             const existingIndex = bulkSaleCart.findIndex(item => item.barkod === barkod);
             if (existingIndex >= 0) {
-                bulkSaleCart[existingIndex].miktar += miktar;
+                // Mevcut ürünün miktarını güncelle
+                const newTotalMiktar = bulkSaleCart[existingIndex].miktar + miktar;
+                
+                // Stok kontrolü
+                if (currentStock < newTotalMiktar) {
+                    showNotification(`❌ Toplam miktar stoktan fazla! (Mevcut: ${currentStock}, İstenen: ${newTotalMiktar})`, 'error');
+                    return;
+                }
+                
+                bulkSaleCart[existingIndex].miktar = newTotalMiktar;
                 bulkSaleCart[existingIndex].fiyat = fiyat || bulkSaleCart[existingIndex].fiyat;
+                
+                showNotification(`✅ ${product.urun_adi || product.ad} miktarı güncellendi: ${bulkSaleCart[existingIndex].miktar}`, 'success');
             } else {
+                // Yeni ürün ekle
                 bulkSaleCart.push({
                     barkod: barkod,
-                    urunAdi: product.ad || product.urun_adi,
+                    urunAdi: product.urun_adi || product.ad || 'Bilinmeyen Ürün',
                     miktar: miktar,
                     fiyat: fiyat || product.satisFiyati || 0,
-                    alisFiyati: product.alisFiyati
+                    alisFiyati: product.alisFiyati || 0,
+                    stok_miktari: currentStock
                 });
+                
+                showNotification(`✅ ${product.urun_adi || product.ad} sepete eklendi`, 'success');
             }
             
             // Formu temizle
@@ -4987,7 +5018,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             updateBulkSaleCart();
         }
 
-        // Toplu satış sepetini güncelle
+        // Toplu satış sepetini güncelle - Geliştirilmiş
         function updateBulkSaleCart() {
             const cartDiv = document.getElementById('bulkSaleCart');
             const totalDiv = document.getElementById('bulkSaleTotal');
@@ -5007,15 +5038,25 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 const itemTotal = item.fiyat * item.miktar;
                 total += itemTotal;
                 
+                // Stok durumu kontrolü
+                const currentStock = item.stok_miktari || 0;
+                const stockStatus = currentStock >= item.miktar ? '✅' : '⚠️';
+                const stockColor = currentStock >= item.miktar ? '#27ae60' : '#f39c12';
+                
                 html += `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 1px solid #eee;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; background: ${currentStock >= item.miktar ? '#f8f9fa' : '#fff3cd'};">
                         <div style="flex: 1;">
                             <strong>${item.urunAdi}</strong><br>
-                            <small>${item.barkod} - ${item.miktar}x ${item.fiyat.toFixed(2)}₺</small>
+                            <small style="color: #666;">
+                                ${item.barkod} - ${item.miktar}x ${item.fiyat.toFixed(2)}₺
+                                <span style="color: ${stockColor}; margin-left: 8px;">
+                                    ${stockStatus} Stok: ${currentStock}
+                                </span>
+                            </small>
                         </div>
-                        <div>
-                            <strong>${itemTotal.toFixed(2)}₺</strong>
-                            <button onclick="removeFromBulkCart(${index})" style="background: none; border: none; color: red; margin-left: 10px;">
+                        <div style="text-align: right;">
+                            <strong>${itemTotal.toFixed(2)}₺</strong><br>
+                            <button onclick="removeFromBulkCart(${index})" style="background: none; border: none; color: red; margin-left: 10px; cursor: pointer;" title="Sepetten çıkar">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -5026,6 +5067,12 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             cartDiv.innerHTML = html;
             totalDiv.textContent = `Toplam: ${total.toFixed(2)} ₺`;
             completeBtn.disabled = false;
+            
+            // Stok uyarısı
+            const lowStockItems = bulkSaleCart.filter(item => (item.stok_miktari || 0) < item.miktar);
+            if (lowStockItems.length > 0) {
+                showNotification(`⚠️ ${lowStockItems.length} ürün için yetersiz stok!`, 'warning');
+            }
         }
 
         // Sepetten ürün çıkar
@@ -5040,10 +5087,18 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             updateBulkSaleCart();
         }
 
-        // Toplu satışı tamamla
+        // Toplu satışı tamamla - Geliştirilmiş
         async function completeBulkSale() {
             if (bulkSaleCart.length === 0) {
                 showNotification('❌ Sepet boş', 'error');
+                return;
+            }
+            
+            // Stok kontrolü
+            const insufficientStock = bulkSaleCart.filter(item => (item.stok_miktari || 0) < item.miktar);
+            if (insufficientStock.length > 0) {
+                const itemNames = insufficientStock.map(item => item.urunAdi).join(', ');
+                Swal.fire('⚠️ Yetersiz Stok', `${itemNames} ürünleri için yetersiz stok bulunmaktadır.`, 'warning');
                 return;
             }
             
@@ -5052,32 +5107,103 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 const musteriId = customerSelect.value;
                 const musteriAdi = customerSelect.selectedOptions[0]?.textContent;
                 
-                showNotification('🔄 Toplu satış işleniyor...', 'info');
-                
-                const response = await fetch(`${API_BASE}/api/satis-toplu`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        items: bulkSaleCart,
-                        musteriId: musteriId || null,
-                        musteriAdi: musteriAdi || null
-                    })
+                // Onay modalı
+                const confirmResult = await Swal.fire({
+                    title: 'Toplu Satış Onayı',
+                    html: `
+                        <div style="text-align: left;">
+                            <p><strong>${bulkSaleCart.length} ürün satılacak</strong></p>
+                            <p>Toplam Tutar: <strong>${bulkSaleCart.reduce((sum, item) => sum + (item.fiyat * item.miktar), 0).toFixed(2)} ₺</strong></p>
+                            ${musteriAdi ? `<p>Müşteri: <strong>${musteriAdi}</strong></p>` : ''}
+                            <hr>
+                            <p>Devam etmek istiyor musunuz?</p>
+                        </div>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Evet, Sat',
+                    cancelButtonText: 'İptal',
+                    confirmButtonColor: '#27ae60'
                 });
                 
-                const result = await response.json();
+                if (!confirmResult.isConfirmed) {
+                    return;
+                }
                 
-                if (result.success) {
-                    showNotification(`✅ ${result.itemCount} ürün başarıyla satıldı! Toplam: ${result.totalAmount.toFixed(2)}₺`, 'success');
+                showNotification('🔄 Toplu satış işleniyor...', 'info');
+                
+                // Her ürün için ayrı satış yap
+                let successCount = 0;
+                let totalAmount = 0;
+                
+                for (const item of bulkSaleCart) {
+                    try {
+                        // Ürünü bul
+                        const product = Object.values(stokListesi).find(p => p.barkod === item.barkod);
+                        if (!product) continue;
+                        
+                        // Satış verisi oluştur
+                        const satis = {
+                            id: Date.now().toString(36) + Math.random().toString(36).substring(2, 7),
+                            tarih: new Date().toISOString(),
+                            barkod: item.barkod,
+                            urunAdi: item.urunAdi,
+                            marka: product.marka || '',
+                            miktar: item.miktar,
+                            fiyat: item.fiyat,
+                            alisFiyati: item.alisFiyati,
+                            toplam: item.fiyat * item.miktar,
+                            borc: false,
+                            musteriId: musteriId,
+                            aciklama: 'Toplu satış',
+                            odemeTarihi: null
+                        };
+                        
+                        // Backend'e kaydet
+                        const response = await fetch(`${API_BASE}/api/satis-ekle`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(satis)
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            // Stok güncelle
+                            product.stok_miktari = (product.stok_miktari || 0) - item.miktar;
+                            if (product.miktar !== undefined) {
+                                product.miktar = product.stok_miktari;
+                            }
+                            
+                            // Satış geçmişine ekle
+                            satisGecmisi.push(result.data || satis);
+                            
+                            successCount++;
+                            totalAmount += satis.toplam;
+                        }
+                    } catch (error) {
+                        console.error(`Ürün satış hatası (${item.urunAdi}):`, error);
+                    }
+                }
+                
+                if (successCount > 0) {
+                    // UI güncelle
+                    stokTablosunuGuncelle();
+                    satisTablosunuGuncelle();
+                    guncelleIstatistikler();
+                    guncellenenVerileriKaydet();
+                    
+                    showNotification(`✅ ${successCount} ürün başarıyla satıldı! Toplam: ${totalAmount.toFixed(2)}₺`, 'success');
                     bulkSaleCart = [];
                     updateBulkSaleCart();
-                    stokListesiniGetir(); // Stok listesini yenile
-                    satisGecmisiniGetir(); // Satış geçmişini yenile
                     Swal.close();
                 } else {
-                    showNotification('❌ Toplu satış başarısız: ' + result.error, 'error');
+                    showNotification('❌ Hiçbir ürün satılamadı', 'error');
                 }
+                
             } catch (error) {
                 showNotification('❌ Toplu satış hatası: ' + error.message, 'error');
+                console.error('Toplu satış hatası:', error);
             }
         }
         
@@ -5132,10 +5258,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     });
                 }
                 sortedSales.forEach(satis => {
-                    // Otomatik öneri fiyatı ile oluşan satışları gösterme
-                    const isAutoSuggested = (parseFloat(satis.alisFiyati) || 0) > 0 
-                        && Math.round((parseFloat(satis.alisFiyati) || 0) * 1.2) === Math.round(parseFloat(satis.fiyat) || 0);
-                    if (isAutoSuggested) return;
+                    // Tüm satışları göster
                     
                     const tr = document.createElement('tr');
                     const tarih = new Date(satis.tarih);
@@ -5418,111 +5541,147 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         }
         // Ürün satış fonksiyonu
         function urunSat(key) {
-            if (!stokListesi[key]) return;
-            if (stokListesi[key].miktar <= 0) {
-                Swal.fire('Uyarı', 'Bu ürünün stokta yeterli miktarı yok.', 'warning');
-                return;
-            }
-            
-            const urun = stokListesi[key];
-            const alisFiyati = parseFloat(urun.alisFiyati) || 0;
-            
-            Swal.fire({
-                title: 'Satışı onayla',
-                html: `
-                    <b>${urun.ad || urun.urun_adi}</b> ürününü satmak istediğinize emin misiniz?
-                    <div style="margin-top: 15px;">
-                        <div class="form-group">
-                            <label for="satisMiktari">Satış Miktarı</label>
-                            <input type="number" id="satisMiktari" class="form-control" min="1" max="${urun.miktar}" value="1">
-                        </div>
-                        <div class="form-group">
-                            <label for="satisFiyati">Satış Fiyatı (₺)</label>
-                            <input type="number" id="satisFiyati" class="form-control" min="0" step="0.01" placeholder="Fiyat giriniz">
-                            <small style="color: #666;">
-                                Alış fiyatı: ${alisFiyati.toFixed(2)} ₺
-                            </small>
-                        </div>
-                        <div id="customer-selection" style="margin-top: 10px;">
-                            <label>Müşteri Seçin</label>
-                            <div style="display: flex; gap: 10px;">
-                                <select id="sale-customer" class="form-control" style="flex:1;">
-                                    <option value="">Müşteri seçin</option>
-                                </select>
-                                <button type="button" class="btn btn-outline" onclick="openNewCustomerModal('sale-customer')">
-                                    <i class="fas fa-plus"></i> Yeni Müşteri Ekle
-                                </button>
-                            </div>
-                        </div>
-                        <div class="form-group" style="margin-top: 10px;">
-                            <label>
-                                <input type="checkbox" id="borcSatis"> Borçlu satış (müşteri hesabına yaz)
-                            </label>
-                        </div>
+    if (!stokListesi[key]) return;
+
+    const urun = stokListesi[key];
+    const mevcutStok = parseInt(urun.stok_miktari ?? urun.miktar ?? 0, 10);
+    if (mevcutStok <= 0) {
+        Swal.fire('Uyarı', 'Bu ürünün stokta yeterli miktarı yok.', 'warning');
+        return;
+    }
+
+    const alisFiyati = parseFloat(urun.alisFiyati) || 0;
+
+    Swal.fire({
+        title: 'Satışı onayla',
+        html: `
+            <b>${urun.ad || urun.urun_adi || ''}</b> ürününü satmak istediğinize emin misiniz?
+            <div style="margin-top: 15px;">
+                <div class="form-group">
+                    <label for="satisMiktari">Satış Miktarı</label>
+                    <input type="number" id="satisMiktari" class="form-control" min="1" max="${mevcutStok}" value="1" inputmode="numeric">
+                </div>
+                <div class="form-group">
+                    <label for="satisFiyati">Satış Fiyatı (₺)</label>
+                    <input type="number" id="satisFiyati" class="form-control" placeholder="Fiyat giriniz"
+                           min="0" step="0.01" required inputmode="decimal">
+                    <small style="color: #666;">
+                        Alış fiyatı: ${alisFiyati.toFixed(2)} ₺
+                    </small>
+                </div>
+                <div id="customer-selection" style="margin-top: 10px;">
+                    <label>Müşteri Seçin</label>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="sale-customer" class="form-control" style="flex:1;">
+                            <option value="">Müşteri seçin</option>
+                        </select>
+                        <button type="button" class="btn btn-outline" onclick="openNewCustomerModal('sale-customer')">
+                            <i class="fas fa-plus"></i> Yeni Müşteri Ekle
+                        </button>
                     </div>
-                `,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Evet, Sat',
-                cancelButtonText: 'İptal',
-                confirmButtonColor: '#27ae60',
-                cancelButtonColor: '#6c757d',
-                didOpen: () => {
-                    const saleCustomer = document.getElementById('sale-customer');
-                    saleCustomer.innerHTML = '<option value="">Müşteri seçin</option>';
-                    for (const [id, musteri] of Object.entries(musteriler)) {
-                        const option = document.createElement('option');
-                        option.value = id;
-                        option.textContent = musteri.ad;
-                        saleCustomer.appendChild(option);
-                    }
-                    
-                }
-            }).then(async result => {
-                if (result.isConfirmed) {
-                    const satisMiktari = parseInt(document.getElementById('satisMiktari').value) || 1;
-                    let satisFiyati = parseFloat(document.getElementById('satisFiyati').value);
-                    const customerId = document.getElementById('sale-customer').value || null;
-                    const isDebtSale = document.getElementById('borcSatis').checked;
-                    
-                    if (satisMiktari <= 0) {
-                        Swal.fire('Hata', 'Satış miktarı 1 veya daha büyük olmalıdır.', 'error');
-                        return;
-                    }
-                    
-                    console.log('💰 Ana satış modalı fiyat kontrolü:', { 
-                        inputValue: document.getElementById('satisFiyati').value,
-                        parsedValue: satisFiyati,
-                        isValid: !isNaN(satisFiyati) && satisFiyati > 0 
-                    });
-                    
-                    if (isNaN(satisFiyati) || satisFiyati <= 0) {
-                        const inputVal = document.getElementById('satisFiyati').value;
-                        Swal.fire('Uyarı', `Geçerli bir satış fiyatı giriniz. Girilen değer: "${inputVal}"`, 'warning');
-                        return;
-                    }
-                    
-                    await tamamlaSatis(key, satisMiktari, customerId, null, satisFiyati, isDebtSale);
-                }
-            });
+                </div>
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>
+                        <input type="checkbox" id="borcSatis"> Borçlu satış (müşteri hesabına yaz)
+                    </label>
+                </div>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Evet, Sat',
+        cancelButtonText: 'İptal',
+        confirmButtonColor: '#27ae60',
+        cancelButtonColor: '#6c757d',
+        allowOutsideClick: false,
+        didOpen: () => {
+            const popup = Swal.getPopup();
+            const saleCustomer = popup.querySelector('#sale-customer');
+            saleCustomer.innerHTML = '<option value="">Müşteri seçin</option>';
+            for (const [id, musteri] of Object.entries(musteriler)) {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = musteri.ad;
+                saleCustomer.appendChild(option);
+            }
+        },
+        preConfirm: () => {
+            const popup = Swal.getPopup();
+
+            const miktarEl = popup.querySelector('#satisMiktari');
+            const fiyatEl  = popup.querySelector('#satisFiyati');
+            const musteriEl = popup.querySelector('#sale-customer');
+            const borcEl = popup.querySelector('#borcSatis');
+
+            const miktar = parseInt((miktarEl?.value ?? '1'), 10) || 1;
+
+            // virgülü noktaya çevir + trim
+            const fiyatRaw = (fiyatEl?.value ?? '').replace(',', '.').trim();
+            const fiyat = parseFloat(fiyatRaw);
+
+            if (!fiyatRaw) {
+                Swal.showValidationMessage('Lütfen satış fiyatı giriniz.');
+                return false;
+            }
+            if (!Number.isFinite(fiyat) || fiyat <= 0) {
+                Swal.showValidationMessage(`Geçerli bir satış fiyatı giriniz. Girilen değer: "${fiyatEl?.value ?? ''}"`);
+                return false;
+            }
+            if (!Number.isInteger(miktar) || miktar <= 0) {
+                Swal.showValidationMessage('Satış miktarı 1 veya daha büyük olmalıdır.');
+                return false;
+            }
+            if (miktar > mevcutStok) {
+                Swal.showValidationMessage(`Stok yetersiz. Mevcut stok: ${mevcutStok}`);
+                return false;
+            }
+
+            return {
+                satisMiktari: miktar,
+                satisFiyati: fiyat,
+                customerId: musteriEl?.value || null,
+                isDebtSale: !!borcEl?.checked
+            };
         }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const { satisMiktari, satisFiyati, customerId, isDebtSale } = result.value;
+            await tamamlaSatis(key, satisMiktari, customerId, null, satisFiyati, isDebtSale);
+        }
+    });
+}
+
+
         // Satışı tamamla
         async function tamamlaSatis(key, miktar, musteriId, aciklama, satisFiyati, borc = false) {
             const urun = stokListesi[key];
             
-            // Fiyat ve miktar kontrolü - İyileştirilmiş validasyon
+            // Fiyat ve miktar kontrolü - Geliştirilmiş validasyon
             const fiyat = parseFloat(satisFiyati);
             const miktarSayi = parseInt(miktar);
             
-            console.log('💰 Satış fiyatı kontrolü:', { satisFiyati, fiyat, isValid: !isNaN(fiyat) && fiyat > 0 });
+            console.log('💰 Satış fiyatı kontrolü:', { 
+                satisFiyati, 
+                fiyat, 
+                isValid: !isNaN(fiyat) && fiyat > 0,
+                type: typeof satisFiyati,
+                isString: typeof satisFiyati === 'string',
+                stringLength: typeof satisFiyati === 'string' ? satisFiyati.length : 'N/A'
+            });
+            
+            // Geliştirilmiş fiyat validasyonu
+            if (typeof satisFiyati === 'string' && (!satisFiyati.trim() || satisFiyati.trim() === '')) {
+                Swal.fire('Hata', 'Lütfen satış fiyatı giriniz.', 'error');
+                return;
+            }
             
             if (isNaN(fiyat) || fiyat <= 0) {
-                Swal.fire('Hata', `Geçerli bir satış fiyatı giriniz. Girilen değer: "${satisFiyati}"`, 'error');
+                Swal.fire('Hata', `Geçerli bir satış fiyatı giriniz. Girilen değer: "${satisFiyati}" (Sayısal değer: ${fiyat})`, 'error');
                 return;
             }
             
             if (isNaN(miktarSayi) || miktarSayi <= 0) {
-                Swal.fire('Hata', `Geçerli bir miktar giriniz. Girilen değer: "${miktar}"`, 'error');
+                Swal.fire('Hata', `Geçerli bir miktar giriniz. Girilen değer: "${miktar}" (Sayısal değer: ${miktarSayi})`, 'error');
                 return;
             }
             
@@ -7186,6 +7345,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                                 <th>Fiyat</th>
                                 <th>Toplam</th>
                                 <th>Tür</th>
+                                <th>İşlemler</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -7200,6 +7360,11 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                                         <td>${satis.fiyat.toFixed(2)}</td>
                                         <td>${satis.toplam.toFixed(2)}</td>
                                         <td>${satis.borc ? 'Borç' : 'Nakit'}</td>
+                                        <td>
+                                            <button class="btn btn-danger btn-sm" onclick="deleteCustomerSale('${customerId}', '${satis.id}')" title="Bu satışı sil">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 `;
                             }).join('')}
@@ -7216,6 +7381,64 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             
             document.getElementById('customerDetailsContent').innerHTML = detailsContent;
             document.getElementById('customerDetailsModal').style.display = 'flex';
+        }
+        
+        // Müşteri satışını sil
+        function deleteCustomerSale(customerId, saleId) {
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: 'Bu satış kaydını silmek istediğinizden emin misiniz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Evet, Sil',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    try {
+                        // Satışı bul
+                        const saleIndex = satisGecmisi.findIndex(s => s.id === saleId);
+                        if (saleIndex === -1) {
+                            Swal.fire('Hata', 'Satış bulunamadı.', 'error');
+                            return;
+                        }
+                        
+                        const sale = satisGecmisi[saleIndex];
+                        
+                        // Stok miktarını geri ekle
+                        const product = stokListesi[sale.barkod];
+                        if (product) {
+                            product.stok_miktari = (product.stok_miktari || 0) + sale.miktar;
+                            if (product.miktar !== undefined) {
+                                product.miktar = product.stok_miktari;
+                            }
+                        }
+                        
+                        // Satışı sil
+                        satisGecmisi.splice(saleIndex, 1);
+                        
+                        // Real-time sync
+                        socket.emit('dataUpdate', {
+                            type: 'satis-delete',
+                            data: { id: saleId }
+                        });
+                        
+                        // UI güncelle
+                        stokTablosunuGuncelle();
+                        satisTablosunuGuncelle();
+                        guncellenenVerileriKaydet();
+                        
+                        // Müşteri detaylarını yenile
+                        showCustomerDetails(customerId);
+                        
+                        Swal.fire('Başarılı', 'Satış kaydı silindi ve stok geri eklendi.', 'success');
+                    } catch (error) {
+                        console.error('Satış silme hatası:', error);
+                        Swal.fire('Hata', 'Satış silinirken hata oluştu.', 'error');
+                    }
+                }
+            });
         }
         
         // Müşteri için PDF oluştur
@@ -7888,10 +8111,25 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         // Satış işlemleri - FIX: Eksik fonksiyonlar eklendi
         function satisDuzenle(satisId) {
             console.log('🔄 Satış düzenleme:', satisId);
+            console.log('🔍 Mevcut satışlar:', satisGecmisi.map(s => ({ id: s.id, barkod: s.barkod, urunAdi: s.urunAdi })));
             
-            const satis = satisGecmisi.find(s => s.id === satisId);
+            // Satışı farklı yollarla bulmaya çalış
+            let satis = satisGecmisi.find(s => s.id == satisId || s.id === satisId);
+            
             if (!satis) {
-                Swal.fire('Hata', 'Satış bulunamadı.', 'error');
+                // ID ile bulunamadıysa barkod ile dene
+                satis = satisGecmisi.find(s => s.barkod == satisId || s.barkod === satisId);
+            }
+            
+            if (!satis) {
+                // String ID ile de dene
+                satis = satisGecmisi.find(s => String(s.id) === String(satisId));
+            }
+            
+            if (!satis) {
+                console.error('❌ Satış bulunamadı:', { satisId, satisGecmisiLength: satisGecmisi.length });
+                console.log('🔍 Mevcut satışlar:', satisGecmisi.map(s => ({ id: s.id, barkod: s.barkod, urunAdi: s.urunAdi })));
+                Swal.fire('Hata', `Satış bulunamadı. ID: ${satisId}`, 'error');
                 return;
             }
             
@@ -7928,10 +8166,31 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         
         function satisSil(satisId) {
             console.log('🔄 Satış silme:', satisId);
+            console.log('🔍 Mevcut satışlar:', satisGecmisi.map(s => ({ id: s.id, barkod: s.barkod, urunAdi: s.urunAdi })));
+            
+            // Satışı farklı yollarla bulmaya çalış
+            let satis = satisGecmisi.find(s => s.id == satisId || s.id === satisId);
+            
+            if (!satis) {
+                // ID ile bulunamadıysa barkod ile dene
+                satis = satisGecmisi.find(s => s.barkod == satisId || s.barkod === satisId);
+            }
+            
+            if (!satis) {
+                // String ID ile de dene
+                satis = satisGecmisi.find(s => String(s.id) === String(satisId));
+            }
+            
+            if (!satis) {
+                console.error('❌ Satış bulunamadı:', { satisId, satisGecmisiLength: satisGecmisi.length });
+                console.log('🔍 Mevcut satışlar:', satisGecmisi.map(s => ({ id: s.id, barkod: s.barkod, urunAdi: s.urunAdi })));
+                Swal.fire('Hata', `Satış bulunamadı. ID: ${satisId}`, 'error');
+                return;
+            }
             
             Swal.fire({
                 title: 'Emin misiniz?',
-                text: 'Bu satış kaydını silmek istediğinizden emin misiniz?',
+                text: `"${satis.urunAdi || satis.urun_adi || 'Ürün'}" satışını silmek istediğinizden emin misiniz?`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
@@ -7942,12 +8201,12 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 if (result.isConfirmed) {
                     try {
                         // Local array'den kaldır
-                        satisGecmisi = satisGecmisi.filter(s => s.id !== satisId);
+                        satisGecmisi = satisGecmisi.filter(s => s.id !== satis.id);
                         
                         // Real-time sync
                         socket.emit('dataUpdate', {
                             type: 'satis-delete',
-                            data: { id: satisId }
+                            data: { id: satis.id }
                         });
                         
                         // UI güncelle
@@ -7964,10 +8223,25 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         }
         function urunIade(satisId) {
             console.log('🔄 Ürün iade:', satisId);
+            console.log('🔍 Mevcut satışlar:', satisGecmisi.map(s => ({ id: s.id, barkod: s.barkod, urunAdi: s.urunAdi })));
             
-            const satis = satisGecmisi.find(s => s.id === satisId);
+            // Satışı farklı yollarla bulmaya çalış
+            let satis = satisGecmisi.find(s => s.id == satisId || s.id === satisId);
+            
             if (!satis) {
-                Swal.fire('Hata', 'Satış bulunamadı.', 'error');
+                // ID ile bulunamadıysa barkod ile dene
+                satis = satisGecmisi.find(s => s.barkod == satisId || s.barkod === satisId);
+            }
+            
+            if (!satis) {
+                // String ID ile de dene
+                satis = satisGecmisi.find(s => String(s.id) === String(satisId));
+            }
+            
+            if (!satis) {
+                console.error('❌ Satış bulunamadı:', { satisId, satisGecmisiLength: satisGecmisi.length });
+                console.log('🔍 Mevcut satışlar:', satisGecmisi.map(s => ({ id: s.id, barkod: s.barkod, urunAdi: s.urunAdi })));
+                Swal.fire('Hata', `Satış bulunamadı. ID: ${satisId}`, 'error');
                 return;
             }
             
@@ -8893,12 +9167,16 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                         const networkInfo = result.networkInfo;
                         const primaryURL = networkInfo.primaryURL;
                         
+                        // QR kod oluştur
+                        const qrContainer = document.createElement('div');
+                        qrContainer.id = 'qrCodeContainer';
+                        
                         Swal.fire({
                             title: 'QR Bağlantı',
                             html: `
                                 <div style="text-align: center;">
                                     <p><strong>Yerel Ağ Bağlantısı</strong></p>
-                                    <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                                    <div id="qrCodeContainer" style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 10px;">
                                         <i class="fas fa-qrcode" style="font-size: 100px; color: var(--primary);"></i>
                                     </div>
                                     <p style="font-size: 14px; color: #666;">
@@ -8912,7 +9190,24 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                             showConfirmButton: true,
                             confirmButtonText: 'Kopyala',
                             showCancelButton: true,
-                            cancelButtonText: 'Kapat'
+                            cancelButtonText: 'Kapat',
+                            didOpen: () => {
+                                // QR kod oluştur
+                                if (window.QRCode) {
+                                    const qrContainer = document.getElementById('qrCodeContainer');
+                                    if (qrContainer) {
+                                        qrContainer.innerHTML = '';
+                                        new QRCode(qrContainer, {
+                                            text: primaryURL,
+                                            width: 200,
+                                            height: 200,
+                                            colorDark: "#000000",
+                                            colorLight: "#ffffff",
+                                            correctLevel: QRCode.CorrectLevel.H
+                                        });
+                                    }
+                                }
+                            }
                         }).then((result) => {
                             if (result.isConfirmed) {
                                 navigator.clipboard.writeText(primaryURL).then(() => {
@@ -9099,7 +9394,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 const now = Date.now();
                 // Sadece son 10 dakika içinde gerçek bir senkronizasyon olayı olduysa mesaj göster
                 if (now - lastSyncTime < 600000) { // 10 dakika
-                    showNotification('🔄 Veriler senkronize edildi', 'info');
+                    // showNotification('🔄 Veriler senkronize edildi', 'info');
                 }
             }, 600000); // 10 dakikada bir kontrol et
             
