@@ -2729,7 +2729,8 @@ app.put('/api/satis-guncelle/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { urunAdi, miktar, fiyat, toplam, tarih } = req.body;
-        console.log('🔄 Satış güncelleniyor:', id);
+        const idInt = parseInt(id);
+        console.log('🔄 Satış güncelleniyor:', idInt);
         
         const updateData = {
             urunAdi: urunAdi || null,
@@ -2743,11 +2744,11 @@ app.put('/api/satis-guncelle/:id', async (req, res) => {
             UPDATE satisGecmisi 
             SET urunAdi = ?, miktar = ?, fiyat = ?, toplam = ?, tarih = ?
             WHERE id = ?
-        `).run(updateData.urunAdi, updateData.miktar, updateData.fiyat, updateData.toplam, updateData.tarih, id);
+        `).run(updateData.urunAdi, updateData.miktar, updateData.fiyat, updateData.toplam, updateData.tarih, idInt);
         
         if (result.changes > 0) {
             // Get updated record
-            const updatedSale = db.prepare('SELECT * FROM satisGecmisi WHERE id = ?').get(id);
+            const updatedSale = db.prepare('SELECT * FROM satisGecmisi WHERE id = ?').get(idInt);
             
             // Real-time sync to all clients
             io.emit('dataUpdated', {
@@ -2784,9 +2785,10 @@ app.put('/api/satis-guncelle/:id', async (req, res) => {
 app.delete('/api/satis-sil/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        console.log('🗑️ Satış siliniyor:', id);
+        const idInt = parseInt(id);
+        console.log('🗑️ Satış siliniyor:', idInt);
         
-        const result = db.prepare('DELETE FROM satisGecmisi WHERE id = ?').run(id);
+        const result = db.prepare('DELETE FROM satisGecmisi WHERE id = ?').run(idInt);
         
         if (result.changes > 0) {
             // Real-time sync to all clients - FIX: emit to all clients, not just specific room
@@ -2835,8 +2837,9 @@ app.post('/api/satis-iade', async (req, res) => {
             });
         }
         
-        // Önce satışı kontrol et
-        const existingSale = db.prepare('SELECT * FROM satisGecmisi WHERE id = ? OR barkod = ?').get(satisId, barkod);
+        // Önce satışı kontrol et - ID'yi integer'a çevir
+        const satisIdInt = parseInt(satisId);
+        const existingSale = db.prepare('SELECT * FROM satisGecmisi WHERE id = ? OR barkod = ?').get(satisIdInt, barkod);
         
         if (!existingSale) {
             // Eğer satış ID ile bulunamadıysa, barkoda göre en son satışı bul
@@ -3555,6 +3558,40 @@ app.get('/api/network-info', (req, res) => {
 // QR Code connection page
 app.get('/qr-connect', (req, res) => {
     res.sendFile(path.join(__dirname, 'qr-connection.html'));
+});
+
+// Network info endpoint for mobile devices
+app.get('/api/network-info', (req, res) => {
+    const os = require('os');
+    const networkInterfaces = os.networkInterfaces();
+    let localIPs = [];
+    
+    // Find all local IP addresses
+    for (const name of Object.keys(networkInterfaces)) {
+        for (const interface of networkInterfaces[name]) {
+            if (interface.family === 'IPv4' && !interface.internal) {
+                localIPs.push({
+                    interface: name,
+                    ip: interface.address,
+                    url: `http://${interface.address}:${PORT}`,
+                    qrUrl: `http://${interface.address}:${PORT}/qr-connect`
+                });
+            }
+        }
+    }
+    
+    res.json({
+        success: true,
+        hostname: os.hostname(),
+        port: PORT,
+        networkInfo: {
+            localIPs: localIPs,
+            primaryIP: localIPs.length > 0 ? localIPs[0].ip : 'N/A',
+            primaryURL: localIPs.length > 0 ? localIPs[0].url : `http://localhost:${PORT}`
+        },
+        localUrl: `http://localhost:${PORT}`,
+        timestamp: new Date().toISOString()
+    });
 });
 
 // Start server

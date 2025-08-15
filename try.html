@@ -9171,22 +9171,51 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                         const qrContainer = document.createElement('div');
                         qrContainer.id = 'qrCodeContainer';
                         
+                        // Tüm IP adreslerini listele
+                        const localIPs = networkInfo.localIPs || [];
+                        const ipList = localIPs.map(ip => 
+                            `<div style="padding: 5px; margin: 3px 0; background: #f0f0f0; border-radius: 5px; font-size: 11px;">
+                                ${ip.interface}: ${ip.ip}
+                            </div>`
+                        ).join('');
+                        
                         Swal.fire({
-                            title: 'QR Bağlantı',
+                            title: 'Mobil Bağlantı Rehberi',
                             html: `
-                                <div style="text-align: center;">
-                                    <p><strong>Yerel Ağ Bağlantısı</strong></p>
-                                    <div id="qrCodeContainer" style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 10px;">
-                                        <i class="fas fa-qrcode" style="font-size: 100px; color: var(--primary);"></i>
+                                <div style="text-align: left; max-width: 500px; margin: 0 auto;">
+                                    <div style="text-align: center; margin-bottom: 20px;">
+                                        <div id="qrCodeContainer" style="padding: 15px; background: #f8f9fa; border-radius: 10px; margin-bottom: 10px;">
+                                            <i class="fas fa-qrcode" style="font-size: 80px; color: var(--primary);"></i>
+                                        </div>
+                                        <p style="font-size: 12px; color: #999; word-break: break-all; margin: 5px 0;">
+                                            <strong>${primaryURL}</strong>
+                                        </p>
                                     </div>
-                                    <p style="font-size: 14px; color: #666;">
-                                        Bu adresi telefonunuzla tarayarak bağlanabilirsiniz
-                                    </p>
-                                    <p style="font-size: 12px; color: #999; margin-top: 10px; word-break: break-all;">
-                                        ${primaryURL}
-                                    </p>
+                                    
+                                    <div style="font-size: 14px;">
+                                        <h4 style="color: var(--primary); margin-bottom: 10px;">📱 Bağlantı Adımları:</h4>
+                                        <ol style="margin-left: 20px; line-height: 1.6;">
+                                            <li>Telefonunuzun aynı Wi-Fi ağında olduğundan emin olun</li>
+                                            <li>QR kodu telefonunuzla tarayın VEYA</li>
+                                            <li>Bu adresi manuel olarak girin</li>
+                                        </ol>
+                                        
+                                        <h4 style="color: #e74c3c; margin: 15px 0 10px;">❗ Bağlanamıyorsanız:</h4>
+                                        <ul style="margin-left: 20px; line-height: 1.5; font-size: 13px;">
+                                            <li>Güvenlik duvarını geçici olarak kapatın</li>
+                                            <li>Windows Defender'da 3000 portuna izin verin</li>
+                                            <li>Telefon ve bilgisayar aynı alt ağda olmalı</li>
+                                            <li>Aşağıdaki IP adreslerinden birini deneyin</li>
+                                        </ul>
+                                        
+                                        <div style="margin-top: 15px; padding: 10px; background: #e8f4fd; border-radius: 5px;">
+                                            <strong style="color: var(--primary);">📡 Mevcut IP Adresleri:</strong>
+                                            ${ipList || '<div style="color: #999; font-style: italic;">IP adresi bulunamadı</div>'}
+                                        </div>
+                                    </div>
                                 </div>
                             `,
+                            width: 600,
                             showConfirmButton: true,
                             confirmButtonText: 'Kopyala',
                             showCancelButton: true,
