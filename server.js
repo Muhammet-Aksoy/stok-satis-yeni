@@ -5575,3 +5575,151 @@ app.post('/api/stok-yukle-veriler-json', async (req, res) => {
     setInterval(sendDailyBackup, 24 * 60 * 60 * 1000); // 24 saat
     setInterval(sendDailyBackup, 6 * 60 * 60 * 1000); // 6 saat
 }); */
+// İade işlemi endpoint'i - Düzeltildi
+app.post('/api/iade', async (req, res) => {
+    try {
+        const { satis_id, barkod, miktar, aciklama, musteri_id } = req.body;
+
+        if (!satis_id || !barkod || !miktar) {
+            return res.status(400).json({
+                success: false,
+                error: 'Eksik parametreler: satis_id, barkod ve miktar gerekli'
+            });
+        }
+
+        // Satış kaydını kontrol et
+        const satis = db.prepare('SELECT * FROM satisGecmisi WHERE id = ?').get(satis_id);
+        if (!satis) {
+            return res.status(404).json({
+                success: false,
+                error: 'Satış kaydı bulunamadı'
+            });
+        }
+
+        // İade miktarı kontrolü
+        if (miktar > satis.miktar) {
+            return res.status(400).json({
+                success: false,
+                error: 'İade miktarı satış miktarından fazla olamaz'
+            });
+        }
+
+        // Transaction ile iade işlemi
+        const transaction = db.transaction(() => {
+            // İade kaydı oluştur
+            const iadeResult = db.prepare(`
+                INSERT INTO iadeler 
+                (satis_id, barkod, urun_adi, miktar, fiyat, musteri_id, musteri_adi, aciklama)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(
+                satis_id, 
+                barkod, 
+                satis.urunAdi, 
+                miktar, 
+                satis.fiyat,
+                musteri_id || satis.musteriId,
+                satis.musteriAdi,
+                aciklama || 'İade işlemi'
+            );
+
+            // Stok geri ekle
+            db.prepare(`
+                UPDATE stok 
+                SET miktar = miktar + ?, updated_at = CURRENT_TIMESTAMP 
+                WHERE barkod = ?
+            `).run(miktar, barkod);
+
+            // Satış kaydını güncelle
+            if (miktar === satis.miktar) {
+                // Tam iade
+                db.prepare(`
+                    UPDATE satisGecmisi 
+                    SET miktar = 0, durum = 'iade_edildi', updated_at = CURRENT_TIMESTAMP 
+                    WHERE id = ?
+                `).run(satis_id);
+            } else {
+                // Kısmi iade
+                db.prepare(`
+                    UPDATE satisGecmisi 
+                    SET miktar = miktar - ?, durum = 'kismi_iade', updated_at = CURRENT_TIMESTAMP 
+                    WHERE id = ?
+                `).run(miktar, satis_id);
+            }
+
+            return iadeResult;
+        });
+
+        const result = transaction();
+
+        // Real-time update
+        io.emit('dataUpdate', {
+            type: 'iade',
+            data: {
+                satis_id,
+                barkod,
+                miktar,
+                durum: 'basarili'
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'İade işlemi başarıyla tamamlandı',
+            data: {
+                iade_id: result.lastInsertRowid,
+                satis_id,
+                miktar,
+                durum: 'basarili'
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ İade işlemi hatası:', error.message);
+        res.status(500).json({
+            success: false,
+            error: 'İade işlemi sırasında hata oluştu: ' + error.message
+        });
+    }
+});
+
+// İade geçmişi endpoint'i
+app.get('/api/iadeler', async (req, res) => {
+    try {
+        const { musteri_id, tarih_baslangic, tarih_bitis } = req.query;
+        
+        let query = 'SELECT * FROM iadeler WHERE 1=1';
+        let params = [];
+
+        if (musteri_id) {
+            query += ' AND musteri_id = ?';
+            params.push(musteri_id);
+        }
+
+        if (tarih_baslangic) {
+            query += ' AND DATE(iade_tarihi) >= DATE(?)';
+            params.push(tarih_baslangic);
+        }
+
+        if (tarih_bitis) {
+            query += ' AND DATE(iade_tarihi) <= DATE(?)';
+            params.push(tarih_bitis);
+        }
+
+        query += ' ORDER BY iade_tarihi DESC LIMIT 100';
+
+        const iadeler = db.prepare(query).all(...params);
+
+        res.json({
+            success: true,
+            data: iadeler,
+            count: iadeler.length
+        });
+
+    } catch (error) {
+        console.error('❌ İade geçmişi hatası:', error.message);
+        res.status(500).json({
+            success: false,
+            error: 'İade geçmişi alınamadı: ' + error.message
+        });
+    }
+});
