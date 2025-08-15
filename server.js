@@ -2711,16 +2711,34 @@ app.post('/api/backup-email', async (req, res) => {
 });
 
 // POST /api/backup-restore - Yedek dosyası yükleme endpoint'i
-app.post('/api/backup-restore', upload.single('backupFile'), async (req, res) => {
-    try {
-        console.log('🔄 Yedek dosyası yükleme işlemi başlatılıyor...');
-        
-        if (!req.file) {
-            return res.status(400).json({
-                success: false,
-                error: 'Yedek dosyası yüklenemedi'
+app.post('/api/backup-restore', (req, res) => {
+    const uploadHandler = upload.single('backupFile');
+    
+    uploadHandler(req, res, async (uploadError) => {
+        try {
+            console.log('🔄 Yedek dosyası yükleme işlemi başlatılıyor...');
+            
+            if (uploadError) {
+                console.error('❌ Upload hatası:', uploadError);
+                return res.status(400).json({
+                    success: false,
+                    error: 'Dosya yükleme hatası: ' + uploadError.message
+                });
+            }
+            
+            if (!req.file) {
+                console.error('❌ Dosya yüklenemedi');
+                return res.status(400).json({
+                    success: false,
+                    error: 'Yedek dosyası yüklenemedi'
+                });
+            }
+            
+            console.log('✅ Dosya başarıyla yüklendi:', {
+                originalname: req.file.originalname,
+                size: req.file.size,
+                mimetype: req.file.mimetype
             });
-        }
         
         let backupData;
         try {
@@ -2963,14 +2981,15 @@ app.post('/api/backup-restore', upload.single('backupFile'), async (req, res) =>
             timestamp: new Date().toISOString()
         });
         
-    } catch (error) {
-        console.error('❌ Yedek yükleme hatası:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Yedek yükleme hatası: ' + error.message,
-            timestamp: new Date().toISOString()
-        });
-    }
+        } catch (error) {
+            console.error('❌ Yedek yükleme hatası:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Yedek yükleme hatası: ' + error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
 });
 
 // DELETE /api/musteri-sil/:id - Müşteri sil

@@ -64,14 +64,14 @@
             --danger: #ff6b6b;
             --warning: #ffd93d;
             --info: #4ecdc4;
-            --primary: #6c5ce7;
-            --primary-dark: #5f3dc4;
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
             --menu-bg: #1e1e3f;
             --menu-hover: #2d2d44;
             --menu-text: #ffffff;
             --menu-border: #3d3d5f;
-            --button-bg: #6c5ce7;
-            --button-hover: #5f3dc4;
+            --button-bg: #3b82f6;
+            --button-hover: #2563eb;
             --button-text: #ffffff;
             --link-color: #74b9ff;
             --link-hover: #0984e3;
@@ -84,7 +84,7 @@
             --label-text: #ffffff;
             --placeholder-text: #a0a0a0;
             --tab-bg: #1a1f2e;
-            --tab-active: #4299e1;
+            --tab-active: #3b82f6;
             --tab-hover: #2d3748;
             --tab-text: #cbd5e0;
             --tab-border: #4a5568;
@@ -2988,6 +2988,9 @@
                     <input type="file" id="restoreFile" accept=".json" style="display: none;">
                     <button class="btn btn-success" onclick="document.getElementById('restoreFile').click()">
                         <i class="fas fa-upload"></i> Dosya Seç
+                    </button>
+                    <button class="btn btn-info" onclick="testBackupRestore()" style="margin-left: 10px;">
+                        <i class="fas fa-vial"></i> Test Restore
                     </button>
                     <div id="restoreStatus" style="margin-top: 10px;"></div>
                 </div>
@@ -8073,8 +8076,8 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     datasets: [{
                         label: 'Toplam Satış (₺)',
                         data: data,
-                        backgroundColor: '#9b59b6',
-                        borderColor: '#8e44ad',
+                        backgroundColor: '#10b981',
+                        borderColor: '#059669',
                         borderWidth: 1
                     }]
                 },
@@ -8967,15 +8970,25 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 document.getElementById('restoreStatus').innerHTML = '<p style="color: #3498db;">🔄 Yedek dosyası yükleniyor...</p>';
                 
                 // FormData ile dosyayı backend'e gönder
+                console.log('📤 Dosya backend\'e gönderiliyor:', file.name, file.size, 'bytes');
                 const formData = new FormData();
                 formData.append('backupFile', file);
                 
+                console.log('🌐 API çağrısı yapılıyor:', `${API_BASE}/api/backup-restore`);
                 const response = await fetch(`${API_BASE}/api/backup-restore`, {
                     method: 'POST',
                     body: formData
                 });
                 
+                console.log('📥 Response alındı:', response.status, response.statusText);
+                console.log('📄 Response detayları:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries())
+                });
+                
                 const result = await response.json();
+                console.log('🔍 Response JSON:', result);
                 
                 if (result.success) {
                     const stats = result.stats;
@@ -9024,8 +9037,113 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 
             } catch (error) {
                 console.error('❌ Yedek dosyası yükleme hatası:', error);
-                document.getElementById('restoreStatus').innerHTML = '<p style="color: #e74c3c;">❌ Dosya yükleme hatası!</p>';
+                document.getElementById('restoreStatus').innerHTML = `<p style="color: #e74c3c;">❌ Dosya yükleme hatası: ${error.message}</p>`;
                 showNotification('❌ Dosya yükleme hatası: ' + error.message, 'error');
+                
+                // Detaylı hata bilgisi
+                if (error.stack) {
+                    console.error('Stack trace:', error.stack);
+                }
+            }
+        }
+        
+        // Test backup restore fonksiyonu
+        async function testBackupRestore() {
+            try {
+                console.log('🧪 Test backup restore başlatılıyor...');
+                
+                // Test için küçük bir backup data oluştur
+                const testData = {
+                    timestamp: new Date().toISOString(),
+                    version: '1.0',
+                    stokListesi: {
+                        "FRONTEND_TEST_123_": {
+                            barkod: "FRONTEND_TEST_123",
+                            urun_adi: "Frontend Test Ürünü",
+                            marka: "TEST",
+                            stok_miktari: 5,
+                            alisFiyati: 50,
+                            satisFiyati: 75,
+                            kategori: "Test",
+                            aciklama: "Frontend test ürünü",
+                            urun_id: "frontend_test_123",
+                            varyant_id: "",
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        }
+                    },
+                    satisGecmisi: [{
+                        id: 99999,
+                        barkod: "FRONTEND_TEST_123",
+                        urunAdi: "Frontend Test Ürünü", 
+                        miktar: 1,
+                        fiyat: 75,
+                        tarih: new Date().toISOString(),
+                        musteriId: "",
+                        musteriAdi: "",
+                        created_at: new Date().toISOString(),
+                        borc: 0,
+                        toplam: 75,
+                        alisFiyati: 50
+                    }],
+                    musteriler: {},
+                    borclarim: {}
+                };
+                
+                // JSON Blob oluştur
+                const blob = new Blob([JSON.stringify(testData, null, 2)], { type: 'application/json' });
+                
+                // FormData oluştur
+                const formData = new FormData();
+                formData.append('backupFile', blob, 'frontend_test_backup.json');
+                
+                document.getElementById('restoreStatus').innerHTML = '<p style="color: #3498db;">🧪 Test backup yükleniyor...</p>';
+                
+                console.log('🌐 Test API çağrısı yapılıyor:', `${API_BASE}/api/backup-restore`);
+                const response = await fetch(`${API_BASE}/api/backup-restore`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('📥 Test Response alındı:', response.status, response.statusText);
+                
+                const result = await response.json();
+                console.log('🔍 Test Response JSON:', result);
+                
+                if (result.success) {
+                    const stats = result.stats;
+                    document.getElementById('restoreStatus').innerHTML = `
+                        <div style="color: #27ae60; background: #d4edda; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                            <h4 style="margin: 0 0 10px 0;">✅ Test Backup Başarılı!</h4>
+                            <div style="font-size: 14px;">
+                                <strong>📦 Ürünler:</strong> +${stats.stok.added} yeni, ~${stats.stok.updated} güncellendi, ⏭️${stats.stok.skipped} atlandı<br>
+                                <strong>💰 Satışlar:</strong> +${stats.satis.added} yeni, ⏭️${stats.satis.skipped} atlandı<br>
+                                <strong>👥 Müşteriler:</strong> +${stats.musteri.added} yeni, ~${stats.musteri.updated} güncellendi<br>
+                                <strong>💳 Borçlar:</strong> +${stats.borc.added} yeni, ~${stats.borc.updated} güncellendi
+                            </div>
+                        </div>
+                    `;
+                    
+                    showNotification('✅ Test backup başarılı! Sistem çalışıyor.', 'success');
+                    
+                    // Verileri yeniden yükle
+                    setTimeout(() => {
+                        tumVerileriYukle();
+                    }, 1000);
+                    
+                } else {
+                    document.getElementById('restoreStatus').innerHTML = `<p style="color: #e74c3c;">❌ Test Hatası: ${result.error}</p>`;
+                    showNotification('❌ Test backup başarısız: ' + result.error, 'error');
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('restoreStatus').innerHTML = '';
+                }, 8000);
+                
+            } catch (error) {
+                console.error('❌ Test backup hatası:', error);
+                document.getElementById('restoreStatus').innerHTML = `<p style="color: #e74c3c;">❌ Test Hatası: ${error.message}</p>`;
+                showNotification('❌ Test backup hatası: ' + error.message, 'error');
             }
         }
         
