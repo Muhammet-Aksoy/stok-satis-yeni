@@ -7,11 +7,28 @@ const path = require('path');
 const fs = require('fs-extra');
 const nodemailer = require('nodemailer');
 const XLSX = require('xlsx');
+const multer = require('multer');
 
 // Server configuration - ULTRA OPTIMIZED
 const PORT = process.env.PORT || 3001;
 const app = express();
 const server = http.createServer(app);
+
+// Multer configuration for file uploads
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 50 * 1024 * 1024 // 50MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'application/json' || file.originalname.endsWith('.json')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Sadece JSON dosyaları kabul edilir'), false);
+        }
+    }
+});
+
 const io = socketIo(server, {
     cors: {
         origin: "*",
@@ -2523,25 +2540,25 @@ app.post('/api/satis-ekle', async (req, res) => {
                 throw new Error('Yetersiz stok');
             }
             
-            // Stok miktarını güncelle
-            const yeniMiktar = stokUrunu.miktar - satis.miktar;
-            db.prepare('UPDATE stok SET miktar = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(yeniMiktar, stokUrunu.id);
-            
-            // 2. Duplicate satış kontrolü
+            // 2. Duplicate satış kontrolü - STOK GÜNCELLEMESİNDEN ÖNCE
             const existingSale = db.prepare(`
                 SELECT * FROM satisGecmisi 
                 WHERE barkod = ? AND tarih = ? AND miktar = ? AND fiyat = ?
             `).get(satis.barkod, satis.tarih, satis.miktar, satis.fiyat);
             
             if (existingSale) {
-                console.log('⚠️ Duplicate sale detected, skipping:', satis);
+                console.log('⚠️ Duplicate sale detected, skipping (stock not modified):', satis);
                 return { 
                     success: true, 
-                    message: 'Satış zaten mevcut',
+                    message: 'Bu satış zaten kayıtlarda mevcut, tekrar eklenmedi',
                     data: existingSale,
-                    stokGuncellendi: true
+                    duplicate: true
                 };
             }
+            
+            // Stok miktarını güncelle - Sadece duplicate değilse
+            const yeniMiktar = stokUrunu.miktar - satis.miktar;
+            db.prepare('UPDATE stok SET miktar = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(yeniMiktar, stokUrunu.id);
             
             // 3. Satışı ekle
             const toplam = (parseFloat(satis.fiyat) || 0) * (parseInt(satis.miktar) || 0);
@@ -2691,6 +2708,288 @@ app.post('/api/backup-email', async (req, res) => {
             timestamp: new Date().toISOString()
         });
     }
+});
+
+// POST /api/backup-restore - Yedek dosyası yükleme endpoint'i
+app.post('/api/backup-restore', (req, res) => {
+    const uploadHandler = upload.single('backupFile');
+    
+    uploadHandler(req, res, async (uploadError) => {
+        try {
+            console.log('🔄 Yedek dosyası yükleme işlemi başlatılıyor...');
+            
+            if (uploadError) {
+                console.error('❌ Upload hatası:', uploadError);
+                return res.status(400).json({
+                    success: false,
+                    error: 'Dosya yükleme hatası: ' + uploadError.message
+                });
+            }
+            
+            if (!req.file) {
+                console.error('❌ Dosya yüklenemedi');
+                return res.status(400).json({
+                    success: false,
+                    error: 'Yedek dosyası yüklenemedi'
+                });
+            }
+            
+            console.log('✅ Dosya başarıyla yüklendi:', {
+                originalname: req.file.originalname,
+                size: req.file.size,
+                mimetype: req.file.mimetype
+            });
+        
+        let backupData;
+        try {
+            const fileContent = req.file.buffer.toString('utf8');
+            backupData = JSON.parse(fileContent);
+            console.log('✅ Yedek dosyası başarıyla ayrıştırıldı');
+        } catch (parseError) {
+            console.error('❌ JSON ayrıştırma hatası:', parseError);
+            return res.status(400).json({
+                success: false,
+                error: 'Geçersiz JSON dosyası'
+            });
+        }
+        
+        // Backup verilerini doğrula
+        if (!backupData.stokListesi && !backupData.satisGecmisi && !backupData.musteriler && !backupData.borclarim) {
+            return res.status(400).json({
+                success: false,
+                error: 'Geçersiz yedek dosyası formatı'
+            });
+        }
+        
+        console.log('📊 Yedek dosyasından okunan veriler:', {
+            stok: Object.keys(backupData.stokListesi || {}).length,
+            satis: (backupData.satisGecmisi || []).length,
+            musteri: Object.keys(backupData.musteriler || {}).length,
+            borc: Object.keys(backupData.borclarim || {}).length
+        });
+        
+        // Transaction ile güvenli yükleme - SADECE YENİ VERİLER EKLEME
+        const result = db.transaction(() => {
+            let stats = {
+                stok: { added: 0, updated: 0, skipped: 0 },
+                satis: { added: 0, skipped: 0 },
+                musteri: { added: 0, updated: 0, skipped: 0 },
+                borc: { added: 0, updated: 0, skipped: 0 }
+            };
+            
+            // Stok verilerini yükle - Mevcut olanları güncelle, yeni olanları ekle
+            if (backupData.stokListesi) {
+                Object.entries(backupData.stokListesi).forEach(([key, urun]) => {
+                    try {
+                        if (!urun.barkod) {
+                            stats.stok.skipped++;
+                            return;
+                        }
+                        
+                        const existingProduct = db.prepare('SELECT id, miktar FROM stok WHERE barkod = ?').get(urun.barkod);
+                        
+                        if (existingProduct) {
+                            // Mevcut ürünü güncelle (stok miktarını ekle, diğer bilgileri güncelle)
+                            const newStock = (existingProduct.miktar || 0) + (urun.stok_miktari || urun.miktar || 0);
+                            
+                            db.prepare(`
+                                UPDATE stok SET 
+                                    ad = ?, marka = ?, miktar = ?, alisFiyati = ?, 
+                                    satisFiyati = ?, kategori = ?, aciklama = ?, 
+                                    varyant_id = ?, updated_at = CURRENT_TIMESTAMP
+                                WHERE barkod = ?
+                            `).run(
+                                urun.urun_adi || urun.ad || urun.urunAdi || '',
+                                urun.marka || '',
+                                newStock,
+                                urun.alisFiyati || 0,
+                                urun.fiyat || urun.satisFiyati || 0,
+                                urun.kategori || '',
+                                urun.aciklama || '',
+                                urun.varyant_id || '',
+                                urun.barkod
+                            );
+                            stats.stok.updated++;
+                        } else {
+                            // Yeni ürün ekle
+                            db.prepare(`
+                                INSERT INTO stok (barkod, ad, marka, miktar, alisFiyati, satisFiyati, kategori, aciklama, varyant_id)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            `).run(
+                                urun.barkod,
+                                urun.urun_adi || urun.ad || urun.urunAdi || '',
+                                urun.marka || '',
+                                urun.stok_miktari || urun.miktar || 0,
+                                urun.alisFiyati || 0,
+                                urun.fiyat || urun.satisFiyati || 0,
+                                urun.kategori || '',
+                                urun.aciklama || '',
+                                urun.varyant_id || ''
+                            );
+                            stats.stok.added++;
+                        }
+                    } catch (error) {
+                        console.error('❌ Stok yükleme hatası:', error);
+                        stats.stok.skipped++;
+                    }
+                });
+            }
+            
+            // Satış geçmişini yükle - SADECE YENİ SATIŞLAR
+            if (backupData.satisGecmisi && Array.isArray(backupData.satisGecmisi)) {
+                backupData.satisGecmisi.forEach(satis => {
+                    try {
+                        if (!satis.barkod || !satis.tarih) {
+                            stats.satis.skipped++;
+                            return;
+                        }
+                        
+                        // Gelişmiş duplicate kontrolü - tarih, barkod, miktar ve fiyat ile unique ID oluştur
+                        const uniqueKey = `${satis.barkod}_${satis.tarih}_${satis.miktar}_${satis.fiyat}`;
+                        const existingSale = db.prepare(`
+                            SELECT id FROM satisGecmisi 
+                            WHERE barkod = ? AND tarih = ? AND miktar = ? AND fiyat = ?
+                        `).get(satis.barkod, satis.tarih, satis.miktar, satis.fiyat);
+                        
+                        if (!existingSale) {
+                            const alisFiyati = parseFloat(satis.alisFiyati) || 0;
+                            const miktar = parseInt(satis.miktar) || 0;
+                            const fiyat = parseFloat(satis.fiyat) || 0;
+                            const toplam = parseFloat(satis.toplam) || (fiyat * miktar) || 0;
+                            const borc = satis.borc ? 1 : 0;
+                            
+                            db.prepare(`
+                                INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, alisFiyati, toplam, borc, tarih, musteriId, musteriAdi)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            `).run(
+                                satis.barkod,
+                                satis.urunAdi || '',
+                                miktar,
+                                fiyat,
+                                alisFiyati,
+                                toplam,
+                                borc,
+                                satis.tarih,
+                                satis.musteriId || '',
+                                satis.musteriAdi || ''
+                            );
+                            stats.satis.added++;
+                        } else {
+                            stats.satis.skipped++;
+                        }
+                    } catch (error) {
+                        console.error('❌ Satış yükleme hatası:', error);
+                        stats.satis.skipped++;
+                    }
+                });
+            }
+            
+            // Müşterileri yükle - Mevcut olanları güncelle, yeni olanları ekle
+            if (backupData.musteriler) {
+                Object.entries(backupData.musteriler).forEach(([id, musteri]) => {
+                    try {
+                        if (!musteri.ad) {
+                            stats.musteri.skipped++;
+                            return;
+                        }
+                        
+                        const existingCustomer = db.prepare('SELECT id FROM musteriler WHERE ad = ? OR telefon = ?').get(musteri.ad, musteri.telefon);
+                        
+                        if (existingCustomer) {
+                            db.prepare(`
+                                UPDATE musteriler SET 
+                                    ad = ?, telefon = ?, adres = ?, bakiye = ?, updated_at = CURRENT_TIMESTAMP
+                                WHERE id = ?
+                            `).run(
+                                musteri.ad,
+                                musteri.telefon || '',
+                                musteri.adres || '',
+                                musteri.bakiye || 0,
+                                existingCustomer.id
+                            );
+                            stats.musteri.updated++;
+                        } else {
+                            db.prepare(`
+                                INSERT INTO musteriler (ad, telefon, adres, bakiye)
+                                VALUES (?, ?, ?, ?)
+                            `).run(
+                                musteri.ad,
+                                musteri.telefon || '',
+                                musteri.adres || '',
+                                musteri.bakiye || 0
+                            );
+                            stats.musteri.added++;
+                        }
+                    } catch (error) {
+                        console.error('❌ Müşteri yükleme hatası:', error);
+                        stats.musteri.skipped++;
+                    }
+                });
+            }
+            
+            // Borçları yükle - Mevcut olanları güncelle, yeni olanları ekle
+            if (backupData.borclarim) {
+                Object.entries(backupData.borclarim).forEach(([id, borc]) => {
+                    try {
+                        if (!borc.alacakli || !borc.miktar) {
+                            stats.borc.skipped++;
+                            return;
+                        }
+                        
+                        const existingDebt = db.prepare('SELECT id FROM borclarim WHERE alacakli = ? AND miktar = ? AND tarih = ?')
+                            .get(borc.alacakli, borc.miktar, borc.tarih);
+                        
+                        if (!existingDebt) {
+                            db.prepare(`
+                                INSERT INTO borclarim (alacakli, miktar, aciklama, tarih, odemeTarihi, durum)
+                                VALUES (?, ?, ?, ?, ?, ?)
+                            `).run(
+                                borc.alacakli,
+                                borc.miktar,
+                                borc.aciklama || '',
+                                borc.tarih,
+                                borc.odemeTarihi || null,
+                                borc.durum || 'beklemede'
+                            );
+                            stats.borc.added++;
+                        } else {
+                            stats.borc.skipped++;
+                        }
+                    } catch (error) {
+                        console.error('❌ Borç yükleme hatası:', error);
+                        stats.borc.skipped++;
+                    }
+                });
+            }
+            
+            return stats;
+        })();
+        
+        console.log('✅ Yedek dosyası başarıyla yüklendi:', result);
+        
+        // Tüm client'lara bildir
+        io.emit('dataUpdated', {
+            type: 'backup-restored',
+            stats: result,
+            timestamp: new Date().toISOString()
+        });
+        
+        res.json({
+            success: true,
+            message: 'Yedek dosyası başarıyla yüklendi',
+            stats: result,
+            timestamp: new Date().toISOString()
+        });
+        
+        } catch (error) {
+            console.error('❌ Yedek yükleme hatası:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Yedek yükleme hatası: ' + error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
 });
 
 // DELETE /api/musteri-sil/:id - Müşteri sil
