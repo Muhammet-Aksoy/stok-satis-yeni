@@ -9,7 +9,7 @@ const nodemailer = require('nodemailer');
 const XLSX = require('xlsx');
 
 // Server configuration - ULTRA OPTIMIZED
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -202,6 +202,15 @@ function initializeDatabase() {
         
         // Update existing products to have urun_id if missing
         try {
+            // First check if urun_id column exists
+            const stokCols = db.prepare("PRAGMA table_info(stok)").all();
+            const hasUrunId = stokCols.some(col => col.name === 'urun_id');
+            
+            if (!hasUrunId) {
+                console.log('➕ urun_id sütunu ekleniyor...');
+                db.exec("ALTER TABLE stok ADD COLUMN urun_id TEXT");
+            }
+            
             const productsWithoutUrunId = db.prepare('SELECT * FROM stok WHERE urun_id IS NULL OR urun_id = ""').all();
             console.log(`🔄 Updating ${productsWithoutUrunId.length} products with urun_id...`);
             
