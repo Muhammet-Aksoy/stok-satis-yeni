@@ -2839,57 +2839,69 @@ app.post('/api/satis-iade', async (req, res) => {
         
         // Önce satışı kontrol et - ID'yi integer'a çevir
         const satisIdInt = parseInt(satisId);
-        const existingSale = db.prepare('SELECT * FROM satisGecmisi WHERE id = ? OR barkod = ?').get(satisIdInt, barkod);
+        const existingSale = db.prepare('SELECT * FROM satisGecmisi WHERE id = ?').get(satisIdInt);
         
         if (!existingSale) {
-            // Eğer satış ID ile bulunamadıysa, barkoda göre en son satışı bul
-            const latestSaleByBarcode = db.prepare('SELECT * FROM satisGecmisi WHERE barkod = ? ORDER BY id DESC LIMIT 1').get(barkod);
-            
-            if (!latestSaleByBarcode) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Bu ürün için satış kaydı bulunamadı',
-                    barkod: barkod,
-                    timestamp: new Date().toISOString()
-                });
-            }
-            
-            // En son satışı kullan
-            const deleteResult = db.prepare('DELETE FROM satisGecmisi WHERE id = ?').run(latestSaleByBarcode.id);
-            console.log(`✅ Barkod ${barkod} için en son satış (ID: ${latestSaleByBarcode.id}) iade edildi`);
-        } else {
-            // Satışı veritabanından sil
-            const deleteResult = db.prepare('DELETE FROM satisGecmisi WHERE id = ?').run(existingSale.id);
-            console.log(`✅ Satış ID ${existingSale.id} iade edildi`);
+            return res.status(404).json({
+                success: false,
+                message: 'Satış kaydı bulunamadı',
+                satisId: satisId,
+                timestamp: new Date().toISOString()
+            });
         }
         
-        // Stok güncellemesi
+        // Satışı veritabanından sil
+        const deleteResult = db.prepare('DELETE FROM satisGecmisi WHERE id = ?').run(existingSale.id);
+        console.log(`✅ Satış ID ${existingSale.id} iade edildi`);
+        
+        if (deleteResult.changes === 0) {
+            return res.status(500).json({
+                success: false,
+                message: 'Satış kaydı silinemedi',
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+        // Stok güncellemesi - barkodu satış kaydından al
         let stokGuncellemesi = null;
-        const existingStock = db.prepare('SELECT * FROM stok WHERE barkod = ?').get(barkod);
+        const saleBarcode = existingSale.barkod;
+        const saleQuantity = existingSale.miktar;
+        
+        // Mevcut stoku kontrol et
+        const existingStock = db.prepare('SELECT * FROM stok WHERE barkod = ?').get(saleBarcode);
         
         if (existingStock) {
             // Mevcut stok miktarını artır
-            const newAmount = existingStock.miktar + miktar;
-            db.prepare('UPDATE stok SET miktar = ?, updated_at = CURRENT_TIMESTAMP WHERE barkod = ?').run(newAmount, barkod);
+            const newAmount = existingStock.miktar + saleQuantity;
+            const updateResult = db.prepare('UPDATE stok SET miktar = ?, updated_at = CURRENT_TIMESTAMP WHERE barkod = ?').run(newAmount, saleBarcode);
             
-            // Güncellenmiş stok bilgisini al
-            stokGuncellemesi = db.prepare('SELECT * FROM stok WHERE barkod = ?').get(barkod);
+            if (updateResult.changes > 0) {
+                // Güncellenmiş stok bilgisini al
+                stokGuncellemesi = db.prepare('SELECT * FROM stok WHERE barkod = ?').get(saleBarcode);
+            }
         } else {
-            // Yeni ürün olarak ekle
+            // Yeni ürün olarak ekle - sadece satış kaydında ürün varsa ve stokta yoksa
             const insertResult = db.prepare(`
-                INSERT INTO stok (barkod, ad, miktar, alisFiyati, created_at, updated_at)
-                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-            `).run(barkod, urunAdi, miktar, alisFiyati || 0);
+                INSERT INTO stok (urun_id, barkod, ad, miktar, alisFiyati, satisFiyati, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            `).run(
+                generateUrunId(),
+                saleBarcode, 
+                existingSale.urunAdi || urunAdi || 'İade Edilen Ürün', 
+                saleQuantity, 
+                existingSale.alisFiyati || alisFiyati || 0,
+                existingSale.fiyat || 0
+            );
             
             if (insertResult.changes > 0) {
-                stokGuncellemesi = db.prepare('SELECT * FROM stok WHERE barkod = ?').get(barkod);
+                stokGuncellemesi = db.prepare('SELECT * FROM stok WHERE barkod = ?').get(saleBarcode);
             }
         }
         
-        // Real-time sync to all clients - FIX: broadcast to all clients
+        // Real-time sync to all clients
         io.emit('dataUpdated', {
             type: 'satis-iade',
-            data: { satisId, barkod, stokGuncellemesi },
+            data: { satisId: existingSale.id, barkod: saleBarcode, stokGuncellemesi },
             timestamp: new Date().toISOString()
         });
         
@@ -2897,6 +2909,7 @@ app.post('/api/satis-iade', async (req, res) => {
             success: true, 
             message: 'İade başarıyla tamamlandı',
             stokGuncellemesi,
+            deletedSaleId: existingSale.id,
             timestamp: new Date().toISOString()
         });
         
@@ -3672,7 +3685,9 @@ app.put('/api/stok-guncelle/:id', async (req, res) => {
         if (!existingProduct) {
             return res.status(404).json({
                 success: false,
-                error: 'Ürün bulunamadı'
+                message: 'Ürün bulunamadı',
+                error: 'Ürün bulunamadı',
+                timestamp: new Date().toISOString()
             });
         }
         
@@ -3683,7 +3698,9 @@ app.put('/api/stok-guncelle/:id', async (req, res) => {
             if (duplicateBarcode) {
                 return res.status(400).json({
                     success: false,
-                    error: 'Bu barkod başka bir ürün tarafından kullanılıyor'
+                    message: 'Bu barkod başka bir ürün tarafından kullanılıyor',
+                    error: 'Bu barkod başka bir ürün tarafından kullanılıyor',
+                    timestamp: new Date().toISOString()
                 });
             }
         }
@@ -3707,6 +3724,15 @@ app.put('/api/stok-guncelle/:id', async (req, res) => {
             updateData.varyant_id || existingProduct.varyant_id,
             id
         );
+        
+        if (result.changes === 0) {
+            return res.status(500).json({
+                success: false,
+                message: 'Ürün güncellenemedi',
+                error: 'Ürün güncellenemedi',
+                timestamp: new Date().toISOString()
+            });
+        }
         
         // Güncellenmiş ürünü al
         const updatedProduct = db.prepare('SELECT * FROM stok WHERE id = ?').get(id);
@@ -4336,10 +4362,10 @@ app.post('/api/test-veri-yukle', async (req, res) => {
     }
 });
 
-// Yedek yükleme sistemi - GELİŞMİŞ VERSİYON
+// Yedek yükleme sistemi - GELİŞMİŞ VERSİYON (SADECE YENİLERİ EKLE)
 app.post('/api/yedek-yukle-gelismis', async (req, res) => {
     try {
-        console.log('🔄 Gelişmiş yedek yükleme sistemi başlatılıyor...');
+        console.log('🔄 Gelişmiş yedek yükleme sistemi başlatılıyor (sadece yeni ürünler eklenecek)...');
         
         // Yedek dosyalarını kontrol et
         const backupFiles = [
@@ -4392,7 +4418,7 @@ app.post('/api/yedek-yukle-gelismis', async (req, res) => {
             let errorCount = 0;
             let skippedCount = 0;
             
-            // Stok verilerini yükle
+            // Stok verilerini yükle - SADECE YENİLERİ EKLE
             if (yedekData.stokListesi) {
                 Object.entries(yedekData.stokListesi).forEach(([key, urun]) => {
                     try {
@@ -4401,35 +4427,20 @@ app.post('/api/yedek-yukle-gelismis', async (req, res) => {
                             return; // Barkod yoksa atla
                         }
                         
-                        // Barkod kontrolü
+                        // Barkod kontrolü - sadece yeni ürünleri ekle
                         const existingProduct = db.prepare('SELECT id FROM stok WHERE barkod = ?').get(urun.barkod);
                         
                         if (existingProduct) {
-                            // Güncelle
-                            db.prepare(`
-                                UPDATE stok SET 
-                                    ad = ?, marka = ?, miktar = ?, alisFiyati = ?, 
-                                    satisFiyati = ?, kategori = ?, aciklama = ?, 
-                                    varyant_id = ?, updated_at = CURRENT_TIMESTAMP
-                                WHERE barkod = ?
-                            `).run(
-                                urun.urun_adi || urun.ad || urun.urunAdi || urun.barkod || '',
-                                urun.marka || '',
-                                urun.stok_miktari || urun.miktar || 0,
-                                urun.alisFiyati || 0,
-                                urun.fiyat || urun.satisFiyati || 0,
-                                urun.kategori || '',
-                                urun.aciklama || '',
-                                urun.varyant_id || '',
-                                urun.barkod
-                            );
-                            updatedCount++;
+                            // Mevcut ürün - atla (güncelleme yapma)
+                            skippedCount++;
+                            console.log(`⏭️ Mevcut ürün atlandı: ${urun.barkod} - ${urun.urun_adi || urun.ad || urun.urunAdi}`);
                         } else {
-                            // Yeni ekle
+                            // Sadece yeni ürünleri ekle
                             db.prepare(`
-                                INSERT INTO stok (barkod, ad, marka, miktar, alisFiyati, satisFiyati, kategori, aciklama, varyant_id)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                INSERT INTO stok (urun_id, barkod, ad, marka, miktar, alisFiyati, satisFiyati, kategori, aciklama, varyant_id, created_at, updated_at)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                             `).run(
+                                generateUrunId(),
                                 urun.barkod,
                                 urun.urun_adi || urun.ad || urun.urunAdi || urun.barkod || '',
                                 urun.marka || '',
@@ -4441,6 +4452,7 @@ app.post('/api/yedek-yukle-gelismis', async (req, res) => {
                                 urun.varyant_id || ''
                             );
                             insertedCount++;
+                            console.log(`✅ Yeni ürün eklendi: ${urun.barkod} - ${urun.urun_adi || urun.ad || urun.urunAdi}`);
                         }
                     } catch (error) {
                         console.error('❌ Stok yükleme hatası:', error);

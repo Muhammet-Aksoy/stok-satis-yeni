@@ -6286,7 +6286,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                         }
                     }
                 } else {
-                    throw new Error(result.message || 'Bilinmeyen hata');
+                    throw new Error(result.message || result.error || 'Bilinmeyen hata');
                 }
                 
             } catch (error) {
@@ -6352,6 +6352,29 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                                 showConfirmButton: false,
                                 timer: 1500
                             });
+                        } else if (!result.canDelete && result.salesCount > 0) {
+                            // Satışlı ürün için özel durumu handle et
+                            Swal.fire({
+                                title: 'Ürün Daha Önce Satılmış',
+                                html: `<p>${result.message}</p><p>Bu ürünü yine de silmek istiyor musunuz?</p>`,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                showDenyButton: true,
+                                confirmButtonText: 'Evet, Zorla Sil',
+                                denyButtonText: 'Satışları İade Et',
+                                cancelButtonText: 'İptal',
+                                confirmButtonColor: '#e74c3c',
+                                denyButtonColor: '#f39c12',
+                                cancelButtonColor: '#6c757d'
+                            }).then(async (forceResult) => {
+                                if (forceResult.isConfirmed) {
+                                    // Force delete
+                                    await forcedeleteProduct(urun, key);
+                                } else if (forceResult.isDenied) {
+                                    // Show sales for this product
+                                    showProductSalesForReturn(urun.barkod);
+                                }
+                            });
                         } else {
                             throw new Error(result.message);
                         }
@@ -6376,6 +6399,108 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
 
             
             editingBarkod = null;
+        }
+        
+        // Ürünü zorla sil
+        async function forcedeleteProduct(urun, key) {
+            try {
+                const deleteUrl = urun.id ? 
+                    `${API_BASE}/api/stok-sil/${urun.id}?force=true` : 
+                    `${API_BASE}/api/stok-sil-barkod/${encodeURIComponent(urun.barkod)}?force=true`;
+                
+                const response = await fetch(deleteUrl, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Local data dan sil
+                    delete stokListesi[key];
+                    
+                    // Real-time sync to other clients
+                    socket.emit('dataUpdate', {
+                        type: 'stok-delete',
+                        data: { 
+                            id: urun.id,
+                            barkod: urun.barkod,
+                            marka: urun.marka,
+                            varyant_id: urun.varyant_id,
+                            forced: true
+                        },
+                        source: socket.id
+                    });
+                    
+                    stokTablosunuGuncelle();
+                    guncellenenVerileriKaydet();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Ürün Zorla Silindi!',
+                        text: result.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('❌ Zorla silme hatası:', error);
+                Swal.fire('Hata', error.message || 'Ürün zorla silinemedi', 'error');
+            }
+        }
+        
+        // Ürün satışlarını iade için göster
+        function showProductSalesForReturn(barkod) {
+            const productSales = satisGecmisi.filter(s => s.barkod === barkod);
+            
+            if (productSales.length === 0) {
+                Swal.fire('Bilgi', 'Bu ürün için satış kaydı bulunamadı.', 'info');
+                return;
+            }
+            
+            let salesHTML = `
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <p><strong>Barkod ${barkod} için ${productSales.length} satış bulundu:</strong></p>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                        <thead>
+                            <tr style="background-color: #f8f9fa;">
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Tarih</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Miktar</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Fiyat</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            productSales.forEach(sale => {
+                const tarih = new Date(sale.tarih).toLocaleDateString('tr-TR');
+                salesHTML += `
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${tarih}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${sale.miktar}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${sale.fiyat?.toFixed(2) || '0.00'} ₺</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">
+                            <button onclick="urunIade('${sale.id}')" style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer;">İade Et</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            salesHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            Swal.fire({
+                title: 'Ürün Satış Geçmişi',
+                html: salesHTML,
+                icon: 'info',
+                confirmButtonText: 'Tamam',
+                width: '600px'
+            });
         }
         // Düşük stoklu ürünleri göster
         function showLowStockProducts() {
@@ -8254,36 +8379,74 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Evet, İade Et',
                 cancelButtonText: 'İptal'
-            }).then((result) => {
+            }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
-                        // Stok miktarını geri ekle
-                        const urunKey = Object.keys(stokListesi).find(key => 
-                            stokListesi[key].barkod === satis.barkod
-                        );
+                        console.log('🔄 İade işlemi başlatılıyor (Customer):', satisId);
                         
-                        if (urunKey) {
-                            stokListesi[urunKey].miktar += satis.miktar;
+                        // API'ye iade isteği gönder - aynı API'yi kullan
+                        const response = await fetch(`${API_BASE}/api/satis-iade`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                satisId: satisId,
+                                barkod: satis.barkod,
+                                miktar: satis.miktar,
+                                urunAdi: satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-')),
+                                alisFiyati: satis.alisFiyati || 0
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            // Local data'dan satışı sil
+                            const satisIndex = satisGecmisi.findIndex(s => s.id === parseInt(satisId));
+                            if (satisIndex !== -1) {
+                                satisGecmisi.splice(satisIndex, 1);
+                            }
                             
-                            // Real-time sync
+                            // Stok güncellemesi varsa local data'yı güncelle
+                            if (result.stokGuncellemesi) {
+                                // Use composite key for stock update
+                                const compositeKey = `${result.stokGuncellemesi.barkod}_${result.stokGuncellemesi.marka || ''}_${result.stokGuncellemesi.varyant_id || ''}`;
+                                
+                                // Map backend fields to frontend expected fields
+                                const mappedData = {
+                                    ...result.stokGuncellemesi,
+                                    urun_adi: result.stokGuncellemesi.ad || result.stokGuncellemesi.urun_adi || '',
+                                    stok_miktari: result.stokGuncellemesi.miktar || result.stokGuncellemesi.stok_miktari || 0,
+                                    fiyat: result.stokGuncellemesi.satisFiyati || result.stokGuncellemesi.fiyat || 0
+                                };
+                                
+                                stokListesi[compositeKey] = mappedData;
+                            }
+                            
+                            // Real-time sync to other clients
                             socket.emit('dataUpdate', {
-                                type: 'stok-update',
-                                data: stokListesi[urunKey]
+                                type: 'satis-iade',
+                                data: { satisId: satisId, barkod: satis.barkod },
+                                source: socket.id
                             });
+                            
+                            stokTablosunuGuncelle();
+                            satisTablosunuGuncelle();
+                            guncellenenVerileriKaydet();
+                            
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'İade Tamamlandı!',
+                                text: result.message || 'Ürün stoklara geri eklendi.',
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                        } else {
+                            throw new Error(result.message);
                         }
                         
-                        // Satış kaydını sil
-                        satisGecmisi = satisGecmisi.filter(s => s.id !== satisId);
-                        
-                        // UI güncelle
-                        stokTablosunuGuncelle();
-                        satisTablosunuGuncelle();
-                        guncellenenVerileriKaydet();
-                        
-                        Swal.fire('Başarılı', 'Ürün iade edildi ve stok güncellendi.', 'success');
                     } catch (error) {
-                        console.error('İade hatası:', error);
-                        Swal.fire('Hata', 'İade işlemi sırasında hata oluştu.', 'error');
+                        console.error('❌ İade hatası:', error);
+                        Swal.fire('Hata', error.message || 'İade işlemi başarısız', 'error');
                     }
                 }
             });
