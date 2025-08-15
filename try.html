@@ -39,22 +39,22 @@
             --card-bg: #ffffff;
         }
 
-        /* Dark theme variables - Geliştirilmiş ve Renklendirilmiş */
+        /* Dark theme variables - Geliştirilmiş ve Modern Renkler */
         [data-theme="dark"] {
-            --bg-primary: #0f0f23;
-            --bg-secondary: #1a1a2e;
-            --text-primary: #ffffff;
-            --text-secondary: #e0e0e0;
-            --border-color: #2d2d44;
-            --card-bg: #16213e;
-            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
-            --input-bg: #1e1e3f;
-            --input-border: #3d3d5f;
-            --input-text: #ffffff;
-            --table-bg: #16213e;
-            --table-border: #2d2d44;
-            --table-hover: #1e1e3f;
-            --modal-bg: #16213e;
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #1a1f2e;
+            --text-primary: #f0f4f8;
+            --text-secondary: #b8c5d1;
+            --border-color: #3a4553;
+            --card-bg: #1e2432;
+            --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            --input-bg: #252b3b;
+            --input-border: #4a5568;
+            --input-text: #f0f4f8;
+            --table-bg: #1e2432;
+            --table-border: #3a4553;
+            --table-hover: #2a3441;
+            --modal-bg: #1e2432;
             --modal-overlay: rgba(0, 0, 0, 0.9);
             --dropdown-bg: #1e1e3f;
             --dropdown-hover: #2d2d44;
@@ -83,15 +83,15 @@
             --form-border: #3d3d5f;
             --label-text: #ffffff;
             --placeholder-text: #a0a0a0;
-            --tab-bg: #1e1e3f;
-            --tab-active: #6c5ce7;
-            --tab-hover: #2d2d44;
-            --tab-text: #ffffff;
-            --tab-border: #3d3d5f;
-            --header-bg: linear-gradient(135deg, #6c5ce7 0%, #5f3dc4 100%);
-            --header-text: #ffffff;
-            --stats-bg: #16213e;
-            --stats-border: #2d2d44;
+            --tab-bg: #1a1f2e;
+            --tab-active: #4299e1;
+            --tab-hover: #2d3748;
+            --tab-text: #cbd5e0;
+            --tab-border: #4a5568;
+            --header-bg: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            --header-text: #f7fafc;
+            --stats-bg: #1e2432;
+            --stats-border: #3a4553;
             --notification-bg: #1e1e3f;
             --notification-border: #3d3d5f;
             --context-menu-bg: #1e1e3f;
@@ -8902,77 +8902,131 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 console.error('Backup analizi hatası:', error);
             }
         }
-        // Veri geri yükle - GELİŞTİRİLMİŞ: Senkronizasyon ile
+        // Veri geri yükle - YENİ BACKEND ENDPOINT İLE
         async function restoreData(e) {
             const file = e.target.files[0];
             if (!file) return;
             
-            const reader = new FileReader();
-            reader.onload = async function(event) {
+            try {
+                // Önce dosyayı doğrula
+                const text = await file.text();
+                let data;
                 try {
-                    const data = JSON.parse(event.target.result);
-                    
-                    // Basit veri kontrolü
-                    if (!data.stokListesi || !data.satisGecmisi || !data.musteriler || !data.borclarim) {
-                        document.getElementById('restoreStatus').innerHTML = '<p style="color: #e74c3c;">Geçersiz yedek dosyası!</p>';
-                        return;
-                    }
-                    
-                    // Kullanıcıya onay sor
-                    const result = await Swal.fire({
-                        title: 'Yedek Yükleme',
-                        text: 'Yedek veriler yüklenecek ve tüm cihazlarla senkronize edilecek. Devam etmek istiyor musunuz?',
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Evet, Yükle',
-                        cancelButtonText: 'İptal',
-                        confirmButtonColor: '#27ae60',
-                        cancelButtonColor: '#6c757d'
-                    });
-                    
-                    if (!result.isConfirmed) {
-                        document.getElementById('restoreFile').value = '';
-                        return;
-                    }
-                    
-                    // Mevcut verileri temizle
-                    stokListesi = {};
-                    satisGecmisi = [];
-                    musteriler = {};
-                    borclarim = {};
-                    
-                    // Yeni verileri yükle
-                    stokListesi = data.stokListesi;
-                    satisGecmisi = data.satisGecmisi;
-                    musteriler = data.musteriler;
-                    borclarim = data.borclarim;
-                    
-                    // LocalStorage'e kaydet
-                    saveData();
-                    
-                    // Tüm tabloları güncelle
-                    stokTablosunuGuncelle();
-                    satisTablosunuGuncelle();
-                    musteriTablosunuGuncelle();
-                    borcTablosunuGuncelle();
-                    guncelleIstatistikler();
-                    
-                    // Backend'e senkronize et
-                    await syncBackupData(data);
-                    
-                    document.getElementById('restoreStatus').innerHTML = '<p style="color: #27ae60;">Veriler başarıyla geri yüklendi ve senkronize edildi!</p>';
-                    
-                    setTimeout(() => {
-                        document.getElementById('restoreStatus').innerHTML = '';
-                        document.getElementById('restoreFile').value = '';
-                    }, 3000);
-                    
-                } catch (error) {
-                    console.error('Veri geri yükleme hatası:', error);
-                    document.getElementById('restoreStatus').innerHTML = '<p style="color: #e74c3c;">Yedek dosyası okunamadı!</p>';
+                    data = JSON.parse(text);
+                } catch (parseError) {
+                    document.getElementById('restoreStatus').innerHTML = '<p style="color: #e74c3c;">❌ Geçersiz JSON dosyası!</p>';
+                    return;
                 }
-            };
-            reader.readAsText(file);
+                
+                // Basit veri kontrolü
+                if (!data.stokListesi && !data.satisGecmisi && !data.musteriler && !data.borclarim) {
+                    document.getElementById('restoreStatus').innerHTML = '<p style="color: #e74c3c;">❌ Geçersiz yedek dosyası formatı!</p>';
+                    return;
+                }
+                
+                // Kullanıcıya onay sor
+                const isConfirmed = await Swal.fire({
+                    title: '🔄 Yedek Dosyası Geri Yükleme',
+                    html: `
+                        <div style="text-align: left; max-width: 400px; margin: 0 auto;">
+                            <p><strong>Geri Yüklenecek Veriler:</strong></p>
+                            <ul>
+                                <li>📦 Ürünler: <strong>${Object.keys(data.stokListesi || {}).length}</strong></li>
+                                <li>💰 Satışlar: <strong>${(data.satisGecmisi || []).length}</strong></li>
+                                <li>👥 Müşteriler: <strong>${Object.keys(data.musteriler || {}).length}</strong></li>
+                                <li>💳 Borçlar: <strong>${Object.keys(data.borclarim || {}).length}</strong></li>
+                            </ul>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                                <p style="margin: 0; color: #28a745; font-weight: 500;">
+                                    ✅ <strong>Güvenli Yükleme:</strong><br>
+                                    • Mevcut veriler korunur<br>
+                                    • Sadece yeni veriler eklenir<br>
+                                    • Duplikasyon önlenir<br>
+                                    • Stok miktarları birleştirilir
+                                </p>
+                            </div>
+                            <p style="color: #6c757d; font-size: 14px;">
+                                Bu işlem mevcut verilerinizi silmez, sadece yeni verileri ekler.
+                            </p>
+                        </div>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: '✅ Güvenli Yükleme Yap',
+                    cancelButtonText: '❌ İptal',
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    width: 600
+                });
+                
+                if (!isConfirmed.isConfirmed) {
+                    document.getElementById('restoreFile').value = '';
+                    return;
+                }
+                
+                document.getElementById('restoreStatus').innerHTML = '<p style="color: #3498db;">🔄 Yedek dosyası yükleniyor...</p>';
+                
+                // FormData ile dosyayı backend'e gönder
+                const formData = new FormData();
+                formData.append('backupFile', file);
+                
+                const response = await fetch(`${API_BASE}/api/backup-restore`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    const stats = result.stats;
+                    document.getElementById('restoreStatus').innerHTML = `
+                        <div style="color: #27ae60; background: #d4edda; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                            <h4 style="margin: 0 0 10px 0;">✅ Yedek Başarıyla Yüklendi!</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                                <div><strong>📦 Ürünler:</strong><br>
+                                    ➕ ${stats.stok.added} yeni<br>
+                                    🔄 ${stats.stok.updated} güncellendi<br>
+                                    ⏭️ ${stats.stok.skipped} atlandı
+                                </div>
+                                <div><strong>💰 Satışlar:</strong><br>
+                                    ➕ ${stats.satis.added} yeni<br>
+                                    ⏭️ ${stats.satis.skipped} atlandı
+                                </div>
+                                <div><strong>👥 Müşteriler:</strong><br>
+                                    ➕ ${stats.musteri.added} yeni<br>
+                                    🔄 ${stats.musteri.updated} güncellendi<br>
+                                    ⏭️ ${stats.musteri.skipped} atlandı
+                                </div>
+                                <div><strong>💳 Borçlar:</strong><br>
+                                    ➕ ${stats.borc.added} yeni<br>
+                                    🔄 ${stats.borc.updated} güncellendi<br>
+                                    ⏭️ ${stats.borc.skipped} atlandı
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Verileri yeniden yükle
+                    setTimeout(() => {
+                        tumVerileriYukle();
+                        showNotification('✅ Yedek veriler başarıyla yüklendi!', 'success');
+                    }, 1000);
+                    
+                } else {
+                    document.getElementById('restoreStatus').innerHTML = `<p style="color: #e74c3c;">❌ Hata: ${result.error}</p>`;
+                    showNotification('❌ Yedek yükleme başarısız: ' + result.error, 'error');
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('restoreStatus').innerHTML = '';
+                    document.getElementById('restoreFile').value = '';
+                }, 8000);
+                
+            } catch (error) {
+                console.error('❌ Yedek dosyası yükleme hatası:', error);
+                document.getElementById('restoreStatus').innerHTML = '<p style="color: #e74c3c;">❌ Dosya yükleme hatası!</p>';
+                showNotification('❌ Dosya yükleme hatası: ' + error.message, 'error');
+            }
         }
         
         // Yedek verileri backend'e senkronize et - GELİŞTİRİLMİŞ: Tekrar yükleme kontrolü
