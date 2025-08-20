@@ -60,18 +60,18 @@
             --dropdown-hover: #2d2d44;
             --tooltip-bg: #1e1e3f;
             --tooltip-text: #ffffff;
-            --success: #00d4aa;
+            --success: #10b981;
             --danger: #ff6b6b;
             --warning: #ffd93d;
             --info: #4ecdc4;
-            --primary: #6c5ce7;
-            --primary-dark: #5f3dc4;
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
             --menu-bg: #1e1e3f;
             --menu-hover: #2d2d44;
             --menu-text: #ffffff;
             --menu-border: #3d3d5f;
-            --button-bg: #6c5ce7;
-            --button-hover: #5f3dc4;
+            --button-bg: #3b82f6;
+            --button-hover: #2563eb;
             --button-text: #ffffff;
             --link-color: #74b9ff;
             --link-hover: #0984e3;
@@ -84,11 +84,11 @@
             --label-text: #ffffff;
             --placeholder-text: #a0a0a0;
             --tab-bg: #1e1e3f;
-            --tab-active: #6c5ce7;
+            --tab-active: #3b82f6;
             --tab-hover: #2d2d44;
             --tab-text: #ffffff;
             --tab-border: #3d3d5f;
-            --header-bg: linear-gradient(135deg, #6c5ce7 0%, #5f3dc4 100%);
+            --header-bg: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             --header-text: #ffffff;
             --stats-bg: #16213e;
             --stats-border: #2d2d44;
@@ -99,7 +99,7 @@
             --context-menu-border: #3d3d5f;
             --accent-1: #fd79a8;
             --accent-2: #fdcb6e;
-            --accent-3: #00b894;
+            --accent-3: #10b981;
             --accent-4: #e84393;
             --accent-5: #00cec9;
         }
@@ -906,7 +906,7 @@
         }
 
         .btn-print {
-            background: #9b59b6;
+            background: #3b82f6;
         }
 
         .action-btn:hover {
@@ -7994,8 +7994,8 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     datasets: [{
                         label: 'Satış Adedi',
                         data: data,
-                        backgroundColor: '#3498db',
-                        borderColor: '#2980b9',
+                        backgroundColor: '#10b981',
+                        borderColor: '#059669',
                         borderWidth: 1
                     }]
                 },
@@ -8031,7 +8031,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     labels: ['Nakit', 'Borç'],
                     datasets: [{
                         data: [cashCount, creditCount],
-                        backgroundColor: ['#27ae60', '#f39c12'],
+                        backgroundColor: ['#10b981', '#059669'],
                         borderWidth: 1
                     }]
                 },
@@ -8073,8 +8073,8 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     datasets: [{
                         label: 'Toplam Satış (₺)',
                         data: data,
-                        backgroundColor: '#9b59b6',
-                        borderColor: '#8e44ad',
+                        backgroundColor: '#10b981',
+                        borderColor: '#059669',
                         borderWidth: 1
                     }]
                 },

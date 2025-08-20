@@ -1295,9 +1295,9 @@ app.post('/api/tum-veriler', async (req, res) => {
                         const toplam = parseFloat(satis.toplam) || 0;
                         
                         db.prepare(`
-                            INSERT INTO satisGecmisi (barkod, miktar, fiyat, alisFiyati, musteriId, tarih, borc, toplam)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        `).run(barkod, miktar, fiyat, alisFiyati, musteriId, tarih, borc, toplam);
+                            INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, alisFiyati, toplam, borc, tarih, musteriId, musteriAdi)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        `).run(barkod, satis.urunAdi || '', miktar, fiyat, alisFiyati, toplam, borc, tarih, musteriId, satis.musteriAdi || '');
                         insertedCount++;
                     } else {
                         skippedCount++; // Duplicate sales record
@@ -1954,10 +1954,11 @@ app.post('/api/satis-toplu', async (req, res) => {
                 }
                 
                 // Satış kaydı ekle
+                const toplam = (parseFloat(fiyat) || 0) * (parseInt(miktar) || 0);
                 const saleId = db.prepare(`
-                    INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, tarih, musteriId, musteriAdi, alisFiyati, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-                `).run(barkod, urunAdi || stockItem.ad, miktar, fiyat, new Date().toISOString(), musteriId, musteriAdi, alisFiyati || stockItem.alisFiyati).lastInsertRowid;
+                    INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, alisFiyati, toplam, borc, tarih, musteriId, musteriAdi, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                `).run(barkod, urunAdi || stockItem.ad, miktar, fiyat, alisFiyati || stockItem.alisFiyati, toplam, 0, new Date().toISOString(), musteriId, musteriAdi).lastInsertRowid;
                 
                 // Stok güncelle
                 const newStock = stockItem.miktar - miktar;
