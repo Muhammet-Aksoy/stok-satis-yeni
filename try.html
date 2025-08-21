@@ -3232,6 +3232,12 @@
             
             // Spesifik güncelleme türüne göre işlem yap
             switch(data.type) {
+                case 'missing-products-imported':
+                    if (data.data) {
+                        showNotification(`Eksik ürün içe aktarma: ${data.data.added} eklendi, ${data.data.updated} güncellendi, ${data.data.skipped} atlandı`, 'success');
+                        setTimeout(() => tumVerileriYukle(), 500);
+                    }
+                    break;
                 case 'stok-add':
                 case 'stok-update':
                     if (data.data && data.data.barkod) {
@@ -6055,60 +6061,40 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         
         // Satış sil (API ile entegre)
         async function satisSil(satisId) {
-            const satisIndex = satisGecmisi.findIndex(s => s.id === satisId);
-            if (satisIndex === -1) return;
-            
-            const satis = satisGecmisi[satisIndex];
+            const satisIndex = satisGecmisi.findIndex(s => s.id == satisId || s.id === parseInt(satisId));
+            if (satisIndex === -1) {
+                console.error('❌ Satış bulunamadı:', satisId);
+                Swal.fire('Hata', `Satış bulunamadı. ID: ${satisId}`, 'error');
+                return;
+            }
             
             Swal.fire({
                 title: 'Satışı silmek istiyor musunuz?',
-                text: "Bu işlem geri alınamaz!",
+                text: 'Bu işlem geri alınamaz!',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
                 confirmButtonText: 'Evet, sil!',
                 cancelButtonText: 'İptal'
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    try {
-                        console.log('🗑️ Satış siliniyor:', satisId);
-                        
-                        const response = await fetch(`${API_BASE}/api/satis-sil/${satisId}`, {
-                            method: 'DELETE'
-                        });
-                        
-                        const result = await response.json();
-                        
-                        if (result.success) {
-                            // Local data'dan sil
-                            satisGecmisi.splice(satisIndex, 1);
-                            
-                            // Real-time sync to other clients
-                            socket.emit('dataUpdate', {
-                                type: 'satis-delete',
-                                data: { satisId: satisId },
-                                source: socket.id
-                            });
-                            
-                            satisTablosunuGuncelle();
-                            guncellenenVerileriKaydet();
-                            
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Satış Silindi!',
-                                text: result.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                        } else {
-                            throw new Error(result.message);
-                        }
-                        
-                    } catch (error) {
-                        console.error('❌ Satış silme hatası:', error);
-                        Swal.fire('Hata', error.message || 'Satış silinemedi', 'error');
-                    }
+            }).then(async (dialog) => {
+                if (!dialog.isConfirmed) return;
+                try {
+                    console.log('🗑️ Satış siliniyor:', satisId);
+                    const response = await fetch(`${API_BASE}/api/satis-sil/${satisId}`, { method: 'DELETE' });
+                    const apiResult = await response.json();
+                    if (!response.ok || !apiResult.success) throw new Error(apiResult.message || 'Satış silinemedi');
+                    // Local data'dan sil
+                    satisGecmisi.splice(satisIndex, 1);
+                    // Real-time sync to other clients
+                    socket.emit('dataUpdate', { type: 'satis-delete', data: { satisId }, source: socket.id });
+                    satisTablosunuGuncelle();
+                    guncellenenVerileriKaydet();
+                    showNotification('🗑️ Satış silindi', 'success');
+                    Swal.fire({ icon: 'success', title: 'Satış Silindi!', text: apiResult.message, showConfirmButton: false, timer: 1200 });
+                } catch (error) {
+                    console.error('❌ Satış silme hatası:', error);
+                    Swal.fire('Hata', error.message || 'Satış silinemedi', 'error');
                 }
             });
         }
@@ -7763,7 +7749,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         }
         
         // Müşteri satışını sil
-        function deleteCustomerSale(customerId, saleId) {
+        async function deleteCustomerSale(customerId, saleId) {
             Swal.fire({
                 title: 'Emin misiniz?',
                 text: 'Bu satış kaydını silmek istediğinizden emin misiniz?',
@@ -7773,49 +7759,30 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 cancelButtonColor: '#3085d6',
                 confirmButtonText: 'Evet, Sil',
                 cancelButtonText: 'İptal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    try {
-                        // Satışı bul
-                        const saleIndex = satisGecmisi.findIndex(s => s.id === saleId);
-                        if (saleIndex === -1) {
-                            Swal.fire('Hata', 'Satış bulunamadı.', 'error');
-                            return;
-                        }
-                        
-                        const sale = satisGecmisi[saleIndex];
-                        
-                        // Stok miktarını geri ekle
-                        const product = stokListesi[sale.barkod];
-                        if (product) {
-                            product.stok_miktari = (product.stok_miktari || 0) + sale.miktar;
-                            if (product.miktar !== undefined) {
-                                product.miktar = product.stok_miktari;
-                            }
-                        }
-                        
-                        // Satışı sil
+            }).then(async (dialog) => {
+                if (!dialog.isConfirmed) return;
+                try {
+                    const response = await fetch(`${API_BASE}/api/satis-sil/${saleId}`, { method: 'DELETE' });
+                    const apiResult = await response.json();
+                    if (!response.ok || !apiResult.success) throw new Error(apiResult.message || 'Satış silinemedi');
+
+                    const saleIndex = satisGecmisi.findIndex(s => s.id == saleId || s.id === parseInt(saleId));
+                    if (saleIndex !== -1) {
                         satisGecmisi.splice(saleIndex, 1);
-                        
-                        // Real-time sync
-                        socket.emit('dataUpdate', {
-                            type: 'satis-delete',
-                            data: { id: saleId }
-                        });
-                        
-                        // UI güncelle
-                        stokTablosunuGuncelle();
-                        satisTablosunuGuncelle();
-                        guncellenenVerileriKaydet();
-                        
-                        // Müşteri detaylarını yenile
-                        showCustomerDetails(customerId);
-                        
-                        Swal.fire('Başarılı', 'Satış kaydı silindi ve stok geri eklendi.', 'success');
-                    } catch (error) {
-                        console.error('Satış silme hatası:', error);
-                        Swal.fire('Hata', 'Satış silinirken hata oluştu.', 'error');
                     }
+
+                    socket.emit('dataUpdate', { type: 'satis-delete', data: { satisId: saleId }, source: socket.id });
+
+                    stokTablosunuGuncelle();
+                    satisTablosunuGuncelle();
+                    guncellenenVerileriKaydet();
+                    showCustomerDetails(customerId);
+
+                    showNotification('🗑️ Satış silindi', 'success');
+                    Swal.fire('Başarılı', 'Satış kaydı silindi.', 'success');
+                } catch (error) {
+                    console.error('Satış silme hatası:', error);
+                    Swal.fire('Hata', error.message || 'Satış silinirken hata oluştu.', 'error');
                 }
             });
         }
@@ -8615,62 +8582,9 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             }
         }
         
+        // KALDIRILDI: Eski local-only satisSil. Tüm silmeler API üzerinden yapılır.
         function satisSil(satisId) {
-            console.log('🔄 Satış silme:', satisId);
-            console.log('🔍 Mevcut satışlar:', satisGecmisi.map(s => ({ id: s.id, barkod: s.barkod, urunAdi: s.urunAdi })));
-            
-            // Satışı farklı yollarla bulmaya çalış
-            let satis = satisGecmisi.find(s => s.id == satisId || s.id === satisId);
-            
-            if (!satis) {
-                // ID ile bulunamadıysa barkod ile dene
-                satis = satisGecmisi.find(s => s.barkod == satisId || s.barkod === satisId);
-            }
-            
-            if (!satis) {
-                // String ID ile de dene
-                satis = satisGecmisi.find(s => String(s.id) === String(satisId));
-            }
-            
-            if (!satis) {
-                console.error('❌ Satış bulunamadı:', { satisId, satisGecmisiLength: satisGecmisi.length });
-                console.log('🔍 Mevcut satışlar:', satisGecmisi.map(s => ({ id: s.id, barkod: s.barkod, urunAdi: s.urunAdi })));
-                Swal.fire('Hata', `Satış bulunamadı. ID: ${satisId}`, 'error');
-                return;
-            }
-            
-            Swal.fire({
-                title: 'Emin misiniz?',
-                text: `"${satis.urunAdi || satis.urun_adi || 'Ürün'}" satışını silmek istediğinizden emin misiniz?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Evet, Sil',
-                cancelButtonText: 'İptal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    try {
-                        // Local array'den kaldır
-                        satisGecmisi = satisGecmisi.filter(s => s.id !== satis.id);
-                        
-                        // Real-time sync
-                        socket.emit('dataUpdate', {
-                            type: 'satis-delete',
-                            data: { id: satis.id }
-                        });
-                        
-                        // UI güncelle
-                        satisTablosunuGuncelle();
-                        guncellenenVerileriKaydet();
-                        
-                        Swal.fire('Başarılı', 'Satış kaydı silindi.', 'success');
-                    } catch (error) {
-                        console.error('Satış silme hatası:', error);
-                        Swal.fire('Hata', 'Satış silinirken hata oluştu.', 'error');
-                    }
-                }
-            });
+            return window.__noop && __noop(satisId);
         }
         function urunIade(satisId) {
             console.log('🔄 Ürün iade:', satisId);
