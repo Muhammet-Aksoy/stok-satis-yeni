@@ -3272,6 +3272,58 @@
                     }
                     break;
                     
+                case 'satis-delete':
+                    if (data.data && (data.data.satisId || data.data.id)) {
+                        const satisId = data.data.satisId || data.data.id;
+                        // Find and remove the sale from local array
+                        const satisIndex = satisGecmisi.findIndex(sale => 
+                            sale.id == satisId || sale.id === parseInt(satisId)
+                        );
+                        
+                        if (satisIndex !== -1) {
+                            satisGecmisi.splice(satisIndex, 1);
+                            satisTablosunuGuncelle();
+                            guncelleIstatistikler();
+                            guncellenenVerileriKaydet();
+                            showNotification('🗑️ Satış silindi', 'success');
+                        }
+                    }
+                    break;
+                    
+                case 'satis-iade':
+                    if (data.data && data.data.satisId) {
+                        // Handle return/refund
+                        const satisId = data.data.satisId;
+                        const satisIndex = satisGecmisi.findIndex(sale => 
+                            sale.id == satisId || sale.id === parseInt(satisId)
+                        );
+                        
+                        if (satisIndex !== -1) {
+                            satisGecmisi.splice(satisIndex, 1);
+                            
+                            // Update stock if stock update info is provided
+                            if (data.data.stokGuncellemesi) {
+                                const stokData = data.data.stokGuncellemesi;
+                                const compositeKey = `${stokData.barkod}_${stokData.marka || ''}_${stokData.varyant_id || ''}`;
+                                
+                                const mappedData = {
+                                    ...stokData,
+                                    urun_adi: stokData.ad || stokData.urun_adi || '',
+                                    stok_miktari: stokData.miktar || stokData.stok_miktari || 0,
+                                    fiyat: stokData.satisFiyati || stokData.fiyat || 0
+                                };
+                                
+                                stokListesi[compositeKey] = mappedData;
+                                stokTablosunuGuncelle();
+                            }
+                            
+                            satisTablosunuGuncelle();
+                            guncelleIstatistikler();
+                            guncellenenVerileriKaydet();
+                            showNotification('🔄 Satış iade edildi', 'success');
+                        }
+                    }
+                    break;
 
                     
                 case 'bulk-sync':
