@@ -6,7 +6,7 @@ async function testSales() {
     try {
         // Önce veritabanı durumunu kontrol et
         console.log('📊 Veritabanı durumu kontrol ediliyor...');
-        const dbResponse = await fetch('http://localhost:3000/api/database-status');
+        const dbResponse = await fetch('http://localhost:3001/api/database-status');
         const dbStatus = await dbResponse.json();
         console.log('✅ Veritabanı durumu:', dbStatus);
         
@@ -22,7 +22,7 @@ async function testSales() {
             aciklama: 'Test amaçlı ürün'
         };
         
-        const productResponse = await fetch('http://localhost:3000/api/stok-ekle', {
+        const productResponse = await fetch('http://localhost:3001/api/stok-ekle', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(testProduct)
@@ -50,7 +50,7 @@ async function testSales() {
             musteriAdi: ''
         };
         
-        const saleResponse = await fetch('http://localhost:3000/api/satis-ekle', {
+        const saleResponse = await fetch('http://localhost:3001/api/satis-ekle', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(testSale)
