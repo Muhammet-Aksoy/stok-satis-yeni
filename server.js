@@ -43,9 +43,14 @@ try {
 
 // Performance optimizations - Geliştirilmiş
 const CACHE_SIZE = 2000; // Cache size for frequently accessed data
-const SYNC_INTERVAL = 10000; // 10 seconds for faster sync
+const SYNC_INTERVAL = 60000; // 60 seconds for optimized sync (changed from 10 seconds)
 const MAX_CONNECTIONS = 200; // Increased connection limit
 const SYNC_TIMEOUT = 5000; // 5 seconds timeout for sync operations
+
+// Debounce mechanism for data synchronization
+const pendingUpdates = new Map(); // Store pending updates by type
+const DEBOUNCE_DELAY = 2000; // 2 seconds debounce delay
+const lastUpdateTimes = new Map(); // Track last update times
 
 // In-memory cache for frequently accessed data
 const memoryCache = new Map();
@@ -291,6 +296,47 @@ function setCachedData(key, data) {
 // Initialize database
 initializeDatabase();
 
+// Debounced synchronization function to reduce unnecessary updates
+function debouncedEmit(eventType, data) {
+    const key = `${eventType}_${data.type || 'default'}`;
+    const currentTime = Date.now();
+    const lastTime = lastUpdateTimes.get(key) || 0;
+    
+    // Clear existing timeout for this key
+    if (pendingUpdates.has(key)) {
+        clearTimeout(pendingUpdates.get(key));
+    }
+    
+    // Set new timeout
+    const timeoutId = setTimeout(() => {
+        // Only emit if data has actually changed
+        const lastData = memoryCache.get(`last_${key}`);
+        const dataHash = JSON.stringify(data);
+        
+        if (!lastData || lastData.data !== dataHash) {
+            io.emit(eventType, data);
+            memoryCache.set(`last_${key}`, { data: dataHash, timestamp: currentTime });
+            lastUpdateTimes.set(key, currentTime);
+            console.log(`📡 Debounced emit: ${eventType} (${data.type})`);
+        }
+        
+        pendingUpdates.delete(key);
+    }, DEBOUNCE_DELAY);
+    
+    pendingUpdates.set(key, timeoutId);
+}
+
+// Optimized data change detection
+function hasDataChanged(newData, cachedData) {
+    if (!cachedData) return true;
+    
+    // Simple hash comparison for performance
+    const newHash = JSON.stringify(newData);
+    const oldHash = JSON.stringify(cachedData);
+    
+    return newHash !== oldHash;
+}
+
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     console.log('🔗 Client connected:', socket.id);
@@ -504,7 +550,7 @@ io.on('connection', (socket) => {
                     case 'stok-update':
                         // Eğer kayıt zaten DB id'sine sahipse, DB'ye tekrar yazma, yalnızca yayınla
                         if (data.data && data.data.id) {
-                            io.emit('dataUpdated', {
+                            debouncedEmit('dataUpdated', {
                                 type: data.type,
                                 data: data.data,
                                 timestamp: new Date().toISOString()
@@ -2165,7 +2211,7 @@ app.post('/api/stok-ekle', async (req, res) => {
                 const insertedProduct = db.prepare('SELECT * FROM stok WHERE urun_id = ?').get(urun_id);
                 
                 // Real-time sync to all clients
-                io.emit('dataUpdated', {
+                debouncedEmit('dataUpdated', {
                     type: 'stok-add',
                     data: insertedProduct,
                     timestamp: new Date().toISOString()
@@ -2192,7 +2238,7 @@ app.post('/api/stok-ekle', async (req, res) => {
             const insertedProduct = db.prepare('SELECT * FROM stok WHERE barkod = ? AND marka = ? AND varyant_id = ?').get(barkod, marka, varyant_id);
             
             // Real-time sync to all clients - FIX: broadcast to all clients
-            io.emit('dataUpdated', {
+            debouncedEmit('dataUpdated', {
                 type: 'stok-add',
                 data: insertedProduct,
                 timestamp: new Date().toISOString()
@@ -2259,7 +2305,7 @@ app.put('/api/stok-guncelle', async (req, res) => {
             const updatedProduct = db.prepare('SELECT * FROM stok WHERE id = ?').get(id);
             
             // Real-time sync to all clients - FIX: broadcast to all clients
-            io.emit('dataUpdated', {
+            debouncedEmit('dataUpdated', {
                 type: 'stok-update',
                 data: updatedProduct,
                 timestamp: new Date().toISOString()
@@ -2355,7 +2401,7 @@ app.delete('/api/stok-sil/:id', async (req, res) => {
         
         if (result.changes > 0) {
             // Real-time sync to all clients - FIX: broadcast to all clients with product info
-            io.emit('dataUpdated', {
+            debouncedEmit('dataUpdated', {
                 type: 'stok-delete',
                 data: { id, barkod: productToDelete.barkod, productInfo: productToDelete },
                 timestamp: new Date().toISOString()
