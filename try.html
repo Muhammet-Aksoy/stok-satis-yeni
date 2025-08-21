@@ -2240,6 +2240,103 @@
             color: var(--text-secondary, #e0e0e0) !important;
         }
 
+        /* Missing Products Styles */
+        .missing-products-list {
+            margin-top: 20px;
+        }
+        
+        .search-filter {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        [data-theme="dark"] .search-filter {
+            background: #2d3748;
+            border-color: #4a5568;
+        }
+        
+        .filter-options {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-options label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .missing-products-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .missing-products-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .table-container {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        [data-theme="dark"] .table-container {
+            border-color: #4a5568;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+        
+        .table th,
+        .table td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        [data-theme="dark"] .table th,
+        [data-theme="dark"] .table td {
+            border-bottom-color: #4a5568;
+        }
+        
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        
+        [data-theme="dark"] .table th {
+            background: #2d3748;
+        }
+        
+        .table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        [data-theme="dark"] .table tbody tr:hover {
+            background: #2d3748;
+        }
+        
+        .product-checkbox {
+            cursor: pointer;
+        }
+
         /* Dark theme satış paneli özel düzeltmeleri */
         [data-theme="dark"] .sales-panel,
         [data-theme="dark"] .customer-panel,
@@ -7063,7 +7160,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     
     <!-- Eksik Ürünler Modal -->
     <div id="missingProductsModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 1200px; width: 90%;">
             <div class="modal-header">
                 <h2><i class="fas fa-exclamation-triangle"></i> Eksik Ürünler Yönetimi</h2>
                 <span class="close" onclick="closeMissingProductsModal()">&times;</span>
@@ -7074,7 +7171,11 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     <div class="missing-products-stats">
                         <div class="stat-card">
                             <h3 id="missingProductsCount">-</h3>
-                            <p>Eksik Ürün</p>
+                            <p>Toplam Eksik Ürün</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 id="selectedProductsCount">0</h3>
+                            <p>Seçilen Ürün</p>
                         </div>
                         <div class="stat-card">
                             <h3 id="processedCount">-</h3>
@@ -7082,14 +7183,55 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                         </div>
                     </div>
                 </div>
+                
                 <div class="missing-products-actions">
-                    <button class="btn btn-primary" onclick="importMissingProducts()">
-                        <i class="fas fa-download"></i> Eksik Ürünleri İçe Aktar
+                    <button class="btn btn-info" onclick="loadMissingProducts()">
+                        <i class="fas fa-search"></i> Eksik Ürünleri Listele
                     </button>
-                    <button class="btn btn-info" onclick="checkMissingProducts()">
-                        <i class="fas fa-search"></i> Eksik Ürünleri Kontrol Et
+                    <button class="btn btn-warning" onclick="selectAllProducts()" id="selectAllBtn" style="display: none;">
+                        <i class="fas fa-check-square"></i> Tümünü Seç
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearSelection()" id="clearAllBtn" style="display: none;">
+                        <i class="fas fa-square"></i> Seçimi Temizle
+                    </button>
+                    <button class="btn btn-primary" onclick="importSelectedProducts()" id="importSelectedBtn" style="display: none;">
+                        <i class="fas fa-download"></i> Seçilenleri İçe Aktar
+                    </button>
+                    <button class="btn btn-success" onclick="importAllProducts()" id="importAllBtn" style="display: none;">
+                        <i class="fas fa-download"></i> Tümünü İçe Aktar
                     </button>
                 </div>
+
+                <div id="missingProductsList" class="missing-products-list" style="display: none;">
+                    <div class="search-filter" style="margin-bottom: 15px;">
+                        <input type="text" id="productSearchInput" placeholder="Ürün ara (barkod, isim)..." 
+                               onkeyup="filterProducts()" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                        <div class="filter-options">
+                            <label><input type="checkbox" id="filterWithBarcode" onchange="filterProducts()" checked> Barkodlu ürünler</label>
+                            <label><input type="checkbox" id="filterWithoutBarcode" onchange="filterProducts()" checked> Barkodsuz ürünler</label>
+                            <label><input type="checkbox" id="filterFromSales" onchange="filterProducts()" checked> Satış geçmişinden</label>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()"></th>
+                                    <th>Barkod</th>
+                                    <th>Ürün Adı</th>
+                                    <th>Marka</th>
+                                    <th>Kaynak</th>
+                                    <th>Tarih</th>
+                                </tr>
+                            </thead>
+                            <tbody id="missingProductsTableBody">
+                                <!-- Ürünler buraya yüklenecek -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div id="missingProductsResults" class="missing-products-results" style="display: none;">
                     <h3>İşlem Sonuçları:</h3>
                     <div id="missingProductsLog"></div>
@@ -10428,39 +10570,241 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
     <!-- Future JavaScript modularization -->
     <!-- <script src="app.js">
         // Missing Products Functions
+        let missingProductsData = [];
+        let selectedProducts = new Set();
+
         function openMissingProductsModal() {
             document.getElementById('missingProductsModal').style.display = 'block';
-            checkMissingProducts();
+            loadMissingProducts();
         }
         
         function closeMissingProductsModal() {
             document.getElementById('missingProductsModal').style.display = 'none';
+            // Reset state
+            missingProductsData = [];
+            selectedProducts.clear();
+            document.getElementById('missingProductsList').style.display = 'none';
+            document.getElementById('missingProductsResults').style.display = 'none';
+            hideActionButtons();
         }
         
-        async function checkMissingProducts() {
+        async function loadMissingProducts() {
             try {
+                showNotification('Eksik ürünler yükleniyor...', 'info');
+                
                 const response = await fetch('/eksik_urunler.json');
                 if (response.ok) {
                     const data = await response.json();
-                    const count = data.products ? data.products.length : 0;
-                    document.getElementById('missingProductsCount').textContent = count;
-                    showNotification(`${count} eksik ürün bulundu`, 'info');
+                    missingProductsData = data.products || [];
+                    
+                    document.getElementById('missingProductsCount').textContent = missingProductsData.length;
+                    
+                    if (missingProductsData.length > 0) {
+                        displayMissingProducts(missingProductsData);
+                        showActionButtons();
+                        showNotification(`${missingProductsData.length} eksik ürün bulundu`, 'success');
+                    } else {
+                        showNotification('Eksik ürün bulunamadı', 'info');
+                    }
                 } else {
                     document.getElementById('missingProductsCount').textContent = '0';
                     showNotification('Eksik ürünler dosyası bulunamadı', 'warning');
                 }
             } catch (error) {
-                console.error('Eksik ürünler kontrol hatası:', error);
-                showNotification('Eksik ürünler kontrol edilemedi', 'error');
+                console.error('Eksik ürünler yükleme hatası:', error);
+                showNotification('Eksik ürünler yüklenemedi: ' + error.message, 'error');
             }
         }
         
-        async function importMissingProducts() {
+        function displayMissingProducts(products) {
+            const tableBody = document.getElementById('missingProductsTableBody');
+            tableBody.innerHTML = '';
+            
+            products.forEach((product, index) => {
+                const row = document.createElement('tr');
+                const productId = `product_${index}`;
+                
+                // Temiz veri gösterimi
+                const barkod = product.barkod || '-';
+                const urunAdi = product.urun_adi || product.urunAdi || '-';
+                const marka = product.marka || '-';
+                const kaynak = product.source_file || '-';
+                const tarih = product.created_at ? new Date(product.created_at).toLocaleDateString('tr-TR') : '-';
+                
+                row.innerHTML = `
+                    <td>
+                        <input type="checkbox" class="product-checkbox" 
+                               id="${productId}" data-index="${index}" 
+                               onchange="toggleProductSelection(${index})">
+                    </td>
+                    <td>${barkod}</td>
+                    <td>${urunAdi}</td>
+                    <td>${marka}</td>
+                    <td>${kaynak}</td>
+                    <td>${tarih}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            document.getElementById('missingProductsList').style.display = 'block';
+            updateSelectedCount();
+        }
+        
+        function showActionButtons() {
+            document.getElementById('selectAllBtn').style.display = 'inline-block';
+            document.getElementById('clearAllBtn').style.display = 'inline-block';
+            document.getElementById('importSelectedBtn').style.display = 'inline-block';
+            document.getElementById('importAllBtn').style.display = 'inline-block';
+        }
+        
+        function hideActionButtons() {
+            document.getElementById('selectAllBtn').style.display = 'none';
+            document.getElementById('clearAllBtn').style.display = 'none';
+            document.getElementById('importSelectedBtn').style.display = 'none';
+            document.getElementById('importAllBtn').style.display = 'none';
+        }
+        
+        function toggleProductSelection(index) {
+            if (selectedProducts.has(index)) {
+                selectedProducts.delete(index);
+            } else {
+                selectedProducts.add(index);
+            }
+            updateSelectedCount();
+            updateSelectAllCheckbox();
+        }
+        
+        function updateSelectedCount() {
+            document.getElementById('selectedProductsCount').textContent = selectedProducts.size;
+        }
+        
+        function updateSelectAllCheckbox() {
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            const visibleProducts = getVisibleProducts();
+            const visibleSelected = visibleProducts.filter(index => selectedProducts.has(index));
+            
+            if (visibleSelected.length === 0) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = false;
+            } else if (visibleSelected.length === visibleProducts.length) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = true;
+            } else {
+                selectAllCheckbox.indeterminate = true;
+                selectAllCheckbox.checked = false;
+            }
+        }
+        
+        function getVisibleProducts() {
+            const visibleRows = Array.from(document.querySelectorAll('#missingProductsTableBody tr'))
+                                    .filter(row => row.style.display !== 'none');
+            return visibleRows.map(row => parseInt(row.querySelector('.product-checkbox').dataset.index));
+        }
+        
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            const visibleProducts = getVisibleProducts();
+            
+            if (selectAllCheckbox.checked) {
+                visibleProducts.forEach(index => {
+                    selectedProducts.add(index);
+                    document.getElementById(`product_${index}`).checked = true;
+                });
+            } else {
+                visibleProducts.forEach(index => {
+                    selectedProducts.delete(index);
+                    document.getElementById(`product_${index}`).checked = false;
+                });
+            }
+            
+            updateSelectedCount();
+        }
+        
+        function selectAllProducts() {
+            missingProductsData.forEach((_, index) => {
+                selectedProducts.add(index);
+                const checkbox = document.getElementById(`product_${index}`);
+                if (checkbox) checkbox.checked = true;
+            });
+            updateSelectedCount();
+            updateSelectAllCheckbox();
+        }
+        
+        function clearSelection() {
+            selectedProducts.clear();
+            document.querySelectorAll('.product-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateSelectedCount();
+            updateSelectAllCheckbox();
+        }
+        
+        function filterProducts() {
+            const searchTerm = document.getElementById('productSearchInput').value.toLowerCase();
+            const filterWithBarcode = document.getElementById('filterWithBarcode').checked;
+            const filterWithoutBarcode = document.getElementById('filterWithoutBarcode').checked;
+            const filterFromSales = document.getElementById('filterFromSales').checked;
+            
+            const rows = document.querySelectorAll('#missingProductsTableBody tr');
+            
+            rows.forEach((row, index) => {
+                const product = missingProductsData[index];
+                if (!product) return;
+                
+                const barkod = (product.barkod || '').toLowerCase();
+                const urunAdi = (product.urun_adi || product.urunAdi || '').toLowerCase();
+                const marka = (product.marka || '').toLowerCase();
+                const kaynak = product.source_file || '';
+                
+                // Search filter
+                const matchesSearch = searchTerm === '' || 
+                                    barkod.includes(searchTerm) || 
+                                    urunAdi.includes(searchTerm) || 
+                                    marka.includes(searchTerm);
+                
+                // Barcode filters
+                const hasBarcode = barkod && barkod !== '-' && barkod.trim() !== '';
+                const matchesBarcode = (hasBarcode && filterWithBarcode) || (!hasBarcode && filterWithoutBarcode);
+                
+                // Source filter
+                const fromSales = kaynak.includes('satis') || kaynak.includes('sales');
+                const matchesSource = filterFromSales || !fromSales;
+                
+                if (matchesSearch && matchesBarcode && matchesSource) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            updateSelectAllCheckbox();
+        }
+        
+        async function importSelectedProducts() {
+            if (selectedProducts.size === 0) {
+                showNotification('Lütfen içe aktarılacak ürünleri seçin', 'warning');
+                return;
+            }
+            
+            const selectedProductsData = Array.from(selectedProducts).map(index => missingProductsData[index]);
+            await importProducts(selectedProductsData, 'seçilen');
+        }
+        
+        async function importAllProducts() {
+            await importProducts(missingProductsData, 'tüm');
+        }
+        
+        async function importProducts(products, type) {
             try {
-                showNotification('Eksik ürünler içe aktarılıyor...', 'info');
+                showNotification(`${type} ürünler içe aktarılıyor...`, 'info');
                 
                 const response = await fetch(`${API_BASE}/api/import-missing-products`, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ products })
                 });
                 
                 const result = await response.json();
@@ -10471,12 +10815,18 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     document.getElementById('missingProductsLog').innerHTML = `
                         <div class="import-result success">
                             <h4>✅ İçe Aktarma Başarılı</h4>
-                            <p>Eklenen: ${result.data.added}</p>
-                            <p>Güncellenen: ${result.data.updated}</p>
-                            <p>Atlanan: ${result.data.skipped}</p>
+                            <p><strong>Eklenen:</strong> ${result.data.added}</p>
+                            <p><strong>Güncellenen:</strong> ${result.data.updated}</p>
+                            <p><strong>Atlanan:</strong> ${result.data.skipped}</p>
+                            <p><strong>Toplam İşlenen:</strong> ${result.data.total}</p>
                         </div>
                     `;
-                    showNotification(`${result.data.added} ürün eklendi, ${result.data.updated} ürün güncellendi`, 'success');
+                    showNotification(`✅ ${result.data.added} ürün eklendi, ${result.data.updated} ürün güncellendi`, 'success');
+                    
+                    // Refresh data after successful import
+                    setTimeout(() => {
+                        tumVerileriYukle();
+                    }, 1000);
                 } else {
                     showNotification('İçe aktarma başarısız: ' + result.message, 'error');
                 }
