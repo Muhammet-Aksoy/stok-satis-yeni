@@ -10504,7 +10504,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             try {
                 showNotification('Eksik ürünler yükleniyor...', 'info');
                 
-                const response = await fetch('/eksik_urunler.json');
+                const response = await fetch(`${API_BASE}/api/missing-products`);
                 if (response.ok) {
                     const data = await response.json();
                     missingProductsData = data.products || [];
@@ -10519,8 +10519,9 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                         showNotification('Eksik ürün bulunamadı', 'info');
                     }
                 } else {
+                    const errorData = await response.json().catch(() => ({}));
                     document.getElementById('missingProductsCount').textContent = '0';
-                    showNotification('Eksik ürünler dosyası bulunamadı', 'warning');
+                    showNotification(errorData.message || 'Eksik ürünler yüklenemedi', 'warning');
                 }
             } catch (error) {
                 console.error('Eksik ürünler yükleme hatası:', error);
