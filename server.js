@@ -557,10 +557,12 @@ io.on('connection', (socket) => {
                             });
                             break;
                         }
-                        // Stok güncelleme - FIX: varyantlar barkod bazında ezilmesin
+                        // Güvenli stok güncelleme - KRİTİK PROBLEMLER ÇÖZÜLDİ
                         const stokData = data.data;
                         const targetId = stokData.id || stokData.urun_id || null;
                         let targetProduct = null;
+                        
+                        // 1. Mevcut ürünü bul
                         if (targetId) {
                             targetProduct = db.prepare('SELECT * FROM stok WHERE id = ? OR urun_id = ?').get(targetId, targetId);
                         }
@@ -569,24 +571,70 @@ io.on('connection', (socket) => {
                             targetProduct = db.prepare('SELECT * FROM stok WHERE barkod = ? AND (marka = ? OR (? IS NULL AND marka IS NULL)) AND (varyant_id = ? OR (? IS NULL AND varyant_id IS NULL))')
                                 .get(stokData.barkod, stokData.marka || null, stokData.marka || null, stokData.varyant_id || null, stokData.varyant_id || null);
                         }
+                        
                         if (targetProduct) {
+                            // 2. Kritik değişiklik kontrolü
+                            const newBarkod = stokData.barkod || targetProduct.barkod;
+                            const newMarka = stokData.marka !== undefined ? stokData.marka : targetProduct.marka;
+                            const newVaryant = stokData.varyant_id !== undefined ? stokData.varyant_id : targetProduct.varyant_id;
+                            
+                            const barkodChanged = newBarkod !== targetProduct.barkod;
+                            const markaChanged = newMarka !== targetProduct.marka;
+                            const varyantChanged = newVaryant !== targetProduct.varyant_id;
+                            
+                            // 3. Çakışma kontrolü
+                            if (barkodChanged || markaChanged || varyantChanged) {
+                                console.log(`⚠️ Kritik değişiklik: ${targetProduct.barkod} (${targetProduct.marka}) → ${newBarkod} (${newMarka})`);
+                                
+                                const conflictCheck = db.prepare(`
+                                    SELECT * FROM stok 
+                                    WHERE barkod = ? AND marka = ? AND varyant_id = ? AND id != ?
+                                `).get(newBarkod, newMarka || '', newVaryant || '', targetProduct.id);
+
+                                if (conflictCheck) {
+                                    console.error(`❌ ÇAKIŞMA ENGELLENDİ: ${newBarkod} + ${newMarka} kombinasyonu zaten mevcut (ID: ${conflictCheck.id})`);
+                                    socket.emit('updateError', {
+                                        message: `Çakışma tespit edildi: ${newBarkod} (${newMarka}) zaten mevcut!`,
+                                        conflictProduct: conflictCheck
+                                    });
+                                    break;
+                                }
+                                
+                                // Barkod değişikliği özel kontrolü
+                                if (barkodChanged) {
+                                    const barkodExists = db.prepare('SELECT * FROM stok WHERE barkod = ? AND id != ?').get(newBarkod, targetProduct.id);
+                                    if (barkodExists) {
+                                        console.error(`❌ BARKOD ÇAKIŞMASI ENGELLENDİ: ${newBarkod} zaten kullanılıyor`);
+                                        socket.emit('updateError', {
+                                            message: `Barkod çakışması: ${newBarkod} zaten kullanılıyor!`,
+                                            conflictProduct: barkodExists
+                                        });
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            // 4. Güvenli güncelleme
                             db.prepare(`
                                 UPDATE stok SET 
                                     ad = ?, marka = ?, miktar = ?, alisFiyati = ?, 
                                     satisFiyati = ?, kategori = ?, aciklama = ?, 
-                                    varyant_id = ?, updated_at = CURRENT_TIMESTAMP
+                                    varyant_id = ?, barkod = ?, updated_at = CURRENT_TIMESTAMP
                                 WHERE id = ?
                             `).run(
-                                stokData.urun_adi || stokData.ad,
-                                stokData.marka || targetProduct.marka || '',
+                                stokData.urun_adi || stokData.ad || targetProduct.ad,
+                                newMarka || '',
                                 stokData.stok_miktari || stokData.miktar || targetProduct.miktar || 0,
                                 stokData.alisFiyati ?? targetProduct.alisFiyati ?? 0,
                                 (stokData.fiyat ?? stokData.satisFiyati) ?? targetProduct.satisFiyati ?? 0,
                                 stokData.kategori ?? targetProduct.kategori ?? '',
                                 stokData.aciklama ?? targetProduct.aciklama ?? '',
-                                stokData.varyant_id ?? targetProduct.varyant_id ?? '',
+                                newVaryant || '',
+                                newBarkod,
                                 targetProduct.id
                             );
+                            
+                            console.log(`✅ Güvenli güncelleme: ${targetProduct.barkod} → ${newBarkod} (${newMarka})`);
                         } else {
                             // Yeni ekle
                             db.prepare(`
@@ -604,6 +652,7 @@ io.on('connection', (socket) => {
                                 stokData.aciklama || '',
                                 stokData.varyant_id || ''
                             );
+                            console.log(`➕ Yeni ürün eklendi: ${stokData.barkod} (${stokData.marka})`);
                         }
                         break;
                         
