@@ -2303,6 +2303,11 @@
             <i class="fas fa-shopping-cart"></i>
             <span>Toplu Satış</span>
         </div>
+                
+        <div class="menu-item" onclick="openMissingProductsModal()">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Eksik Ürünler</span>
+        </div>
         
         <div class="menu-item" onclick="openQRConnection()">
             <i class="fas fa-qrcode"></i>
@@ -4097,7 +4102,7 @@
             // 5 dakika sonra gizle
             setTimeout(() => {
                 notification.classList.remove('show');
-            }, 300000);
+            }, 3000);
         }
         
         // İstatistikleri güncelle
@@ -7055,7 +7060,45 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                                 window.close();
                             };
                         <\/script>
-                    </body>
+                    
+    <!-- Eksik Ürünler Modal -->
+    <div id="missingProductsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-exclamation-triangle"></i> Eksik Ürünler Yönetimi</h2>
+                <span class="close" onclick="closeMissingProductsModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="missing-products-info">
+                    <p>Bu bölümde eksik_urunler.json dosyasındaki ürünleri veritabanına ekleyebilirsiniz.</p>
+                    <div class="missing-products-stats">
+                        <div class="stat-card">
+                            <h3 id="missingProductsCount">-</h3>
+                            <p>Eksik Ürün</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 id="processedCount">-</h3>
+                            <p>İşlenen</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="missing-products-actions">
+                    <button class="btn btn-primary" onclick="importMissingProducts()">
+                        <i class="fas fa-download"></i> Eksik Ürünleri İçe Aktar
+                    </button>
+                    <button class="btn btn-info" onclick="checkMissingProducts()">
+                        <i class="fas fa-search"></i> Eksik Ürünleri Kontrol Et
+                    </button>
+                </div>
+                <div id="missingProductsResults" class="missing-products-results" style="display: none;">
+                    <h3>İşlem Sonuçları:</h3>
+                    <div id="missingProductsLog"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
                     </html>
                 `);
                 printWindow.document.close();
@@ -10383,6 +10426,66 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         }
     </script>
     <!-- Future JavaScript modularization -->
-    <!-- <script src="app.js"></script> -->
+    <!-- <script src="app.js">
+        // Missing Products Functions
+        function openMissingProductsModal() {
+            document.getElementById('missingProductsModal').style.display = 'block';
+            checkMissingProducts();
+        }
+        
+        function closeMissingProductsModal() {
+            document.getElementById('missingProductsModal').style.display = 'none';
+        }
+        
+        async function checkMissingProducts() {
+            try {
+                const response = await fetch('/eksik_urunler.json');
+                if (response.ok) {
+                    const data = await response.json();
+                    const count = data.products ? data.products.length : 0;
+                    document.getElementById('missingProductsCount').textContent = count;
+                    showNotification(`${count} eksik ürün bulundu`, 'info');
+                } else {
+                    document.getElementById('missingProductsCount').textContent = '0';
+                    showNotification('Eksik ürünler dosyası bulunamadı', 'warning');
+                }
+            } catch (error) {
+                console.error('Eksik ürünler kontrol hatası:', error);
+                showNotification('Eksik ürünler kontrol edilemedi', 'error');
+            }
+        }
+        
+        async function importMissingProducts() {
+            try {
+                showNotification('Eksik ürünler içe aktarılıyor...', 'info');
+                
+                const response = await fetch(`${API_BASE}/api/import-missing-products`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('processedCount').textContent = result.data.total;
+                    document.getElementById('missingProductsResults').style.display = 'block';
+                    document.getElementById('missingProductsLog').innerHTML = `
+                        <div class="import-result success">
+                            <h4>✅ İçe Aktarma Başarılı</h4>
+                            <p>Eklenen: ${result.data.added}</p>
+                            <p>Güncellenen: ${result.data.updated}</p>
+                            <p>Atlanan: ${result.data.skipped}</p>
+                        </div>
+                    `;
+                    showNotification(`${result.data.added} ürün eklendi, ${result.data.updated} ürün güncellendi`, 'success');
+                } else {
+                    showNotification('İçe aktarma başarısız: ' + result.message, 'error');
+                }
+            } catch (error) {
+                console.error('İçe aktarma hatası:', error);
+                showNotification('İçe aktarma hatası: ' + error.message, 'error');
+            }
+        }
+
+    </script> -->
 </body>
 </html>
