@@ -5828,3 +5828,141 @@ app.post('/api/stok-yukle-veriler-json', async (req, res) => {
     setInterval(sendDailyBackup, 24 * 60 * 60 * 1000); // 24 saat
     setInterval(sendDailyBackup, 6 * 60 * 60 * 1000); // 6 saat
 }); */
+// POST /api/import-missing-products - Import missing products from eksik_urunler.json
+app.post('/api/import-missing-products', async (req, res) => {
+    try {
+        console.log('📦 Starting missing products import...');
+        
+        const fs = require('fs');
+        const path = require('path');
+        
+        const missingProductsFile = path.join(__dirname, 'eksik_urunler.json');
+        
+        if (!fs.existsSync(missingProductsFile)) {
+            return res.status(404).json({
+                success: false,
+                message: 'eksik_urunler.json file not found',
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+        // Read missing products
+        const missingProductsData = JSON.parse(fs.readFileSync(missingProductsFile, 'utf8'));
+        const missingProducts = missingProductsData.products || [];
+        
+        console.log(`Found ${missingProducts.length} missing products to process`);
+        
+        // Prepare statements
+        const insertStmt = db.prepare(`
+            INSERT OR IGNORE INTO stok (
+                barkod, ad, marka, miktar, alisFiyati, 
+                satisFiyati, kategori, aciklama, urun_id,
+                created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        
+        const updateStmt = db.prepare(`
+            UPDATE stok SET 
+                ad = COALESCE(NULLIF(?, ''), ad),
+                marka = COALESCE(NULLIF(?, ''), marka),
+                miktar = miktar + ?,
+                alisFiyati = CASE WHEN ? > 0 THEN ? ELSE alisFiyati END,
+                satisFiyati = CASE WHEN ? > 0 THEN ? ELSE satisFiyati END,
+                kategori = COALESCE(NULLIF(?, ''), kategori),
+                aciklama = COALESCE(NULLIF(?, ''), aciklama),
+                updated_at = ?
+            WHERE barkod = ?
+        `);
+        
+        const checkStmt = db.prepare('SELECT barkod FROM stok WHERE barkod = ?');
+        
+        let addedCount = 0;
+        let updatedCount = 0;
+        let skippedCount = 0;
+        
+        // Process each missing product
+        for (const product of missingProducts) {
+            if (!product.barkod || !product.barkod.trim()) {
+                skippedCount++;
+                continue;
+            }
+            
+            const exists = checkStmt.get(product.barkod);
+            const currentTime = new Date().toISOString();
+            
+            try {
+                if (exists) {
+                    // Update existing product
+                    const result = updateStmt.run(
+                        product.urun_adi || '',
+                        product.marka || '',
+                        product.stok_miktari || 0,
+                        product.alisFiyati || 0,
+                        product.alisFiyati || 0,
+                        product.satisFiyati || 0,
+                        product.satisFiyati || 0,
+                        product.kategori || '',
+                        product.aciklama || '',
+                        currentTime,
+                        product.barkod
+                    );
+                    if (result.changes > 0) updatedCount++;
+                    else skippedCount++;
+                } else {
+                    // Add new product
+                    const productId = `urun_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 6)}`;
+                    const result = insertStmt.run(
+                        product.barkod,
+                        product.urun_adi || '',
+                        product.marka || '',
+                        product.stok_miktari || 0,
+                        product.alisFiyati || 0,
+                        product.satisFiyati || 0,
+                        product.kategori || '',
+                        product.aciklama || '',
+                        product.urun_id || productId,
+                        product.created_at || currentTime,
+                        currentTime
+                    );
+                    if (result.changes > 0) addedCount++;
+                    else skippedCount++;
+                }
+            } catch (error) {
+                console.error(`Error processing product ${product.barkod}:`, error.message);
+                skippedCount++;
+            }
+        }
+        
+        const totalProcessed = addedCount + updatedCount + skippedCount;
+        
+        console.log(`✅ Import completed: ${addedCount} added, ${updatedCount} updated, ${skippedCount} skipped`);
+        
+        // Emit real-time update
+        io.emit('dataUpdated', {
+            type: 'missing-products-imported',
+            data: { added: addedCount, updated: updatedCount, skipped: skippedCount, total: totalProcessed },
+            timestamp: new Date().toISOString()
+        });
+        
+        res.json({
+            success: true,
+            message: 'Missing products imported successfully',
+            data: {
+                added: addedCount,
+                updated: updatedCount,
+                skipped: skippedCount,
+                total: totalProcessed
+            },
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ Missing products import error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Missing products import failed',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
