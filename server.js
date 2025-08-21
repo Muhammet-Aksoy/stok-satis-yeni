@@ -5828,7 +5828,7 @@ app.post('/api/stok-yukle-veriler-json', async (req, res) => {
     setInterval(sendDailyBackup, 24 * 60 * 60 * 1000); // 24 saat
     setInterval(sendDailyBackup, 6 * 60 * 60 * 1000); // 6 saat
 }); */
-// POST /api/import-missing-products - Import missing products from eksik_urunler.json
+// POST /api/import-missing-products - Import missing products from eksik_urunler.json or request body
 app.post('/api/import-missing-products', async (req, res) => {
     try {
         console.log('📦 Starting missing products import...');
@@ -5836,19 +5836,29 @@ app.post('/api/import-missing-products', async (req, res) => {
         const fs = require('fs');
         const path = require('path');
         
-        const missingProductsFile = path.join(__dirname, 'eksik_urunler.json');
+        let missingProducts = [];
         
-        if (!fs.existsSync(missingProductsFile)) {
-            return res.status(404).json({
-                success: false,
-                message: 'eksik_urunler.json file not found',
-                timestamp: new Date().toISOString()
-            });
+        // Check if products are provided in request body (selective import)
+        if (req.body && req.body.products && Array.isArray(req.body.products)) {
+            missingProducts = req.body.products;
+            console.log(`📦 Using ${missingProducts.length} products from request body`);
+        } else {
+            // Read from file (full import)
+            const missingProductsFile = path.join(__dirname, 'eksik_urunler.json');
+            
+            if (!fs.existsSync(missingProductsFile)) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'eksik_urunler.json file not found',
+                    timestamp: new Date().toISOString()
+                });
+            }
+            
+            // Read missing products
+            const missingProductsData = JSON.parse(fs.readFileSync(missingProductsFile, 'utf8'));
+            missingProducts = missingProductsData.products || [];
+            console.log(`📦 Using ${missingProducts.length} products from file`);
         }
-        
-        // Read missing products
-        const missingProductsData = JSON.parse(fs.readFileSync(missingProductsFile, 'utf8'));
-        const missingProducts = missingProductsData.products || [];
         
         console.log(`Found ${missingProducts.length} missing products to process`);
         
