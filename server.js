@@ -5828,6 +5828,46 @@ app.post('/api/stok-yukle-veriler-json', async (req, res) => {
     setInterval(sendDailyBackup, 24 * 60 * 60 * 1000); // 24 saat
     setInterval(sendDailyBackup, 6 * 60 * 60 * 1000); // 6 saat
 }); */
+// GET /api/missing-products - Get missing products from eksik_urunler.json
+app.get('/api/missing-products', async (req, res) => {
+    try {
+        const fs = require('fs');
+        const path = require('path');
+        const missingProductsFile = path.join(__dirname, 'eksik_urunler.json');
+        
+        if (!fs.existsSync(missingProductsFile)) {
+            return res.status(404).json({
+                success: false,
+                message: 'eksik_urunler.json dosyası bulunamadı',
+                products: [],
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+        const missingProductsData = JSON.parse(fs.readFileSync(missingProductsFile, 'utf8'));
+        const products = missingProductsData.products || [];
+        
+        console.log(`📦 ${products.length} eksik ürün bulundu`);
+        
+        res.json({
+            success: true,
+            products: products,
+            total: products.length,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ Eksik ürünler yükleme hatası:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Eksik ürünler yüklenemedi',
+            error: error.message,
+            products: [],
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
 // POST /api/import-missing-products - Import missing products from eksik_urunler.json or request body
 app.post('/api/import-missing-products', async (req, res) => {
     try {
