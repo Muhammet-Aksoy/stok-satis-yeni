@@ -2457,7 +2457,36 @@
                     <div class="table-controls">
                         <div class="search-box">
                             <i class="fas fa-search"></i>
-                            <input type="text" id="searchInput" placeholder="Ürün ara..." oninput="aramaYap()">
+                            <input type="text" id="searchInput" placeholder="Ürün ara... (örn: barkod:123 veya fiyat:>100)" oninput="advancedSearch()">
+                            <button class="advanced-search-btn" onclick="toggleAdvancedSearch()" title="Gelişmiş Arama">
+                                <i class="fas fa-filter"></i>
+                            </button>
+                        </div>
+                        <div class="advanced-search-panel" id="advancedSearchPanel" style="display: none;">
+                            <div class="filter-row">
+                                <select id="filterField">
+                                    <option value="">Alan Seç</option>
+                                    <option value="urun_adi">Ürün Adı</option>
+                                    <option value="barkod">Barkod</option>
+                                    <option value="marka">Marka</option>
+                                    <option value="kategori">Kategori</option>
+                                    <option value="stok_miktari">Stok Miktarı</option>
+                                    <option value="fiyat">Fiyat</option>
+                                </select>
+                                <select id="filterOperator">
+                                    <option value="contains">İçerir</option>
+                                    <option value="equals">Eşit</option>
+                                    <option value="starts">Başlar</option>
+                                    <option value="ends">Biter</option>
+                                    <option value=">">&gt;</option>
+                                    <option value=">=">&gt;=</option>
+                                    <option value="<">&lt;</option>
+                                    <option value="<=">&lt;=</option>
+                                </select>
+                                <input type="text" id="filterValue" placeholder="Değer">
+                                <button onclick="applyAdvancedFilter()" class="btn-primary">Filtrele</button>
+                                <button onclick="clearFilters()" class="btn-secondary">Temizle</button>
+                            </div>
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <div class="view-toggle">
@@ -3349,8 +3378,12 @@
         
         // Performance optimizations
         const FRONTEND_CACHE_SIZE = 100;
-        const SYNC_INTERVAL = 15000; // 15 seconds instead of 30
+        const SYNC_INTERVAL = 60000; // 60 seconds for optimized sync (changed from 15 seconds)
         const frontendCache = new Map();
+        
+        // Debounce mechanism for client-side updates
+        const CLIENT_DEBOUNCE_DELAY = 1000; // 1 second debounce
+        const pendingClientUpdates = new Map();
         
         // Connection status
         let isOnline = navigator.onLine;
@@ -9605,10 +9638,135 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 console.log('🔴 Bağlantı kesildi');
             });
             
-            // Offline mod desteği - GELİŞTİRİLMİŞ
+            // Enhanced Offline Mode Support - ULTRA OPTIMIZED
             let isOfflineMode = false;
             let offlineQueue = [];
             let lastOnlineCheck = Date.now();
+            let offlineData = {
+                products: new Map(),
+                sales: [],
+                customers: new Map(),
+                debts: new Map(),
+                lastSync: null
+            };
+            
+            // Keyboard Shortcuts Support - ENHANCED
+            const keyboardShortcuts = {
+                'Ctrl+N': () => urunEkle(),
+                'Ctrl+F': () => document.getElementById('aramaInput')?.focus(),
+                'Ctrl+S': () => satisYap(),
+                'Ctrl+M': () => musteriEkle(),
+                'Ctrl+B': () => borcEkle(),
+                'Ctrl+E': () => excelAktar(),
+                'Ctrl+P': () => window.print(),
+                'Escape': () => closeAllModals(),
+                'F1': () => showHelp(),
+                'F5': () => tumVerileriYukle()
+            };
+            
+            // Keyboard event handler
+            document.addEventListener('keydown', (e) => {
+                const key = (e.ctrlKey ? 'Ctrl+' : '') + 
+                           (e.altKey ? 'Alt+' : '') + 
+                           (e.shiftKey ? 'Shift+' : '') + 
+                           e.key;
+                
+                if (keyboardShortcuts[key]) {
+                    e.preventDefault();
+                    keyboardShortcuts[key]();
+                }
+                
+                // Quick search on any alphanumeric key
+                if (!e.ctrlKey && !e.altKey && e.key.length === 1 && /[a-zA-Z0-9]/.test(e.key)) {
+                    const activeElement = document.activeElement;
+                    if (activeElement.tagName !== 'INPUT' && activeElement.tagName !== 'TEXTAREA') {
+                        const searchInput = document.getElementById('aramaInput');
+                        if (searchInput) {
+                            searchInput.focus();
+                            // Let the key press go through to the input
+                            setTimeout(() => {
+                                if (searchInput.value === '') {
+                                    searchInput.value = e.key;
+                                    aramaYap();
+                                }
+                            }, 0);
+                        }
+                    }
+                }
+            });
+            
+            // Helper functions for keyboard shortcuts
+            function closeAllModals() {
+                const modals = document.querySelectorAll('.modal');
+                modals.forEach(modal => modal.style.display = 'none');
+            }
+            
+            function showHelp() {
+                Swal.fire({
+                    title: '⌨️ Klavye Kısayolları',
+                    html: `
+                        <div style="text-align: left;">
+                            <p><strong>Ctrl+N:</strong> Yeni ürün ekle</p>
+                            <p><strong>Ctrl+F:</strong> Arama yap</p>
+                            <p><strong>Ctrl+S:</strong> Satış yap</p>
+                            <p><strong>Ctrl+M:</strong> Müşteri ekle</p>
+                            <p><strong>Ctrl+B:</strong> Borç ekle</p>
+                            <p><strong>Ctrl+E:</strong> Excel'e aktar</p>
+                            <p><strong>Ctrl+P:</strong> Yazdır</p>
+                            <p><strong>Escape:</strong> Modalleri kapat</p>
+                            <p><strong>F1:</strong> Yardım göster</p>
+                            <p><strong>F5:</strong> Verileri yenile</p>
+                            <p><strong>Herhangi bir harf/rakam:</strong> Hızlı arama</p>
+                        </div>
+                    `,
+                    icon: 'info',
+                    confirmButtonText: 'Tamam'
+                });
+            }
+
+            // Initialize offline data from localStorage
+            function initializeOfflineData() {
+                try {
+                    const stored = localStorage.getItem('offline_data');
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        if (parsed.products) {
+                            offlineData.products = new Map(Object.entries(parsed.products));
+                        }
+                        if (parsed.customers) {
+                            offlineData.customers = new Map(Object.entries(parsed.customers));
+                        }
+                        if (parsed.debts) {
+                            offlineData.debts = new Map(Object.entries(parsed.debts));
+                        }
+                        offlineData.sales = parsed.sales || [];
+                        offlineData.lastSync = parsed.lastSync;
+                    }
+                    
+                    const storedQueue = localStorage.getItem('offline_queue');
+                    if (storedQueue) {
+                        offlineQueue = JSON.parse(storedQueue);
+                    }
+                } catch (error) {
+                    console.error('❌ Offline data initialization error:', error);
+                }
+            }
+            
+            // Save offline data to localStorage
+            function saveOfflineData() {
+                try {
+                    const dataToSave = {
+                        products: Object.fromEntries(offlineData.products),
+                        sales: offlineData.sales,
+                        customers: Object.fromEntries(offlineData.customers),
+                        debts: Object.fromEntries(offlineData.debts),
+                        lastSync: offlineData.lastSync
+                    };
+                    localStorage.setItem('offline_data', JSON.stringify(dataToSave));
+                } catch (error) {
+                    console.error('❌ Offline data save error:', error);
+                }
+            }
             
             // Offline queue işlemleri
             function addToOfflineQueue(action, data) {
