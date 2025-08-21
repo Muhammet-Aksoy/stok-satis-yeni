@@ -5873,13 +5873,13 @@ app.post('/api/import-missing-products', async (req, res) => {
         
         const updateStmt = db.prepare(`
             UPDATE stok SET 
-                ad = COALESCE(NULLIF(?, ''), ad),
-                marka = COALESCE(NULLIF(?, ''), marka),
+                ad = CASE WHEN (ad IS NULL OR ad = '') AND ? <> '' THEN ? ELSE ad END,
+                marka = CASE WHEN (marka IS NULL OR marka = '') AND ? <> '' THEN ? ELSE marka END,
                 miktar = miktar + ?,
-                alisFiyati = CASE WHEN ? > 0 THEN ? ELSE alisFiyati END,
-                satisFiyati = CASE WHEN ? > 0 THEN ? ELSE satisFiyati END,
-                kategori = COALESCE(NULLIF(?, ''), kategori),
-                aciklama = COALESCE(NULLIF(?, ''), aciklama),
+                alisFiyati = CASE WHEN (IFNULL(alisFiyati, 0) <= 0) AND ? > 0 THEN ? ELSE alisFiyati END,
+                satisFiyati = CASE WHEN (IFNULL(satisFiyati, 0) <= 0) AND ? > 0 THEN ? ELSE satisFiyati END,
+                kategori = CASE WHEN (kategori IS NULL OR kategori = '') AND ? <> '' THEN ? ELSE kategori END,
+                aciklama = CASE WHEN (aciklama IS NULL OR aciklama = '') AND ? <> '' THEN ? ELSE aciklama END,
                 updated_at = ?
             WHERE barkod = ?
         `);
@@ -5905,6 +5905,8 @@ app.post('/api/import-missing-products', async (req, res) => {
                     // Update existing product
                     const result = updateStmt.run(
                         product.urun_adi || '',
+                        product.urun_adi || '',
+                        product.marka || '',
                         product.marka || '',
                         product.stok_miktari || 0,
                         product.alisFiyati || 0,
@@ -5912,6 +5914,8 @@ app.post('/api/import-missing-products', async (req, res) => {
                         product.satisFiyati || 0,
                         product.satisFiyati || 0,
                         product.kategori || '',
+                        product.kategori || '',
+                        product.aciklama || '',
                         product.aciklama || '',
                         currentTime,
                         product.barkod
