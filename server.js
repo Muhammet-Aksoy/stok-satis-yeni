@@ -2837,6 +2837,140 @@ app.put('/api/satis-guncelle/:id', async (req, res) => {
     }
 });
 
+// POST /api/stok-toplu-ekle - Toplu ürün ekleme
+app.post('/api/stok-toplu-ekle', async (req, res) => {
+    try {
+        const { urunler } = req.body;
+        console.log('📦 Toplu ürün ekleme başlatılıyor:', urunler ? Object.keys(urunler).length : 0, 'ürün');
+        
+        if (!urunler || typeof urunler !== 'object') {
+            return res.status(400).json({
+                success: false,
+                message: 'Ürün listesi gerekli',
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+        const results = {
+            added: 0,
+            skipped: 0,
+            errors: 0,
+            details: []
+        };
+        
+        // Transaction başlat
+        const transaction = db.transaction(() => {
+            for (const [key, urunData] of Object.entries(urunler)) {
+                try {
+                    // Validate required fields
+                    if (!urunData.barkod || !urunData.ad) {
+                        results.errors++;
+                        results.details.push({
+                            key: key,
+                            status: 'error',
+                            message: 'Barkod ve ürün adı zorunludur',
+                            data: urunData
+                        });
+                        continue;
+                    }
+                    
+                    const barkod = urunData.barkod || '';
+                    const ad = urunData.ad || '';
+                    const marka = urunData.marka || '';
+                    const miktar = parseInt(urunData.miktar) || 0;
+                    const alisFiyati = parseFloat(urunData.alisFiyati) || 0;
+                    const satisFiyati = parseFloat(urunData.satisFiyati) || alisFiyati * 1.2; // Default 20% markup
+                    const kategori = urunData.kategori || '';
+                    const aciklama = urunData.aciklama || '';
+                    const varyant_id = urunData.varyant_id || '';
+                    
+                    // Check if exact same product exists
+                    const existingProduct = db.prepare('SELECT * FROM stok WHERE barkod = ? AND marka = ? AND varyant_id = ?').get(barkod, marka, varyant_id);
+                    
+                    if (existingProduct) {
+                        results.skipped++;
+                        results.details.push({
+                            key: key,
+                            status: 'skipped',
+                            message: 'Ürün zaten mevcut',
+                            existing: existingProduct,
+                            data: urunData
+                        });
+                        continue;
+                    }
+                    
+                    // Generate unique product ID
+                    const urun_id = generateUrunId();
+                    
+                    // Insert new product
+                    const result = db.prepare(`
+                        INSERT INTO stok (urun_id, barkod, ad, marka, miktar, alisFiyati, satisFiyati, kategori, aciklama, varyant_id, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    `).run(urun_id, barkod, ad, marka, miktar, alisFiyati, satisFiyati, kategori, aciklama, varyant_id);
+                    
+                    if (result.changes > 0) {
+                        results.added++;
+                        results.details.push({
+                            key: key,
+                            status: 'added',
+                            message: 'Ürün başarıyla eklendi',
+                            urun_id: urun_id,
+                            data: urunData
+                        });
+                    } else {
+                        results.errors++;
+                        results.details.push({
+                            key: key,
+                            status: 'error',
+                            message: 'Ürün eklenemedi',
+                            data: urunData
+                        });
+                    }
+                    
+                } catch (error) {
+                    results.errors++;
+                    results.details.push({
+                        key: key,
+                        status: 'error',
+                        message: error.message,
+                        data: urunData
+                    });
+                }
+            }
+        });
+        
+        // Transaction'ı çalıştır
+        transaction();
+        
+        // Real-time sync to all clients if any products were added
+        if (results.added > 0) {
+            debouncedEmit('dataUpdated', {
+                type: 'bulk-sync',
+                data: { added: results.added },
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+        console.log(`✅ Toplu ürün ekleme tamamlandı: ${results.added} eklendi, ${results.skipped} atlandı, ${results.errors} hata`);
+        
+        res.status(200).json({ 
+            success: true, 
+            message: `Toplu ürün ekleme tamamlandı: ${results.added} eklendi, ${results.skipped} atlandı, ${results.errors} hata`,
+            results: results,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ Toplu ürün ekleme hatası:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Toplu ürün ekleme başarısız', 
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
 // DELETE /api/satis-sil/:id - Satış sil
 app.delete('/api/satis-sil/:id', async (req, res) => {
     try {
