@@ -2884,19 +2884,21 @@ app.post('/api/stok-toplu-ekle', async (req, res) => {
                     const aciklama = urunData.aciklama || '';
                     const varyant_id = urunData.varyant_id || '';
                     
-                    // Check if exact same product exists
-                    const existingProduct = db.prepare('SELECT * FROM stok WHERE barkod = ? AND marka = ? AND varyant_id = ?').get(barkod, marka, varyant_id);
-                    
-                    if (existingProduct) {
-                        results.skipped++;
-                        results.details.push({
-                            key: key,
-                            status: 'skipped',
-                            message: 'Ürün zaten mevcut',
-                            existing: existingProduct,
-                            data: urunData
-                        });
-                        continue;
+                    // Check if exact same product exists (unless force_add is true)
+                    if (!urunData.force_add) {
+                        const existingProduct = db.prepare('SELECT * FROM stok WHERE barkod = ? AND marka = ? AND varyant_id = ?').get(barkod, marka, varyant_id);
+                        
+                        if (existingProduct) {
+                            results.skipped++;
+                            results.details.push({
+                                key: key,
+                                status: 'skipped',
+                                message: 'Ürün zaten mevcut',
+                                existing: existingProduct,
+                                data: urunData
+                            });
+                            continue;
+                        }
                     }
                     
                     // Generate unique product ID
