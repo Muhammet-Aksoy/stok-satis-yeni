@@ -7209,6 +7209,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                                     <th>Marka</th>
                                     <th>Kaynak</th>
                                     <th>Tarih</th>
+                                    <th>İşlem</th>
                                 </tr>
                             </thead>
                             <tbody id="missingProductsTableBody">
@@ -8582,10 +8583,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             }
         }
         
-        // KALDIRILDI: Eski local-only satisSil. Tüm silmeler API üzerinden yapılır.
-        function satisSil(satisId) {
-            return window.__noop && __noop(satisId);
-        }
+        // Eski stub kaldırıldı: satisSil fonksiyonu yukarıda tanımlı API tabanlı sürüm kullanılacaktır.
         function urunIade(satisId) {
             console.log('🔄 Ürün iade:', satisId);
             console.log('🔍 Mevcut satışlar:', satisGecmisi.map(s => ({ id: s.id, barkod: s.barkod, urunAdi: s.urunAdi })));
@@ -10482,7 +10480,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         }
     </script>
     <!-- Future JavaScript modularization -->
-    <!-- <script src="app.js">
+    <script>
         // Missing Products Functions
         let missingProductsData = [];
         let selectedProducts = new Set();
@@ -10556,6 +10554,11 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     <td>${marka}</td>
                     <td>${kaynak}</td>
                     <td>${tarih}</td>
+                    <td>
+                        <button class="btn btn-primary" style="padding: 4px 8px;" onclick="manuelEksikUrunEkle(${index})">
+                            <i class="fas fa-plus"></i> Ekle
+                        </button>
+                    </td>
                 `;
                 
                 tableBody.appendChild(row);
@@ -10750,6 +10753,53 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             }
         }
 
-    </script> -->
+        async function manuelEksikUrunEkle(index) {
+            try {
+                const product = missingProductsData[index];
+                if (!product) return;
+
+                // Boş barkod için kullanıcıdan onay/manuel barkod al
+                let barkod = product.barkod || '';
+                if (!barkod || barkod.trim() === '') {
+                    const { value: manualBarcode } = await Swal.fire({
+                        title: 'Barkod Girin',
+                        input: 'text',
+                        inputLabel: 'Bu ürün için barkod girin',
+                        inputPlaceholder: 'Barkod',
+                        showCancelButton: true
+                    });
+                    if (!manualBarcode) return;
+                    barkod = manualBarcode.trim();
+                }
+
+                const urunPayload = {
+                    barkod: barkod,
+                    ad: product.urun_adi || product.urunAdi || 'Ürün',
+                    marka: product.marka || '',
+                    miktar: parseInt(product.stok_miktari || product.miktar || 0) || 0,
+                    alisFiyati: parseFloat(product.alisFiyati || 0) || 0,
+                    satisFiyati: parseFloat(product.satisFiyati || product.fiyat || 0) || 0,
+                    kategori: product.kategori || '',
+                    aciklama: product.aciklama || '',
+                    varyant_id: product.varyant_id || ''
+                };
+
+                const response = await fetch(`${API_BASE}/api/stok-ekle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(urunPayload)
+                });
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.message || 'Ürün eklenemedi');
+
+                showNotification('✅ Ürün eklendi', 'success');
+                tumVerileriYukle();
+            } catch (error) {
+                console.error('Manuel eksik ürün ekleme hatası:', error);
+                showNotification('Ürün eklenemedi: ' + error.message, 'error');
+            }
+        }
+
+    </script>
 </body>
 </html>
