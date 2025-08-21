@@ -3381,8 +3381,16 @@
                     break;
                     
                 case 'satis-delete':
+                    // FIX: Handle server-initiated deletions and other client deletions properly
                     if (data.data && (data.data.satisId || data.data.id)) {
                         const satisId = data.data.satisId || data.data.id;
+                        
+                        // Skip if this is from the same client (to prevent double deletion)
+                        if (data.source === socket.id) {
+                            console.log('🔄 Kendi silme işlemimiz, atlanıyor');
+                            break;
+                        }
+                        
                         // Find and remove the sale from local array
                         const satisIndex = satisGecmisi.findIndex(sale => 
                             sale.id == satisId || sale.id === parseInt(satisId)
@@ -3393,7 +3401,13 @@
                             satisTablosunuGuncelle();
                             guncelleIstatistikler();
                             guncellenenVerileriKaydet();
-                            showNotification('🗑️ Satış silindi', 'success');
+                            
+                            if (data.source === 'server') {
+                                console.log('🔄 Sunucu kaynaklı silme işlemi');
+                                // Don't show notification for server-initiated deletions (user already did the action)
+                            } else {
+                                showNotification('🗑️ Satış silindi (başka kullanıcı tarafından)', 'info');
+                            }
                         }
                     }
                     break;
@@ -6084,10 +6098,10 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     const response = await fetch(`${API_BASE}/api/satis-sil/${satisId}`, { method: 'DELETE' });
                     const apiResult = await response.json();
                     if (!response.ok || !apiResult.success) throw new Error(apiResult.message || 'Satış silinemedi');
-                    // Local data'dan sil
+                    
+                    // FIX: Only delete locally and emit socket event, don't do both
+                    // The socket event will be handled by other clients, not this one
                     satisGecmisi.splice(satisIndex, 1);
-                    // Real-time sync to other clients
-                    socket.emit('dataUpdate', { type: 'satis-delete', data: { satisId }, source: socket.id });
                     satisTablosunuGuncelle();
                     guncellenenVerileriKaydet();
                     showNotification('🗑️ Satış silindi', 'success');
@@ -7767,12 +7781,11 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     const apiResult = await response.json();
                     if (!response.ok || !apiResult.success) throw new Error(apiResult.message || 'Satış silinemedi');
 
+                    // FIX: Only delete locally, don't emit socket event to prevent double deletion
                     const saleIndex = satisGecmisi.findIndex(s => s.id == saleId || s.id === parseInt(saleId));
                     if (saleIndex !== -1) {
                         satisGecmisi.splice(saleIndex, 1);
                     }
-
-                    socket.emit('dataUpdate', { type: 'satis-delete', data: { satisId: saleId }, source: socket.id });
 
                     stokTablosunuGuncelle();
                     satisTablosunuGuncelle();
