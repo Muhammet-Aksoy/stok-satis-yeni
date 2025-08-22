@@ -3724,6 +3724,9 @@
                         musteriTablosunuGuncelle();
                         guncelleIstatistikler();
                         
+                        // UI durumunu geri yükle
+                        restoreUIState(data);
+                        
                         performanceMetrics.cacheHits++;
                         
                     } catch (error) {
@@ -3784,6 +3787,189 @@
             }
         }
         
+        // UI durumunu geri yükleme fonksiyonu
+        function restoreUIState(data) {
+            try {
+                // Form verilerini geri yükle
+                if (data.formData) {
+                    let restoredInputs = 0;
+                    Object.keys(data.formData).forEach(inputId => {
+                        const input = document.getElementById(inputId);
+                        if (input && input.type !== 'file' && data.formData[inputId]) {
+                            input.value = data.formData[inputId];
+                            // Geri yüklenen input'lara görsel geri bildirim
+                            input.style.backgroundColor = '#e8f5e8';
+                            setTimeout(() => {
+                                input.style.backgroundColor = '';
+                            }, 2000);
+                            restoredInputs++;
+                        }
+                    });
+                    
+                    if (restoredInputs > 0) {
+                        showNotification(`📝 ${restoredInputs} form alanı geri yüklendi`, 'info');
+                    }
+                }
+                
+                // Düzenleme durumlarını geri yükle
+                if (data.uiState) {
+                    editingMode = data.uiState.editingMode || false;
+                    editingMusteriId = data.uiState.editingMusteriId || null;
+                    editingBarkod = data.uiState.editingBarkod || null;
+                    editingSaleId = data.uiState.editingSaleId || null;
+                    editingDebtId = data.uiState.editingDebtId || null;
+                    currentCustomerForSale = data.uiState.currentCustomerForSale || null;
+                    currentView = data.uiState.currentView || 'table';
+                    currentSort = data.uiState.currentSort || { column: null, direction: 'asc' };
+                    currentCustomerSort = data.uiState.currentCustomerSort || { column: null, direction: 'asc' };
+                    currentSalesSort = data.uiState.currentSalesSort || { column: null, direction: 'asc' };
+                    currentBarcode = data.uiState.currentBarcode || '';
+                    
+                    // Tema durumunu geri yükle
+                    if (data.uiState.currentTheme && data.uiState.currentTheme !== currentTheme) {
+                        currentTheme = data.uiState.currentTheme;
+                        document.documentElement.setAttribute('data-theme', currentTheme);
+                        localStorage.setItem('theme', currentTheme);
+                    }
+                }
+                
+                // Görünür panelleri geri yükle
+                if (data.visibleElements) {
+                    Object.keys(data.visibleElements).forEach(elementId => {
+                        const element = document.getElementById(elementId);
+                        if (element && data.visibleElements[elementId]) {
+                            element.style.display = 'block';
+                        }
+                    });
+                }
+                
+                // Düzenleme modundaysa ilgili butonları aktif et
+                if (editingMode) {
+                    if (editingMusteriId) {
+                        // Müşteri düzenleme modunu aktif et
+                        const musteriIptalBtn = document.getElementById('musteriIptalBtn');
+                        if (musteriIptalBtn) {
+                            musteriIptalBtn.style.display = 'inline-block';
+                        }
+                    }
+                    if (editingBarkod) {
+                        // Ürün düzenleme modunu aktif et
+                        const form = document.getElementById('urunForm');
+                        if (form) {
+                            form.classList.add('editing-mode');
+                        }
+                    }
+                }
+                
+                // Devam eden işlemleri geri yükle
+                if (data.pendingOperations && data.pendingOperations.lastOperation) {
+                    const operation = data.pendingOperations;
+                    const timeSinceOperation = Date.now() - (operation.operationTimestamp || 0);
+                    
+                    // Eğer işlem 5 dakikadan eskiyse, kullanıcıya sor
+                    if (timeSinceOperation < 5 * 60 * 1000) {
+                        window.lastOperation = operation.lastOperation;
+                        window.operationTimestamp = operation.operationTimestamp;
+                        window.operationData = operation.operationData;
+                        
+                        // Kullanıcıya devam etmek isteyip istemediğini sor
+                        setTimeout(() => {
+                            if (confirm(`Sayfa yenilenmeden önce "${operation.lastOperation}" işlemi yarıda kaldı. Devam etmek istiyor musunuz?`)) {
+                                resumePendingOperation(operation);
+                            } else {
+                                clearPendingOperation();
+                            }
+                        }, 1000);
+                    }
+                }
+                
+                console.log('✅ UI durumu geri yüklendi:', {
+                    editingMode: editingMode,
+                    currentView: currentView,
+                    formsRestored: data.formData ? Object.keys(data.formData).length : 0,
+                    panelsRestored: data.visibleElements ? Object.keys(data.visibleElements).length : 0,
+                    pendingOperation: data.pendingOperations ? data.pendingOperations.lastOperation : 'none'
+                });
+                
+            } catch (error) {
+                console.error('❌ UI durumu geri yükleme hatası:', error);
+            }
+        }
+        
+        // Devam eden işlemi kaydet
+        function savePendingOperation(operationType, operationData = null) {
+            window.lastOperation = operationType;
+            window.operationTimestamp = Date.now();
+            window.operationData = operationData;
+            guncellenenVerileriKaydet(); // Durumu hemen kaydet
+            
+            // Görsel geri bildirim
+            console.log('💾 İşlem kaydedildi:', operationType);
+            showNotification(`💾 ${operationType} işlemi kaydedildi`, 'info');
+        }
+        
+        // Devam eden işlemi temizle
+        function clearPendingOperation() {
+            if (window.lastOperation) {
+                console.log('🗑️ İşlem temizlendi:', window.lastOperation);
+            }
+            window.lastOperation = null;
+            window.operationTimestamp = null;
+            window.operationData = null;
+            guncellenenVerileriKaydet(); // Durumu hemen kaydet
+        }
+        
+        // Yarıda kalan işlemi devam ettir
+        function resumePendingOperation(operation) {
+            try {
+                console.log('🔄 Yarıda kalan işlem devam ettiriliyor:', operation.lastOperation);
+                
+                switch (operation.lastOperation) {
+                    case 'urun_ekleme':
+                        if (operation.operationData) {
+                            // Ürün ekleme formunu doldur ve göster
+                            const urunPanel = document.getElementById('products-panel');
+                            if (urunPanel) urunPanel.style.display = 'block';
+                            showNotification('Ürün ekleme işlemi devam ettiriliyor...', 'info');
+                        }
+                        break;
+                    case 'musteri_ekleme':
+                        if (operation.operationData) {
+                            // Müşteri ekleme formunu doldur ve göster
+                            const musteriPanel = document.getElementById('customers-panel');
+                            if (musteriPanel) musteriPanel.style.display = 'block';
+                            showNotification('Müşteri ekleme işlemi devam ettiriliyor...', 'info');
+                        }
+                        break;
+                    case 'satis_islemi':
+                        if (operation.operationData) {
+                            // Satış işlemini devam ettir
+                            const satisPanel = document.getElementById('sales-panel');
+                            if (satisPanel) satisPanel.style.display = 'block';
+                            showNotification('Satış işlemi devam ettiriliyor...', 'info');
+                        }
+                        break;
+                    case 'borc_ekleme':
+                        if (operation.operationData) {
+                            // Borç ekleme formunu doldur ve göster
+                            const borcPanel = document.getElementById('debts-panel');
+                            if (borcPanel) borcPanel.style.display = 'block';
+                            showNotification('Borç ekleme işlemi devam ettiriliyor...', 'info');
+                        }
+                        break;
+                    default:
+                        console.log('⚠️ Bilinmeyen işlem türü:', operation.lastOperation);
+                }
+                
+                // İşlem devam ettirildikten sonra temizle
+                clearPendingOperation();
+                
+            } catch (error) {
+                console.error('❌ İşlem devam ettirme hatası:', error);
+                clearPendingOperation();
+            }
+        }
+        
         // Local storage'a kaydet (sadece local backup için) - İyileştirilmiş
         function guncellenenVerileriKaydet() {
             try {
@@ -3799,11 +3985,56 @@
                     return;
                 }
                 
+                // Form verilerini topla
+                const formData = {};
+                const formInputs = document.querySelectorAll('input, textarea, select');
+                formInputs.forEach(input => {
+                    if (input.id && input.value !== '' && input.type !== 'file') {
+                        formData[input.id] = input.value;
+                    }
+                });
+                
+                // Düzenleme durumlarını ve UI durumlarını kaydet
+                const uiState = {
+                    editingMode: editingMode,
+                    editingMusteriId: editingMusteriId,
+                    editingBarkod: editingBarkod,
+                    editingSaleId: editingSaleId,
+                    editingDebtId: editingDebtId,
+                    currentCustomerForSale: currentCustomerForSale,
+                    currentView: currentView,
+                    currentSort: currentSort,
+                    currentCustomerSort: currentCustomerSort,
+                    currentSalesSort: currentSalesSort,
+                    currentBarcode: currentBarcode,
+                    currentTheme: currentTheme
+                };
+                
+                // Açık panelleri ve modal durumlarını kaydet
+                const visibleElements = {};
+                const panels = document.querySelectorAll('.panel, .modal');
+                panels.forEach(panel => {
+                    if (panel.id && panel.style.display === 'block') {
+                        visibleElements[panel.id] = true;
+                    }
+                });
+                
+                // Devam eden işlemleri kaydet
+                const pendingOperations = {
+                    lastOperation: window.lastOperation || null,
+                    operationTimestamp: window.operationTimestamp || null,
+                    operationData: window.operationData || null
+                };
+                
                 const dataToSave = {
                     stokListesi: stokListesi || {},
                     satisGecmisi: satisGecmisi || [],
                     musteriler: musteriler || {},
                     borclarim: borclarim || {},
+                    formData: formData,
+                    uiState: uiState,
+                    visibleElements: visibleElements,
+                    pendingOperations: pendingOperations,
                     lastSync: new Date().toISOString(),
                     source: 'local'
                 };
@@ -3931,13 +4162,81 @@
                 }
             });
             
-            // Sayfa yenilenmeden önce veri kaydetme
-            window.addEventListener('beforeunload', () => {
+            // Sayfa yenilenmeden önce veri kaydetme - Geliştirilmiş
+            window.addEventListener('beforeunload', (e) => {
                 guncellenenVerileriKaydet();
+                
+                // Eğer devam eden bir işlem varsa kullanıcıyı uyar
+                if (window.lastOperation) {
+                    const message = 'Devam eden bir işleminiz var. Çıkmak istediğinizden emin misiniz?';
+                    e.preventDefault();
+                    e.returnValue = message;
+                    return message;
+                }
             });
+            
+            // Form verilerini otomatik kaydetme - Kullanıcı yazarken kaydet
+            setupAutoSaveFormData();
+            
+            // Kullanıcıya otomatik kaydetme hakkında bilgi ver
+            showNotification('🔄 Otomatik kaydetme aktif - Verileriniz sayfa yenilense bile korunur', 'info');
             
             console.log('✅ Sistem başlatma tamamlandı');
         });
+        
+        // Form verilerini otomatik kaydetme sistemi
+        function setupAutoSaveFormData() {
+            let autoSaveTimeout;
+            
+            // Tüm input, textarea ve select elementlerine event listener ekle
+            document.addEventListener('input', function(e) {
+                if (e.target.matches('input, textarea, select')) {
+                    // Debounced auto-save - 2 saniye sonra kaydet
+                    clearTimeout(autoSaveTimeout);
+                    autoSaveTimeout = setTimeout(() => {
+                        guncellenenVerileriKaydet();
+                        console.log('💾 Form verileri otomatik kaydedildi');
+                        
+                        // Sync indicator'ı kısa süre için parlat
+                        const syncIndicator = document.getElementById('syncIndicator');
+                        if (syncIndicator) {
+                            syncIndicator.style.animation = 'pulse 1s ease-in-out';
+                            setTimeout(() => {
+                                syncIndicator.style.animation = '';
+                            }, 1000);
+                        }
+                    }, 2000);
+                }
+            });
+            
+            // Change event'i için de ekle (select elementleri için)
+            document.addEventListener('change', function(e) {
+                if (e.target.matches('input, textarea, select')) {
+                    clearTimeout(autoSaveTimeout);
+                    autoSaveTimeout = setTimeout(() => {
+                        guncellenenVerileriKaydet();
+                        console.log('💾 Form verileri otomatik kaydedildi');
+                        
+                        // Sync indicator'ı kısa süre için parlat
+                        const syncIndicator = document.getElementById('syncIndicator');
+                        if (syncIndicator) {
+                            syncIndicator.style.animation = 'pulse 1s ease-in-out';
+                            setTimeout(() => {
+                                syncIndicator.style.animation = '';
+                            }, 1000);
+                        }
+                    }, 1000);
+                }
+            });
+            
+            // Periyodik otomatik kaydetme - Her 30 saniyede bir
+            setInterval(() => {
+                guncellenenVerileriKaydet();
+                console.log('💾 Periyodik otomatik kaydetme yapıldı');
+            }, 30000); // 30 saniye
+            
+            console.log('✅ Otomatik form kaydetme sistemi kuruldu');
+        }
         
         // Test verisi yükleme fonksiyonu - Geliştirilmiş
         async function loadTestData() {
@@ -5619,11 +5918,20 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         }
         // Müşteri ekle
         async function musteriEkle() {
+            // Devam eden işlemi kaydet
+            savePendingOperation('musteri_ekleme', {
+                ad: document.getElementById('musteriAdi').value.trim(),
+                telefon: document.getElementById('musteriTelefon').value.trim(),
+                adres: document.getElementById('musteriAdres').value.trim(),
+                aciklama: document.getElementById('musteriAciklama').value.trim()
+            });
+            
             const ad = document.getElementById('musteriAdi').value.trim();
             const telefon = document.getElementById('musteriTelefon').value.trim();
             const adres = document.getElementById('musteriAdres').value.trim();
             const aciklama = document.getElementById('musteriAciklama').value.trim();
             if (!ad) {
+                clearPendingOperation(); // Hata durumunda işlemi temizle
                 Swal.fire('Hata', 'Müşteri adı zorunludur.', 'error');
                 return;
             }
@@ -5673,6 +5981,9 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     editingMode = false;
                     editingMusteriId = null;
                     
+                    // İşlem başarılı, pending operation'ı temizle
+                    clearPendingOperation();
+                    
                     Swal.fire({
                         icon: 'success',
                         title: 'Başarılı',
@@ -5686,6 +5997,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 
             } catch (error) {
                 console.error('❌ Müşteri kaydetme hatası:', error);
+                clearPendingOperation(); // Hata durumunda işlemi temizle
                 Swal.fire('Hata', error.message || 'Müşteri kaydedilemedi', 'error');
             }
         }
@@ -5832,6 +6144,16 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
 
         // Satışı tamamla
         async function tamamlaSatis(key, miktar, musteriId, aciklama, satisFiyati, borc = false) {
+            // Devam eden işlemi kaydet
+            savePendingOperation('satis_islemi', {
+                key: key,
+                miktar: miktar,
+                musteriId: musteriId,
+                aciklama: aciklama,
+                satisFiyati: satisFiyati,
+                borc: borc
+            });
+            
             const urun = stokListesi[key];
             
             // Fiyat ve miktar kontrolü - Geliştirilmiş validasyon
@@ -5929,6 +6251,9 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                         Swal.fire('Bilgi', 'Bu ürünün stoğu tükendi.', 'info');
                     }
                     
+                    // İşlem başarılı, pending operation'ı temizle
+                    clearPendingOperation();
+                    
                     Swal.fire({
                         icon: 'success',
                         title: 'Satış Tamamlandı!',
@@ -5942,6 +6267,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 
             } catch (error) {
                 console.error('❌ Satış kaydetme hatası:', error);
+                clearPendingOperation(); // Hata durumunda işlemi temizle
                 Swal.fire('Hata', error.message || 'Satış kaydedilemedi', 'error');
                 
                 // Hata durumunda stoku geri al
@@ -6187,6 +6513,17 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         window.urunKaydet = async function() {
             // console.log('🔄 urunKaydet fonksiyonu başlatıldı'); // PERFORMANCE: Log kaldırıldı
             
+            // Devam eden işlemi kaydet
+            savePendingOperation('urun_ekleme', {
+                barkod: document.getElementById('barkod')?.value.trim(),
+                urunAdi: document.getElementById('urunAdi')?.value.trim(),
+                marka: document.getElementById('marka')?.value.trim(),
+                miktar: document.getElementById('miktar')?.value,
+                alisFiyati: document.getElementById('alisFiyati')?.value,
+                satisFiyati: document.getElementById('satisFiyati')?.value,
+                aciklama: document.getElementById('aciklama')?.value.trim()
+            });
+            
             // Form elementlerini kontrol et - OPTIMIZED
             const formElements = {
                 barkod: document.getElementById('barkod'),
@@ -6311,6 +6648,9 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                         message += ` (${result.existingVariants} varyant mevcut)`;
                     }
                     
+                    // İşlem başarılı, pending operation'ı temizle
+                    clearPendingOperation();
+                    
                     Swal.fire('Başarılı!', message, 'success');
                     
                     // Formu temizle
@@ -6357,6 +6697,9 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                                 type: 'stok-add',
                                 data: forceAddResult.data
                             });
+                            
+                            // İşlem başarılı, pending operation'ı temizle
+                            clearPendingOperation();
                             
                             Swal.fire('Başarılı!', 'Yeni ürün eklendi', 'success');
                             
@@ -6425,6 +6768,9 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                                     data: updateResult.data
                                 });
                                 
+                                // İşlem başarılı, pending operation'ı temizle
+                                clearPendingOperation();
+                                
                                 Swal.fire('Başarılı!', 'Ürün güncellendi', 'success');
                                 
                                 // Formu temizle
@@ -6449,6 +6795,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 
             } catch (error) {
                 console.error('❌ Ürün kaydetme hatası:', error);
+                clearPendingOperation(); // Hata durumunda işlemi temizle
                 Swal.fire('Hata', error.message || 'Ürün kaydedilemedi', 'error');
             }
         }
@@ -8363,6 +8710,16 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         }
         // Borç ekle - FIX: API entegrasyonu ile
         async function borcEkle() {
+            // Devam eden işlemi kaydet
+            savePendingOperation('borc_ekleme', {
+                alacakli: document.getElementById('alacakliAdi').value.trim(),
+                miktar: document.getElementById('borcMiktari').value,
+                aciklama: document.getElementById('borcAciklama').value.trim(),
+                tarih: document.getElementById('borcTarihi').value,
+                odemeTarihi: document.getElementById('borcOdemeTarihi').value,
+                durum: document.getElementById('borcDurumu').value
+            });
+            
             const alacakli = document.getElementById('alacakliAdi').value.trim();
             const miktar = parseFloat(document.getElementById('borcMiktari').value) || 0;
             const aciklama = document.getElementById('borcAciklama').value.trim();
@@ -8371,6 +8728,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             const durum = document.getElementById('borcDurumu').value;
             
             if (!alacakli || miktar <= 0) {
+                clearPendingOperation(); // Hata durumunda işlemi temizle
                 Swal.fire('Hata', 'Alacaklı adı ve borç miktarı zorunludur.', 'error');
                 return;
             }
@@ -8439,6 +8797,9 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     borcFormTemizle();
                     editingDebtId = null;
                     
+                    // İşlem başarılı, pending operation'ı temizle
+                    clearPendingOperation();
+                    
                     Swal.fire({
                         icon: 'success',
                         title: 'Başarılı',
@@ -8452,6 +8813,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 
             } catch (error) {
                 console.error('Borç kaydetme hatası:', error);
+                clearPendingOperation(); // Hata durumunda işlemi temizle
                 Swal.fire('Hata', 'Borç kaydedilirken hata oluştu: ' + error.message, 'error');
             }
         }
