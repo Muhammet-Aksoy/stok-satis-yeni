@@ -5,7 +5,7 @@ const Database = require('better-sqlite3');
 console.log('🔄 Importing sabancioglu_backup_*.json into database...');
 
 const dataDir = __dirname;
-const dbPath = path.join(__dirname, 'veriler', 'veritabani.db');
+const dbPath = path.join(__dirname, '..', 'veriler', 'veritabani.db');
 const db = new Database(dbPath);
 
 function listBackupFiles() {
