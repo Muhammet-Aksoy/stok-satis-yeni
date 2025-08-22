@@ -118,10 +118,42 @@
             padding-bottom: 20px;
             /* Mobil optimize */
             -webkit-overflow-scrolling: touch;
-            -webkit-user-select: none;
-            user-select: none;
             -webkit-tap-highlight-color: transparent;
             transition: var(--transition);
+            cursor: default;
+        }
+        
+        /* Cursor visibility fixes */
+        * {
+            cursor: inherit;
+        }
+        
+        input, textarea, select, button, a, 
+        .clickable, .btn, .menu-button, .tab,
+        .product-card, .sale-item, .customer-item,
+        .debt-item, .close-modal, .search-box,
+        .notification, .table-container tbody tr,
+        .main-menu, .theme-toggle, .sync-status-indicator {
+            cursor: pointer !important;
+        }
+        
+        input[type="text"], 
+        input[type="number"], 
+        input[type="email"], 
+        input[type="tel"],
+        input[type="search"],
+        textarea {
+            cursor: text !important;
+        }
+        
+        /* Ensure text selection is enabled */
+        body * {
+            user-select: auto;
+        }
+        
+        /* Disable text selection only for buttons and controls */
+        button, .btn, .tab, .menu-button {
+            user-select: none;
         }
 
         input, textarea, select { -webkit-user-select: text; user-select: text; caret-color: auto; }
@@ -3598,6 +3630,10 @@
         const NOTIFICATION_COOLDOWN = 10 * 60 * 1000; // 10 minutes in milliseconds - PERFORMANCE OPTIMIZATION
         let syncNotificationShown = false; // Sadece işlem yapıldığında göster
         
+        // Improved data initialization flags
+        let dataInitialized = false;
+        let isDataLoading = false;
+        
         // Tüm verileri yükle (backend'den)
         async function tumVerileriYukle() {
             try {
@@ -3692,60 +3728,97 @@
         
         // Veri başlatma fonksiyonu - ULTRA OPTIMIZED
         async function initializeData() {
+            // Prevent multiple initializations
+            if (isDataLoading || dataInitialized) {
+                console.log('⏭️ Data initialization already in progress or completed');
+                return;
+            }
+            
+            isDataLoading = true;
             const startTime = performance.now();
             console.log('🚀 Veri başlatma başlıyor...');
             
             try {
                 // 1. Önce localStorage'dan hızlı yükleme (cache)
                 const savedData = localStorage.getItem('saban_data');
+                let localDataLoaded = false;
+                
                 if (savedData) {
                     try {
                         const data = JSON.parse(savedData);
-                        stokListesi = data.stokListesi || {};
-                        satisGecmisi = data.satisGecmisi || [];
-                        musteriler = data.musteriler || {};
-                        borclarim = data.borclarim || {};
-                        
-                        // Cache'e ekle
-                        frontendCache.set('local_data', {
-                            data: data,
-                            timestamp: Date.now()
-                        });
-                        
-                        console.log('📄 LocalStorage\'dan yüklendi:', {
-                            stok: Object.keys(stokListesi).length,
-                            satis: satisGecmisi.length,
-                            musteri: Object.keys(musteriler).length
-                        });
-                        
-                        // UI'yi hızlıca güncelle
-                        stokTablosunuGuncelle();
-                        satisTablosunuGuncelle();
-                        musteriTablosunuGuncelle();
-                        guncelleIstatistikler();
-                        
-                        // UI durumunu geri yükle
-                        restoreUIState(data);
-                        
-                        performanceMetrics.cacheHits++;
-                        
+                        if (data && data.stokListesi && data.satisGecmisi && data.musteriler) {
+                            stokListesi = data.stokListesi || {};
+                            satisGecmisi = data.satisGecmisi || [];
+                            musteriler = data.musteriler || {};
+                            borclarim = data.borclarim || {};
+                            
+                            // Cache'e ekle
+                            frontendCache.set('local_data', {
+                                data: data,
+                                timestamp: Date.now()
+                            });
+                            
+                            console.log('📄 LocalStorage\'dan yüklendi:', {
+                                stok: Object.keys(stokListesi).length,
+                                satis: satisGecmisi.length,
+                                musteri: Object.keys(musteriler).length,
+                                borc: Object.keys(borclarim).length,
+                                lastSync: data.lastSync,
+                                source: data.source
+                            });
+                            
+                            // UI'yi hızlıca güncelle
+                            stokTablosunuGuncelle();
+                            satisTablosunuGuncelle();
+                            musteriTablosunuGuncelle();
+                            borcTablosunuGuncelle();
+                            guncelleIstatistikler();
+                            
+                            // UI durumunu geri yükle
+                            restoreUIState(data);
+                            
+                            performanceMetrics.cacheHits++;
+                            localDataLoaded = true;
+                            dataInitialized = true; // Mark as initialized early for better UX
+                        }
                     } catch (error) {
                         console.error('❌ LocalStorage parse hatası:', error);
                         performanceMetrics.cacheMisses++;
+                        localStorage.removeItem('saban_data'); // Remove corrupted data
                     }
                 }
                 
                 // 2. Backend'den fresh data al (öncelikli) - ULTRA OPTIMIZED
-                const backendSuccess = await tumVerileriYukle();
-                
-                if (backendSuccess) {
-                    console.log('✅ Backend verisi başarıyla yüklendi');
-                    showNotification('Veriler güncellendi', 'success');
-                    performanceMetrics.syncCount++;
-                    syncNotificationShown = true; // İşlem yapıldığını işaretle
-                } else {
-                    console.log('⚠️ Backend bağlantısı başarısız, local veriler korunuyor');
-                    showNotification('Backend bağlantısı başarısız, local veriler kullanılıyor', 'warning');
+                if (window.navigator.onLine && (socket.connected || !localDataLoaded)) {
+                    const backendSuccess = await tumVerileriYukle();
+                    
+                    if (backendSuccess) {
+                        console.log('✅ Backend verisi başarıyla yüklendi');
+                        if (!localDataLoaded) {
+                            showNotification('Veriler yüklendi', 'success');
+                        }
+                        performanceMetrics.syncCount++;
+                        syncNotificationShown = true; // İşlem yapıldığını işaretle
+                        dataInitialized = true;
+                    } else if (!localDataLoaded) {
+                        console.log('⚠️ Backend bağlantısı başarısız, boş verilerle başlatılıyor');
+                        // Initialize with empty data if nothing else worked
+                        stokListesi = {};
+                        satisGecmisi = [];
+                        musteriler = {};
+                        borclarim = {};
+                        dataInitialized = true;
+                        showNotification('Backend bağlantısı kurulamadı', 'warning');
+                    }
+                } else if (!localDataLoaded) {
+                    // Offline and no local data
+                    console.log('📴 Çevrimdışı ve local veri yok');
+                    stokListesi = {};
+                    satisGecmisi = [];
+                    musteriler = {};
+                    borclarim = {};
+                    dataInitialized = true;
+                    showNotification('📴 Çevrimdışı modda başlatıldı', 'info');
                 }
                 
                 // 3. Socket.IO bağlantısını kontrol et
@@ -3766,6 +3839,17 @@
             } catch (error) {
                 console.error('❌ Veri başlatma hatası:', error);
                 showNotification('Veri yükleme hatası: ' + error.message, 'error');
+                
+                // Initialize with empty data on error
+                if (!dataInitialized) {
+                    stokListesi = {};
+                    satisGecmisi = [];
+                    musteriler = {};
+                    borclarim = {};
+                    dataInitialized = true;
+                }
+            } finally {
+                isDataLoading = false;
             }
         }
         
