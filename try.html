@@ -124,6 +124,8 @@
             transition: var(--transition);
         }
 
+        input, textarea, select { -webkit-user-select: text; user-select: text; caret-color: auto; }
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -2401,10 +2403,6 @@
             <span>Toplu Satış</span>
         </div>
                 
-        <div class="menu-item" onclick="openMissingProductsModal()">
-            <i class="fas fa-exclamation-triangle"></i>
-            <span>Eksik Ürünler</span>
-        </div>
         
         <div class="menu-item" onclick="openQRConnection()">
             <i class="fas fa-qrcode"></i>
@@ -3174,6 +3172,8 @@
             showNotification('🔗 Bağlantı yeniden kuruldu', 'success');
             // Fresh data sync after reconnection
             setTimeout(() => tumVerileriYukle(), 500);
+            // Offline kuyruk varsa işle
+            try { if (typeof processOfflineQueue === 'function') setTimeout(processOfflineQueue, 1000); } catch (_) {}
         });
         
         socket.on('reconnect_error', (error) => {
@@ -3979,11 +3979,7 @@
                 const musteriCount = Object.keys(musteriler || {}).length;
                 const borcCount = Object.keys(borclarim || {}).length;
                 
-                // Eğer hiç veri yoksa kaydetme
-                if (stokCount === 0 && satisCount === 0 && musteriCount === 0 && borcCount === 0) {
-                    console.log('⚠️ Kaydedilecek veri bulunamadı, localStorage güncellenmedi');
-                    return;
-                }
+                // Kaydetmeyi atlama kaldırıldı: UI durumu ve işlem bilgisi her durumda kaydedilir
                 
                 // Form verilerini topla
                 const formData = {};
@@ -7505,7 +7501,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                             };
                         <\/script>
                     
-    <!-- Eksik Ürünler Modal -->
+    <!-- Eksik Ürünler Modal (kaldırıldı) -->
     <div id="missingProductsModal" class="modal">
         <div class="modal-content" style="max-width: 1200px; width: 90%;">
             <div class="modal-header">
