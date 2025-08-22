@@ -3036,7 +3036,8 @@ app.delete('/api/satis-sil/:id', async (req, res) => {
             io.emit('dataUpdated', {
                 type: 'satis-delete',
                 data: { satisId: id },
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                source: 'server' // Mark as server-initiated to prevent client conflicts
             });
             
             res.json({ 
