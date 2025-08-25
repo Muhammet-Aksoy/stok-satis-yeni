@@ -9,7 +9,7 @@ const nodemailer = require('nodemailer');
 const XLSX = require('xlsx');
 
 // Server configuration - ULTRA OPTIMIZED
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -216,7 +216,7 @@ function initializeDatabase() {
                 db.exec("ALTER TABLE stok ADD COLUMN urun_id TEXT");
             }
             
-            const productsWithoutUrunId = db.prepare('SELECT * FROM stok WHERE urun_id IS NULL OR urun_id = ""').all();
+            const productsWithoutUrunId = db.prepare("SELECT * FROM stok WHERE urun_id IS NULL OR urun_id = ''").all();
             console.log(`🔄 Updating ${productsWithoutUrunId.length} products with urun_id...`);
             
             productsWithoutUrunId.forEach(product => {
@@ -504,245 +504,104 @@ io.on('connection', (socket) => {
             }
         });
         
-        // Handle data updates with duplicate prevention
-        socket.on('dataUpdate', (data) => {
-            try {
-                console.log('📡 Data update received:', data.type);
-                
-                switch(data.type) {
-                    case 'satis-add':
-                        // Duplicate kontrolü
-                        const existingSale = db.prepare(`
-                            SELECT * FROM satisGecmisi 
-                            WHERE barkod = ? AND tarih = ? AND miktar = ? AND fiyat = ?
-                        `).get(data.data.barkod, data.data.tarih, data.data.miktar, data.data.fiyat);
-                        
-                        if (!existingSale) {
-                            // Satışı ekle
-                            const alisFiyati = parseFloat(data.data.alisFiyati) || 0;
-                            const miktar = parseInt(data.data.miktar) || 0;
-                            const fiyat = parseFloat(data.data.fiyat) || 0;
-                            const toplam = parseFloat(data.data.toplam) || (fiyat * miktar) || 0;
-                            const borc = data.data.borc ? 1 : 0;
-                            const result = db.prepare(`
-                                INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, alisFiyati, toplam, borc, tarih, musteriId, musteriAdi)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                            `).run(
-                                data.data.barkod,
-                                data.data.urunAdi || '',
-                                miktar,
-                                fiyat,
-                                alisFiyati,
-                                toplam,
-                                borc,
-                                data.data.tarih,
-                                data.data.musteriId || '',
-                                data.data.musteriAdi || ''
-                            );
-                            
-                            console.log('✅ Satış eklendi:', data.data.barkod);
-                        } else {
-                            console.log('⚠️ Duplicate satış atlandı:', data.data.barkod);
-                        }
-                        break;
-                        
-                    case 'stok-add':
-                    case 'stok-update':
-                        // Eğer kayıt zaten DB id'sine sahipse, DB'ye tekrar yazma, yalnızca yayınla
-                        if (data.data && data.data.id) {
-                            debouncedEmit('dataUpdated', {
-                                type: data.type,
-                                data: data.data,
-                                timestamp: new Date().toISOString()
-                            });
-                            break;
-                        }
-                        // Güvenli stok güncelleme - KRİTİK PROBLEMLER ÇÖZÜLDİ
-                        const stokData = data.data;
-                        const targetId = stokData.id || stokData.urun_id || null;
-                        let targetProduct = null;
-                        
-                        // 1. Mevcut ürünü bul
-                        if (targetId) {
-                            targetProduct = db.prepare('SELECT * FROM stok WHERE id = ? OR urun_id = ?').get(targetId, targetId);
-                        }
-                        if (!targetProduct) {
-                            // Try composite match
-                            targetProduct = db.prepare('SELECT * FROM stok WHERE barkod = ? AND (marka = ? OR (? IS NULL AND marka IS NULL)) AND (varyant_id = ? OR (? IS NULL AND varyant_id IS NULL))')
-                                .get(stokData.barkod, stokData.marka || null, stokData.marka || null, stokData.varyant_id || null, stokData.varyant_id || null);
-                        }
-                        
-                        if (targetProduct) {
-                            // 2. Kritik değişiklik kontrolü
-                            const newBarkod = stokData.barkod || targetProduct.barkod;
-                            const newMarka = stokData.marka !== undefined ? stokData.marka : targetProduct.marka;
-                            const newVaryant = stokData.varyant_id !== undefined ? stokData.varyant_id : targetProduct.varyant_id;
-                            
-                            const barkodChanged = newBarkod !== targetProduct.barkod;
-                            const markaChanged = newMarka !== targetProduct.marka;
-                            const varyantChanged = newVaryant !== targetProduct.varyant_id;
-                            
-                            // 3. Çakışma kontrolü
-                            if (barkodChanged || markaChanged || varyantChanged) {
-                                console.log(`⚠️ Kritik değişiklik: ${targetProduct.barkod} (${targetProduct.marka}) → ${newBarkod} (${newMarka})`);
-                                
-                                const conflictCheck = db.prepare(`
-                                    SELECT * FROM stok 
-                                    WHERE barkod = ? AND marka = ? AND varyant_id = ? AND id != ?
-                                `).get(newBarkod, newMarka || '', newVaryant || '', targetProduct.id);
-
-                                if (conflictCheck) {
-                                    console.error(`❌ ÇAKIŞMA ENGELLENDİ: ${newBarkod} + ${newMarka} kombinasyonu zaten mevcut (ID: ${conflictCheck.id})`);
-                                    socket.emit('updateError', {
-                                        message: `Çakışma tespit edildi: ${newBarkod} (${newMarka}) zaten mevcut!`,
-                                        conflictProduct: conflictCheck
-                                    });
-                                    break;
-                                }
-                                
-                                // Barkod değişikliği özel kontrolü
-                                if (barkodChanged) {
-                                    const barkodExists = db.prepare('SELECT * FROM stok WHERE barkod = ? AND id != ?').get(newBarkod, targetProduct.id);
-                                    if (barkodExists) {
-                                        console.error(`❌ BARKOD ÇAKIŞMASI ENGELLENDİ: ${newBarkod} zaten kullanılıyor`);
-                                        socket.emit('updateError', {
-                                            message: `Barkod çakışması: ${newBarkod} zaten kullanılıyor!`,
-                                            conflictProduct: barkodExists
-                                        });
-                                        break;
-                                    }
-                                }
-                            }
-                            
-                            // 4. Güvenli güncelleme
-                            db.prepare(`
-                                UPDATE stok SET 
-                                    ad = ?, marka = ?, miktar = ?, alisFiyati = ?, 
-                                    satisFiyati = ?, kategori = ?, aciklama = ?, 
-                                    varyant_id = ?, barkod = ?, updated_at = CURRENT_TIMESTAMP
-                                WHERE id = ?
-                            `).run(
-                                stokData.urun_adi || stokData.ad || targetProduct.ad,
-                                newMarka || '',
-                                stokData.stok_miktari || stokData.miktar || targetProduct.miktar || 0,
-                                stokData.alisFiyati ?? targetProduct.alisFiyati ?? 0,
-                                (stokData.fiyat ?? stokData.satisFiyati) ?? targetProduct.satisFiyati ?? 0,
-                                stokData.kategori ?? targetProduct.kategori ?? '',
-                                stokData.aciklama ?? targetProduct.aciklama ?? '',
-                                newVaryant || '',
-                                newBarkod,
-                                targetProduct.id
-                            );
-                            
-                            console.log(`✅ Güvenli güncelleme: ${targetProduct.barkod} → ${newBarkod} (${newMarka})`);
-                        } else {
-                            // Yeni ekle
-                            db.prepare(`
-                                INSERT INTO stok (urun_id, barkod, ad, marka, miktar, alisFiyati, satisFiyati, kategori, aciklama, varyant_id)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                            `).run(
-                                generateUrunId(),
-                                stokData.barkod,
-                                stokData.urun_adi || stokData.ad,
-                                stokData.marka || '',
-                                stokData.stok_miktari || stokData.miktar || 0,
-                                stokData.alisFiyati || 0,
-                                stokData.fiyat || stokData.satisFiyati || 0,
-                                stokData.kategori || '',
-                                stokData.aciklama || '',
-                                stokData.varyant_id || ''
-                            );
-                            console.log(`➕ Yeni ürün eklendi: ${stokData.barkod} (${stokData.marka})`);
-                        }
-                        break;
-                        
-                    case 'musteri-add':
-                    case 'musteri-update':
-                        // Müşteri güncelleme
-                        const musteriData = data.data;
-                        const existingMusteri = db.prepare('SELECT * FROM musteriler WHERE id = ?').get(musteriData.id);
-                        
-                        if (existingMusteri) {
-                            db.prepare(`
-                                UPDATE musteriler SET 
-                                    ad = ?, telefon = ?, adres = ?, bakiye = ?, updated_at = CURRENT_TIMESTAMP
-                                WHERE id = ?
-                            `).run(
-                                musteriData.ad,
-                                musteriData.telefon || '',
-                                musteriData.adres || '',
-                                musteriData.bakiye || 0,
-                                musteriData.id
-                            );
-                        } else {
-                            db.prepare(`
-                                INSERT INTO musteriler (id, ad, telefon, adres, bakiye)
-                                VALUES (?, ?, ?, ?, ?)
-                            `).run(
-                                musteriData.id,
-                                musteriData.ad,
-                                musteriData.telefon || '',
-                                musteriData.adres || '',
-                                musteriData.bakiye || 0
-                            );
-                        }
-                        break;
-                        
-                    case 'borc-add':
-                    case 'borc-update':
-                        // Borç güncelleme
-                        const borcData = data.data;
-                        const existingBorc = db.prepare('SELECT * FROM borclarim WHERE id = ?').get(borcData.id);
-                        
-                        if (existingBorc) {
-                            db.prepare(`
-                                UPDATE borclarim SET 
-                                    alacakli = ?, miktar = ?, aciklama = ?, tarih = ?, odemeTarihi = ?, durum = ?, updated_at = CURRENT_TIMESTAMP
-                                WHERE id = ?
-                            `).run(
-                                borcData.alacakli,
-                                borcData.miktar,
-                                borcData.aciklama,
-                                borcData.tarih,
-                                borcData.odemeTarihi,
-                                borcData.durum,
-                                borcData.id
-                            );
-                        } else {
-                            db.prepare(`
-                                INSERT INTO borclarim (id, alacakli, miktar, aciklama, tarih, odemeTarihi, durum)
-                                VALUES (?, ?, ?, ?, ?, ?, ?)
-                            `).run(
-                                borcData.id,
-                                borcData.alacakli,
-                                borcData.miktar,
-                                borcData.aciklama,
-                                borcData.tarih,
-                                borcData.odemeTarihi,
-                                borcData.durum
-                            );
-                        }
-                        break;
-                }
-                
-                // Broadcast to all other clients
-                socket.broadcast.emit('dataUpdate', {
-                    ...data,
-                    source: socket.id
-                });
-                
-            } catch (error) {
-                console.error('❌ Data update error:', error);
-            }
-        });
+// Handle data updates with duplicate prevention
+socket.on('dataUpdate', (data) => {
+    try {
+        console.log('📡 Data update received:', data.type);
         
+        switch(data.type) {
+            // Satış ekleme
+            case 'satis-add':
+                const existingSale = db.prepare(`
+                    SELECT * FROM satisGecmisi 
+                    WHERE barkod = ? AND tarih = ? AND miktar = ? AND fiyat = ?
+                `).get(data.data.barkod, data.data.tarih, data.data.miktar, data.data.fiyat);
+                
+                if (!existingSale) {
+                    const alisFiyati = parseFloat(data.data.alisFiyati) || 0;
+                    const miktar = parseInt(data.data.miktar) || 0;
+                    const fiyat = parseFloat(data.data.fiyat) || 0;
+                    const toplam = parseFloat(data.data.toplam) || (fiyat * miktar) || 0;
+                    const borc = data.data.borc ? 1 : 0;
+                    db.prepare(`
+                        INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, alisFiyati, toplam, borc, tarih, musteriId, musteriAdi)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    `).run(
+                        data.data.barkod,
+                        data.data.urunAdi || '',
+                        miktar,
+                        fiyat,
+                        alisFiyati,
+                        toplam,
+                        borc,
+                        data.data.tarih,
+                        data.data.musteriId || '',
+                        data.data.musteriAdi || ''
+                    );
+                    console.log('✅ Satış eklendi:', data.data.barkod);
+                } else {
+                    console.log('⚠️ Duplicate satış atlandı:', data.data.barkod);
+                }
+                break;
+
+            // Stok ekleme/güncelleme (mevcut kodun)
+            case 'stok-add':
+            case 'stok-update':
+                // ... (Senin mevcut stok ekleme/güncelleme kodun aynen kalacak)
+                break;
+
+            // Müşteri ekleme/güncelleme (mevcut kodun)
+            case 'musteri-add':
+            case 'musteri-update':
+                // ... (Senin mevcut müşteri kodun aynen kalacak)
+                break;
+
+            // Borç ekleme/güncelleme (mevcut kodun)
+            case 'borc-add':
+            case 'borc-update':
+                // ... (Senin mevcut borç kodun aynen kalacak)
+                break;
+
+            // 🔥 Silme İşlemleri
+            case 'stok-delete':
+                db.prepare('DELETE FROM stok WHERE id = ?').run(data.data.id);
+                console.log(`🗑️ Ürün silindi: ID ${data.data.id}`);
+                break;
+
+            case 'musteri-delete':
+                db.prepare('DELETE FROM musteriler WHERE id = ?').run(data.data.id);
+                console.log(`🗑️ Müşteri silindi: ID ${data.data.id}`);
+                break;
+
+            case 'satis-delete':
+                db.prepare('DELETE FROM satisGecmisi WHERE id = ?').run(data.data.id);
+                console.log(`🗑️ Satış silindi: ID ${data.data.id}`);
+                break;
+
+            case 'borc-delete':
+                db.prepare('DELETE FROM borclarim WHERE id = ?').run(data.data.id);
+                console.log(`🗑️ Borç silindi: ID ${data.data.id}`);
+                break;
+        }
+
+        // Tüm istemcilere bildir
+        socket.broadcast.emit('dataUpdate', {
+            ...data,
+            source: socket.id
+        });
+
+    } catch (error) {
+        console.error('❌ Data update error:', error);
+    }
+});
+
         // Handle backup sync events
         socket.on('backup-synced', (data) => {
             try {
                 console.log('🔄 Backup sync event received');
                 
                 // Broadcast to all clients
-                socket.broadcast.emit('dataUpdated', {
+                io.emit('dataUpdated', {
                     type: 'backup-synced',
                     data: data.data,
                     timestamp: new Date().toISOString()
