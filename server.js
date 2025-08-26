@@ -7,6 +7,7 @@ const path = require('path');
 const fs = require('fs-extra');
 const nodemailer = require('nodemailer');
 const XLSX = require('xlsx');
+const os = require('os');
 
 // Server configuration - ULTRA OPTIMIZED
 const PORT = process.env.PORT || 3000;
@@ -74,6 +75,21 @@ try {
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Request logging middleware
+app.use((req, res, next) => {
+    const start = Date.now();
+    const originalEnd = res.end;
+    
+    res.end = function(...args) {
+        const duration = Date.now() - start;
+        console.log(`${req.method} ${req.url} - ${res.statusCode} - ${duration}ms`);
+        originalEnd.apply(this, args);
+    };
+    
+    next();
+});
+
 // Statik dosyalar: index ve istemci için tüm cihazlara servis
 app.use(express.static(path.join(__dirname)));
 
@@ -234,6 +250,11 @@ function initializeDatabase() {
         // Preload frequently accessed data into cache
         preloadCache();
         
+        // Database health check
+        const healthCheck = db.prepare('SELECT COUNT(*) as stok_count FROM stok').get();
+        const totalSales = db.prepare('SELECT COUNT(*) as sales_count FROM satisGecmisi').get();
+        console.log(`🏥 Database health check - Stok: ${healthCheck.stok_count}, Sales: ${totalSales.sales_count}`);
+        
         } catch (error) {
         console.error('❌ Database initialization error:', error);
         throw error;
@@ -245,6 +266,33 @@ function generateUrunId() {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
     return `urun_${timestamp}_${random}`;
+}
+
+// Input validation helpers
+function validateRequired(value, fieldName) {
+    if (!value || (typeof value === 'string' && value.trim() === '')) {
+        throw new Error(`${fieldName} zorunludur`);
+    }
+}
+
+function validateNumeric(value, fieldName, min = null, max = null) {
+    const num = parseFloat(value);
+    if (isNaN(num)) {
+        throw new Error(`${fieldName} geçerli bir sayı olmalıdır`);
+    }
+    if (min !== null && num < min) {
+        throw new Error(`${fieldName} ${min}'dan büyük olmalıdır`);
+    }
+    if (max !== null && num > max) {
+        throw new Error(`${fieldName} ${max}'dan küçük olmalıdır`);
+    }
+    return num;
+}
+
+function validateStringLength(value, fieldName, maxLength) {
+    if (value && value.length > maxLength) {
+        throw new Error(`${fieldName} ${maxLength} karakterden uzun olamaz`);
+    }
 }
 
 // Cache management functions
@@ -787,6 +835,143 @@ app.get('/api/data', async (req, res) => {
             success: false,
             error: 'Data fetch error: ' + error.message
         });
+    }
+});
+
+// Pagination helper function
+function getPaginationParams(req) {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit) || 50));
+    const offset = (page - 1) * limit;
+    const search = req.query.q ? `%${req.query.q}%` : null;
+    
+    return { page, limit, offset, search };
+}
+
+// GET /api/stok - Paginated stock listing
+app.get('/api/stok', async (req, res, next) => {
+    try {
+        const { page, limit, offset, search } = getPaginationParams(req);
+        
+        // Build query with search
+        let query = 'SELECT * FROM stok';
+        let countQuery = 'SELECT COUNT(*) as total FROM stok';
+        let params = [];
+        
+        if (search) {
+            const searchCondition = ' WHERE ad LIKE ? OR barkod LIKE ? OR marka LIKE ? OR kategori LIKE ?';
+            query += searchCondition + ' ORDER BY ad LIMIT ? OFFSET ?';
+            countQuery += searchCondition;
+            params = [search, search, search, search, limit, offset];
+        } else {
+            query += ' ORDER BY ad LIMIT ? OFFSET ?';
+            params = [limit, offset];
+        }
+        
+        const items = db.prepare(query).all(...params);
+        const totalResult = db.prepare(countQuery).get(...(search ? [search, search, search, search] : []));
+        const total = totalResult.total;
+        
+        res.json({
+            success: true,
+            data: items,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+                hasNext: page * limit < total,
+                hasPrev: page > 1
+            },
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        next(error);
+    }
+});
+
+// GET /api/satis - Paginated sales listing
+app.get('/api/satis', async (req, res, next) => {
+    try {
+        const { page, limit, offset, search } = getPaginationParams(req);
+        
+        let query = 'SELECT * FROM satisGecmisi';
+        let countQuery = 'SELECT COUNT(*) as total FROM satisGecmisi';
+        let params = [];
+        
+        if (search) {
+            const searchCondition = ' WHERE barkod LIKE ? OR urunAdi LIKE ? OR musteriAdi LIKE ?';
+            query += searchCondition + ' ORDER BY tarih DESC LIMIT ? OFFSET ?';
+            countQuery += searchCondition;
+            params = [search, search, search, limit, offset];
+        } else {
+            query += ' ORDER BY tarih DESC LIMIT ? OFFSET ?';
+            params = [limit, offset];
+        }
+        
+        const items = db.prepare(query).all(...params);
+        const totalResult = db.prepare(countQuery).get(...(search ? [search, search, search] : []));
+        const total = totalResult.total;
+        
+        res.json({
+            success: true,
+            data: items,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+                hasNext: page * limit < total,
+                hasPrev: page > 1
+            },
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        next(error);
+    }
+});
+
+// GET /api/musteriler - Paginated customers listing
+app.get('/api/musteriler', async (req, res, next) => {
+    try {
+        const { page, limit, offset, search } = getPaginationParams(req);
+        
+        let query = 'SELECT * FROM musteriler';
+        let countQuery = 'SELECT COUNT(*) as total FROM musteriler';
+        let params = [];
+        
+        if (search) {
+            const searchCondition = ' WHERE ad LIKE ? OR telefon LIKE ? OR adres LIKE ?';
+            query += searchCondition + ' ORDER BY ad LIMIT ? OFFSET ?';
+            countQuery += searchCondition;
+            params = [search, search, search, limit, offset];
+        } else {
+            query += ' ORDER BY ad LIMIT ? OFFSET ?';
+            params = [limit, offset];
+        }
+        
+        const items = db.prepare(query).all(...params);
+        const totalResult = db.prepare(countQuery).get(...(search ? [search, search, search] : []));
+        const total = totalResult.total;
+        
+        res.json({
+            success: true,
+            data: items,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+                hasNext: page * limit < total,
+                hasPrev: page > 1
+            },
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        next(error);
     }
 });
 
@@ -1789,7 +1974,7 @@ app.get('/api/download-excel/:fileName', async (req, res) => {
 });
 
 // Kategori endpoint'leri
-app.get('/api/categories', async (req, res) => {
+app.get('/api/categories', async (req, res, next) => {
     try {
         // Mevcut kategorileri getir
         const categories = db.prepare(`
@@ -1814,18 +1999,20 @@ app.get('/api/categories', async (req, res) => {
             timestamp: new Date().toISOString()
         });
     } catch (error) {
-        console.error('❌ Kategori listesi hatası:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Kategori listesi alınamadı: ' + error.message,
-            timestamp: new Date().toISOString()
-        });
+        next(error);
     }
 });
 
-app.post('/api/categorize-products', async (req, res) => {
+app.post('/api/categorize-products', async (req, res, next) => {
     try {
         const { categoryMappings } = req.body; // { "keyword": "category" }
+        
+        // Input validation
+        if (!categoryMappings || typeof categoryMappings !== 'object') {
+            const error = new Error('Kategori eşleştirmeleri gerekli');
+            error.status = 400;
+            throw error;
+        }
         
         let updateCount = 0;
         const updateStmt = db.prepare('UPDATE stok SET kategori = ? WHERE ad LIKE ? OR aciklama LIKE ?');
@@ -1843,12 +2030,10 @@ app.post('/api/categorize-products', async (req, res) => {
             timestamp: new Date().toISOString()
         });
     } catch (error) {
-        console.error('❌ Kategorizasyon hatası:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Kategorizasyon hatası: ' + error.message,
-            timestamp: new Date().toISOString()
-        });
+        if (error.message.includes('gerekli')) {
+            error.status = 400;
+        }
+        next(error);
     }
 });
 
@@ -1876,17 +2061,30 @@ app.get('/api/products-by-category/:category', async (req, res) => {
 });
 
 // Toplu satış endpoint'i
-app.post('/api/satis-toplu', async (req, res) => {
+app.post('/api/satis-toplu', async (req, res, next) => {
     try {
         const { items, musteriId, musteriAdi } = req.body;
         // items: [{ barkod, miktar, urunAdi, fiyat, alisFiyati }]
         
+        // Enhanced input validation
         if (!items || !Array.isArray(items) || items.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Satış kalemi listesi gerekli',
-                timestamp: new Date().toISOString()
-            });
+            const error = new Error('Satış kalemi listesi gerekli');
+            error.status = 400;
+            throw error;
+        }
+        
+        if (items.length > 100) {
+            const error = new Error('Tek seferde en fazla 100 ürün satılabilir');
+            error.status = 400;
+            throw error;
+        }
+        
+        // Validate each item
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            validateRequired(item.barkod, `Kalemi ${i + 1} barkod`);
+            validateNumeric(item.miktar, `Kalemi ${i + 1} miktar`, 1, 9999);
+            validateNumeric(item.fiyat, `Kalemi ${i + 1} fiyat`, 0, 999999);
         }
         
         const salesResults = [];
@@ -1945,12 +2143,15 @@ app.post('/api/satis-toplu', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('❌ Toplu satış hatası:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Toplu satış hatası: ' + error.message,
-            timestamp: new Date().toISOString()
-        });
+        // Handle validation and business logic errors
+        if (error.message.includes('zorunludur') || 
+            error.message.includes('geçerli bir sayı') || 
+            error.message.includes('bulunamadı') ||
+            error.message.includes('Yetersiz stok') ||
+            error.message.includes('en fazla')) {
+            error.status = 400;
+        }
+        next(error);
     }
 });
 
@@ -2062,30 +2263,30 @@ app.get('/api/backup-analysis', async (req, res) => {
 });
 
 // POST /api/stok-ekle - Tek ürün ekle
-app.post('/api/stok-ekle', async (req, res) => {
+app.post('/api/stok-ekle', async (req, res, next) => {
     try {
         const urun = req.body;
         console.log('📦 Yeni ürün ekleniyor:', urun.barkod, urun.ad);
         
-        // Validate required fields
-        if (!urun.barkod || !urun.ad) {
-            return res.status(400).json({
-                success: false,
-                message: 'Barkod ve ürün adı zorunludur',
-                timestamp: new Date().toISOString()
-            });
-        }
+        // Enhanced input validation
+        validateRequired(urun.barkod, 'Barkod');
+        validateRequired(urun.ad, 'Ürün adı');
+        validateStringLength(urun.barkod, 'Barkod', 50);
+        validateStringLength(urun.ad, 'Ürün adı', 200);
+        validateStringLength(urun.marka, 'Marka', 100);
+        validateStringLength(urun.kategori, 'Kategori', 100);
+        validateStringLength(urun.aciklama, 'Açıklama', 500);
         
-        // Ensure proper data types and handle null/undefined values
-        const barkod = urun.barkod || '';
-        const ad = urun.ad || '';
-        const marka = urun.marka || '';
-        const miktar = parseInt(urun.miktar) || 0;
-        const alisFiyati = parseFloat(urun.alisFiyati) || 0;
-        const satisFiyati = parseFloat(urun.satisFiyati) || 0;
-        const kategori = urun.kategori || '';
-        const aciklama = urun.aciklama || '';
-        const varyant_id = urun.varyant_id || '';
+        // Sanitize and validate data types
+        const barkod = urun.barkod.trim();
+        const ad = urun.ad.trim();
+        const marka = (urun.marka || '').trim();
+        const miktar = validateNumeric(urun.miktar || 0, 'Miktar', 0, 999999);
+        const alisFiyati = validateNumeric(urun.alisFiyati || 0, 'Alış Fiyatı', 0, 999999);
+        const satisFiyati = validateNumeric(urun.satisFiyati || 0, 'Satış Fiyatı', 0, 999999);
+        const kategori = (urun.kategori || '').trim();
+        const aciklama = (urun.aciklama || '').trim();
+        const varyant_id = (urun.varyant_id || '').trim();
         
         // Generate unique product ID
         const urun_id = generateUrunId();
@@ -2165,13 +2366,13 @@ app.post('/api/stok-ekle', async (req, res) => {
         }
         
     } catch (error) {
-        console.error('❌ Ürün eklenirken hata:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Ürün eklenirken hata', 
-            error: error.message,
-            timestamp: new Date().toISOString()
-        });
+        // Handle validation errors with 400 status
+        if (error.message.includes('zorunludur') || 
+            error.message.includes('geçerli bir sayı') || 
+            error.message.includes('karakterden uzun')) {
+            error.status = 400;
+        }
+        next(error);
     }
 });
 
@@ -3708,9 +3909,28 @@ app.get('/api/network-info', (req, res) => {
     });
 });
 
+// Global error middleware - must be last
+app.use((err, req, res, next) => {
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    console.error(`❌ Error [${requestId}]:`, {
+        error: err.message,
+        stack: err.stack,
+        method: req.method,
+        url: req.url,
+        body: req.body,
+        timestamp: new Date().toISOString()
+    });
+    
+    res.status(err.status || 500).json({
+        error: err.message || 'Internal Server Error',
+        requestId: requestId,
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Start server
 server.listen(PORT, '0.0.0.0', () => {
-    const os = require('os');
     const networkInterfaces = os.networkInterfaces();
     let localIPs = [];
     
