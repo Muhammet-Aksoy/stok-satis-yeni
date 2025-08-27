@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -771,7 +772,7 @@
 
         .search-box input {
             width: 100%;
-            padding: 10px 40px 10px 40px;
+            padding: 10px 45px 10px 40px;
             border: 1px solid var(--border);
             border-radius: 6px;
             font-size: 15px;
@@ -787,7 +788,7 @@
         
         .clear-search-btn {
             position: absolute;
-            right: 8px;
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
@@ -795,9 +796,10 @@
             color: var(--gray);
             font-size: 14px;
             cursor: pointer;
-            padding: 4px;
-            border-radius: 3px;
+            padding: 6px;
+            border-radius: 4px;
             transition: all 0.2s ease;
+            z-index: 10;
         }
         
         .clear-search-btn:hover {
@@ -1304,6 +1306,45 @@
             justify-content: center;
             gap: 10px;
             margin-top: 20px;
+        }
+
+        .barcode-number-section {
+            margin-top: 15px;
+            text-align: left;
+        }
+
+        .barcode-number-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .barcode-number-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .barcode-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        [data-theme="dark"] .barcode-input {
+            background: var(--bg-secondary);
+            border-color: var(--border-dark);
+        }
+
+        .btn-copy {
+            padding: 8px 12px !important;
+            min-width: auto !important;
         }
 
         /* Tooltip */
@@ -2422,9 +2463,197 @@
         [data-theme="dark"] .force-visible {
             color: #ffffff !important;
             background: var(--bg-secondary, #2a2a2a) !important;
+                }
+
+        /* ================================ */
+        /* DARK THEME COMPATIBILITY STYLES */
+        /* ================================ */
+
+        /* Dark theme variables */
+        [data-theme="dark"] {
+            --bg-primary: #0f0f23;
+            --bg-secondary: #1a1a2e;
+            --text-primary: #ffffff;
+            --text-secondary: #e0e0e0;
+            --border-color: #404040;
+            --border-dark: #505050;
+            --card-bg: #1e1e2e;
+            --modal-bg: #1a1a2e;
+            --modal-overlay: rgba(0, 0, 0, 0.7);
+            --input-bg: #2a2a2a;
+            --input-border: #505050;
+            --input-text: #ffffff;
+            --table-bg: #1a1a2e;
+            --table-border: #404040;
+            --table-hover: #2a2a3e;
+            --button-bg: #2a2a2a;
+            --button-text: #ffffff;
+            --button-hover: #3a3a3a;
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --hover-bg: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Dark theme form controls */
+        [data-theme="dark"] .form-control {
+            background-color: var(--input-bg);
+            border-color: var(--input-border);
+            color: var(--input-text);
+        }
+
+        [data-theme="dark"] .form-control:focus {
+            background-color: var(--input-bg);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+
+        [data-theme="dark"] input::placeholder,
+        [data-theme="dark"] textarea::placeholder {
+            color: #888888;
+        }
+
+        /* Dark theme table styles */
+        [data-theme="dark"] .table-container {
+            background: var(--table-bg);
+        }
+
+        [data-theme="dark"] .table-controls {
+            background: var(--table-bg);
+            border-bottom-color: var(--table-border);
+        }
+
+        [data-theme="dark"] tbody tr {
+            background-color: var(--table-bg);
+            border-bottom-color: var(--table-border);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] tbody tr:hover {
+            background-color: var(--table-hover);
+        }
+
+        [data-theme="dark"] tbody tr:nth-child(even) {
+            background-color: #1f1f1f;
+        }
+
+        [data-theme="dark"] tbody tr:nth-child(even):hover {
+            background-color: #2a2a2a;
+        }
+
+        [data-theme="dark"] thead th {
+            background-color: #2a2a2a;
+            color: var(--text-primary);
+            border-color: var(--table-border);
+        }
+
+        /* Dark theme cards */
+        [data-theme="dark"] .product-card,
+        [data-theme="dark"] .stat-card,
+        [data-theme="dark"] .card {
+            background: var(--card-bg);
+            border-color: var(--border-color);
+        }
+
+        /* Dark theme modal styles */
+        [data-theme="dark"] .modal {
+            background: var(--modal-overlay);
+        }
+
+        [data-theme="dark"] .modal-content {
+            background: var(--modal-bg);
+            color: var(--text-primary);
+        }
+
+        /* Dark theme button styles */
+        [data-theme="dark"] .btn {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: 1px solid var(--border-color);
+        }
+
+        [data-theme="dark"] .btn:hover {
+            background-color: var(--button-hover);
+        }
+
+        [data-theme="dark"] .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        [data-theme="dark"] .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* Dark theme barcode container */
+        [data-theme="dark"] .barcode-container {
+            background: var(--card-bg);
+        }
+
+        [data-theme="dark"] .barcode-input {
+            background: var(--input-bg);
+            border-color: var(--border-dark);
+            color: var(--text-primary);
+        }
+
+        /* Dark theme search box */
+        [data-theme="dark"] .search-box input {
+            background: var(--input-bg);
+            border-color: var(--input-border);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .clear-search-btn:hover {
+            background-color: var(--hover-bg);
+            color: var(--text-primary);
+        }
+
+        /* Dark theme specific overrides */
+        [data-theme="dark"] .sales-analysis,
+        [data-theme="dark"] .chart-container {
+            background: var(--card-bg) !important;
+        }
+
+        /* Dark theme menu button */
+        [data-theme="dark"] .modern-menu-button {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] .modern-menu-button:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+        }
+
+        /* Fix hard-coded white backgrounds */
+        [data-theme="dark"] .my-debt-item {
+            background: #2a2a3e !important;
+        }
+
+        /* Fix inline styles for dark theme */
+        [data-theme="dark"] .logo {
+            background: var(--card-bg) !important;
+        }
+
+        [data-theme="dark"] .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        [data-theme="dark"] .btn-success:hover {
+            background-color: #218838;
+        }
+
+        [data-theme="dark"] .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        [data-theme="dark"] .btn-danger:hover {
+            background-color: #c82333;
         }
         
-
+        
     </style>
 </head>
 <body>
@@ -2928,10 +3157,25 @@
                         <p>0342 335 2171</p>
                     </div>
                     <svg id="barcode"></svg>
+                    <div class="barcode-number-section">
+                        <label>Barkod Numarası:</label>
+                        <div class="barcode-number-container">
+                            <input type="text" id="barcode-number" readonly class="barcode-input">
+                            <button class="btn btn-copy" onclick="copyBarcodeNumber()" title="Barkod Numarasını Kopyala">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="barcode-actions">
                     <button class="btn btn-primary" onclick="printBarcode()">
                         <i class="fas fa-print"></i> Yazdır
+                    </button>
+                    <button class="btn btn-success" onclick="copyBarcodeImage()" title="Barkod Görselini Kopyala">
+                        <i class="fas fa-copy"></i> Görseli Kopyala
+                    </button>
+                    <button class="btn btn-info" onclick="downloadBarcodeImage()" title="Barkod Görselini İndir">
+                        <i class="fas fa-download"></i> İndir
                     </button>
                     <button class="btn btn-outline" onclick="closeModal()">
                         <i class="fas fa-times"></i> Kapat
@@ -5057,7 +5301,7 @@
                             </div>
                         </div>
                         <div style="grid-column:1 / -1;text-align:center;margin-top:10px;">
-                            <button onclick="copyAllProductData('${JSON.stringify(product).replace(/'/g, "\\'")}', '${urunAdi}')" style="background:#28a745;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;" title="Tüm Ürün Bilgilerini Kopyala">
+                            <button onclick="copyAllProductData('${JSON.stringify(product).replace(/'/g, "\\'")}', '${urunAdi}')" class="btn btn-success" style="padding:8px 16px;border-radius:4px;cursor:pointer;" title="Tüm Ürün Bilgilerini Kopyala">
                                 <i class="fas fa-copy"></i> Tüm Bilgileri Kopyala
                             </button>
                         </div>
@@ -6186,14 +6430,30 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     try {
                         console.log('🔄 İade işlemi başlatılıyor:', satisId);
                         
-                        // Ürün ID'sini bul - aynı barkod ve marka ile eşleşen ürün
+                        // Ürün ID'sini bul - önce varyant_id ile tam eşleşme ara, sonra barkod ve marka ile
                         let urunId = null;
-                        const matchingProduct = Object.values(stokListesi).find(urun => 
-                            urun.barkod === satis.barkod && 
-                            (urun.marka || '') === (satis.marka || '')
-                        );
-                        if (matchingProduct) {
-                            urunId = matchingProduct.urun_id || matchingProduct.id;
+                        
+                        // Eğer satış kaydında varyant_id varsa, önce onu kullan
+                        if (satis.varyant_id) {
+                            const varyantProduct = Object.values(stokListesi).find(urun => 
+                                urun.barkod === satis.barkod && 
+                                urun.varyant_id === satis.varyant_id
+                            );
+                            if (varyantProduct) {
+                                urunId = varyantProduct.urun_id || varyantProduct.id;
+                            }
+                        }
+                        
+                        // Varyant bulunamazsa, barkod ve marka ile ara
+                        if (!urunId) {
+                            const matchingProduct = Object.values(stokListesi).find(urun => 
+                                urun.barkod === satis.barkod && 
+                                (urun.marka || '') === (satis.marka || '') &&
+                                (!satis.varyant_id || !urun.varyant_id || urun.varyant_id === satis.varyant_id)
+                            );
+                            if (matchingProduct) {
+                                urunId = matchingProduct.urun_id || matchingProduct.id;
+                            }
                         }
                         
                         console.log('🔍 İade için ürün ID bulunuyor:', {
@@ -6891,7 +7151,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                         <td style="border: 1px solid #ddd; padding: 8px;">${sale.miktar}</td>
                         <td style="border: 1px solid #ddd; padding: 8px;">${sale.fiyat?.toFixed(2) || '0.00'} ₺</td>
                         <td style="border: 1px solid #ddd; padding: 8px;">
-                            <button onclick="urunIade('${sale.id}')" style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer;">İade Et</button>
+                            <button onclick="urunIade('${sale.id}')" class="btn btn-danger" style="padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">İade Et</button>
                         </td>
                     </tr>
                 `;
@@ -7377,6 +7637,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             // Set the product info in the modal
             document.getElementById('barcode-product-name').textContent = urunAdi;
             document.getElementById('barcode-brand').textContent = marka;
+            document.getElementById('barcode-number').value = barkod;
             
             // Clear previous barcode
             document.getElementById('barcode').innerHTML = '';
@@ -7487,7 +7748,98 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                                 }, 500);
                             };
                         <\/script>
-                    
+                    </body>
+                    </html>
+                `);
+                
+                printWindow.document.close();
+                
+            } catch (error) {
+                console.error('Yazdırma hatası:', error);
+                Swal.fire('Hata', 'Yazdırma işlemi başarısız: ' + error.message, 'error');
+            }
+        }
+
+        // Barkod numarasını kopyala
+        function copyBarcodeNumber() {
+            const barcodeInput = document.getElementById('barcode-number');
+            if (barcodeInput && barcodeInput.value) {
+                navigator.clipboard.writeText(barcodeInput.value).then(() => {
+                    showNotification('📋 Barkod numarası kopyalandı', 'success');
+                }).catch(err => {
+                    // Fallback for older browsers
+                    barcodeInput.select();
+                    document.execCommand('copy');
+                    showNotification('📋 Barkod numarası kopyalandı', 'success');
+                });
+            }
+        }
+
+        // Barkod görselini kopyala (canvas'a çevir)
+        function copyBarcodeImage() {
+            try {
+                const barcodeContainer = document.querySelector('.barcode-container');
+                if (!barcodeContainer) {
+                    Swal.fire('Hata', 'Barkod bulunamadı!', 'error');
+                    return;
+                }
+
+                // HTML2Canvas kullanarak SVG'yi canvas'a çevir
+                html2canvas(barcodeContainer, {
+                    backgroundColor: 'white',
+                    scale: 2
+                }).then(canvas => {
+                    canvas.toBlob(blob => {
+                        navigator.clipboard.write([
+                            new ClipboardItem({ 'image/png': blob })
+                        ]).then(() => {
+                            showNotification('📋 Barkod görseli kopyalandı', 'success');
+                        }).catch(err => {
+                            console.error('Clipboard error:', err);
+                            showNotification('❌ Görsel kopyalanamadı. İndirme seçeneğini kullanın.', 'error');
+                        });
+                    });
+                }).catch(err => {
+                    console.error('Canvas conversion error:', err);
+                    showNotification('❌ Görsel oluşturulamadı', 'error');
+                });
+            } catch (error) {
+                console.error('Copy image error:', error);
+                showNotification('❌ Görsel kopyalanamadı', 'error');
+            }
+        }
+
+        // Barkod görselini indir
+        function downloadBarcodeImage() {
+            try {
+                const barcodeContainer = document.querySelector('.barcode-container');
+                if (!barcodeContainer) {
+                    Swal.fire('Hata', 'Barkod bulunamadı!', 'error');
+                    return;
+                }
+
+                const barcodeNumber = document.getElementById('barcode-number').value || 'barkod';
+                
+                // HTML2Canvas kullanarak SVG'yi canvas'a çevir
+                html2canvas(barcodeContainer, {
+                    backgroundColor: 'white',
+                    scale: 2
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `barkod_${barcodeNumber}.png`;
+                    link.href = canvas.toDataURL();
+                    link.click();
+                    showNotification('💾 Barkod görseli indirildi', 'success');
+                }).catch(err => {
+                    console.error('Download error:', err);
+                    showNotification('❌ İndirme başarısız', 'error');
+                });
+            } catch (error) {
+                console.error('Download image error:', error);
+                showNotification('❌ İndirme başarısız', 'error');
+            }
+        }
+    
     <!-- Eksik Ürünler Modal (kaldırıldı) -->
     <div id="missingProductsModal" class="modal">
         <div class="modal-content" style="max-width: 1200px; width: 90%;">

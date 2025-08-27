@@ -268,6 +268,14 @@ function generateUrunId() {
     return `urun_${timestamp}_${random}`;
 }
 
+// Generate random brand suffix for duplicate barcodes
+function generateRandomBrandSuffix() {
+    const adjectives = ['Premium', 'Plus', 'Pro', 'Standard', 'Basic', 'Elite', 'Ultra', 'Max', 'Super', 'Mega'];
+    const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const randomNum = Math.floor(Math.random() * 999) + 1;
+    return `${randomAdj}-${randomNum}`;
+}
+
 // Input validation helpers
 function validateRequired(value, fieldName) {
     if (!value || (typeof value === 'string' && value.trim() === '')) {

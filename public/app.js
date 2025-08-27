@@ -3277,12 +3277,45 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     try {
                         console.log('🔄 İade işlemi başlatılıyor:', satisId);
                         
+                        // Ürün ID'sini bul - önce varyant_id ile tam eşleşme ara, sonra barkod ve marka ile
+                        let urunId = null;
+                        
+                        // Eğer satış kaydında varyant_id varsa, önce onu kullan
+                        if (satis.varyant_id) {
+                            const varyantProduct = Object.values(stokListesi).find(urun => 
+                                urun.barkod === satis.barkod && 
+                                urun.varyant_id === satis.varyant_id
+                            );
+                            if (varyantProduct) {
+                                urunId = varyantProduct.urun_id || varyantProduct.id;
+                            }
+                        }
+                        
+                        // Varyant bulunamazsa, barkod ve marka ile ara
+                        if (!urunId) {
+                            const matchingProduct = Object.values(stokListesi).find(urun => 
+                                urun.barkod === satis.barkod && 
+                                (urun.marka || '') === (satis.marka || '') &&
+                                (!satis.varyant_id || !urun.varyant_id || urun.varyant_id === satis.varyant_id)
+                            );
+                            if (matchingProduct) {
+                                urunId = matchingProduct.urun_id || matchingProduct.id;
+                            }
+                        }
+                        
+                        console.log('🔍 İade için ürün ID bulunuyor:', {
+                            barkod: satis.barkod,
+                            marka: satis.marka,
+                            bulunanUrunId: urunId
+                        });
+                        
                         // API'ye iade isteği gönder
                         const response = await fetch(`${API_BASE}/api/satis-iade`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 satisId: satisId,
+                                urunId: urunId, // Ürün ID'sini ekle
                                 barkod: satis.barkod,
                                 miktar: satis.miktar,
                                 urunAdi: satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-')),
@@ -4360,6 +4393,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             // Set the product info in the modal
             document.getElementById('barcode-product-name').textContent = urunAdi;
             document.getElementById('barcode-brand').textContent = marka;
+            document.getElementById('barcode-number').value = barkod;
             
             // Clear previous barcode
             document.getElementById('barcode').innerHTML = '';

@@ -755,7 +755,7 @@
 
         .search-box input {
             width: 100%;
-            padding: 10px 15px 10px 40px;
+            padding: 10px 45px 10px 40px;
             border: 1px solid var(--border);
             border-radius: 6px;
             font-size: 15px;
@@ -767,6 +767,27 @@
             top: 50%;
             transform: translateY(-50%);
             color: var(--gray);
+        }
+        
+        .clear-search-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gray);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        
+        .clear-search-btn:hover {
+            background-color: var(--hover-bg);
+            color: var(--text);
         }
 
         .view-toggle {
