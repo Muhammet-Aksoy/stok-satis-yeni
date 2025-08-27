@@ -3111,6 +3111,14 @@
                     </button>
                 </div>
                 
+                <div style="margin-bottom: 20px; border-top: 1px solid #eee; padding-top: 20px;">
+                    <h3>Eksik Ürünleri İçe Aktar</h3>
+                    <p>yedekveriler.json dosyasından eksik ürünleri aktar:</p>
+                    <button class="btn btn-success" onclick="importMissingProducts()">
+                        <i class="fas fa-upload"></i> Eksik Ürünleri İçe Aktar
+                    </button>
+                </div>
+                
                 <div style="margin-bottom: 20px;">
                     <h3>Veri Geri Yükle</h3>
                     <p>Daha önce kaydettiğiniz verileri yükleyin:</p>
@@ -4855,6 +4863,51 @@
             });
         }
         
+        // Satış geçmişinden ürün detaylarını göster
+        function showSalesProductDetails(barkod, marka, satisId) {
+            // Ürünü bul - önce barkod ve marka ile eşleşen
+            let product = null;
+            let productKey = null;
+            
+            for (const [key, urun] of Object.entries(stokListesi)) {
+                if (urun.barkod === barkod && (urun.marka || '') === (marka || '')) {
+                    product = urun;
+                    productKey = key;
+                    break;
+                }
+            }
+            
+            // Eğer bulunamazsa sadece barkod ile ara
+            if (!product) {
+                for (const [key, urun] of Object.entries(stokListesi)) {
+                    if (urun.barkod === barkod) {
+                        product = urun;
+                        productKey = key;
+                        break;
+                    }
+                }
+            }
+            
+            if (!product) {
+                Swal.fire({
+                    title: 'Ürün Bulunamadı',
+                    html: `
+                        <div style="text-align: left;">
+                            <p><strong>Barkod:</strong> ${barkod}</p>
+                            <p><strong>Marka:</strong> ${marka || 'Belirtilmemiş'}</p>
+                            <p style="color: #e74c3c;">Bu ürün artık stok listesinde bulunmamaktadır.</p>
+                            <p>Ürün satış sonrası silinmiş olabilir.</p>
+                        </div>
+                    `,
+                    icon: 'warning'
+                });
+                return;
+            }
+            
+            // Mevcut showProductDetails fonksiyonunu çağır
+            showProductDetails(productKey);
+        }
+        
         // Ürün detaylarını göster (birleştirilmiş ve güvenli)
         function showProductDetails(barkodOrKey) {
             let product = null;
@@ -5513,7 +5566,11 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     tr.innerHTML = `
                         <td>${tarihStr}</td>
                         <td>${barkodGoster}</td>
-                        <td title="Orijinal: ${satis.urunAdi}">${currentProductName}</td>
+                        <td title="Orijinal: ${satis.urunAdi}">
+                            <span class="product-name-link" onclick="showSalesProductDetails('${satis.barkod}', '${satis.marka || ''}', '${satis.id}')">
+                                ${currentProductName}
+                            </span>
+                        </td>
                         <td>${miktar}</td>
                         <td>${(parseFloat(satis.alisFiyati) || 0) > 0 ? (parseFloat(satis.alisFiyati)).toFixed(2) : '-'}</td>
                         <td>${(parseFloat(satis.fiyat) || 0).toFixed(2)}</td>
@@ -6085,12 +6142,29 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     try {
                         console.log('🔄 İade işlemi başlatılıyor:', satisId);
                         
+                        // Ürün ID'sini bul - aynı barkod ve marka ile eşleşen ürün
+                        let urunId = null;
+                        const matchingProduct = Object.values(stokListesi).find(urun => 
+                            urun.barkod === satis.barkod && 
+                            (urun.marka || '') === (satis.marka || '')
+                        );
+                        if (matchingProduct) {
+                            urunId = matchingProduct.urun_id || matchingProduct.id;
+                        }
+                        
+                        console.log('🔍 İade için ürün ID bulunuyor:', {
+                            barkod: satis.barkod,
+                            marka: satis.marka,
+                            bulunanUrunId: urunId
+                        });
+                        
                         // API'ye iade isteği gönder
                         const response = await fetch(`${API_BASE}/api/satis-iade`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 satisId: satisId,
+                                urunId: urunId, // Ürün ID'sini ekle
                                 barkod: satis.barkod,
                                 miktar: satis.miktar,
                                 urunAdi: satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-')),
@@ -7174,7 +7248,11 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     tr.innerHTML = `
                         <td>${tarihStr}</td>
                         <td>${satis.barkod}</td>
-                        <td>${satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-'))}</td>
+                        <td>
+                            <span class="product-name-link" onclick="showSalesProductDetails('${satis.barkod}', '${satis.marka || ''}', '${satis.id}')">
+                                ${satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-'))}
+                            </span>
+                        </td>
                         <td>${satis.miktar}</td>
                         <td>${(parseFloat(satis.alisFiyati) || 0) > 0 ? (parseFloat(satis.alisFiyati)).toFixed(2) : '-'}</td>
                         <td>${(parseFloat(satis.fiyat) || 0).toFixed(2)}</td>
@@ -7919,7 +7997,11 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                                 return `
                                     <tr>
                                         <td>${tarihStr}</td>
-                                        <td>${satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-'))}</td>
+                                        <td>
+                            <span class="product-name-link" onclick="showSalesProductDetails('${satis.barkod}', '${satis.marka || ''}', '${satis.id}')">
+                                ${satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-'))}
+                            </span>
+                        </td>
                                         <td>${satis.miktar}</td>
                                         <td>${satis.fiyat.toFixed(2)}</td>
                                         <td>${satis.toplam.toFixed(2)}</td>
@@ -8149,7 +8231,11 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     tr.innerHTML = `
                         <td>${tarihStr}</td>
                         <td>${satis.barkod}</td>
-                        <td>${satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-'))}</td>
+                        <td>
+                            <span class="product-name-link" onclick="showSalesProductDetails('${satis.barkod}', '${satis.marka || ''}', '${satis.id}')">
+                                ${satis.urunAdi || satis.urun_adi || satis.ad || (stokListesi[satis.barkod]?.ad || stokListesi[satis.barkod]?.urun_adi || stokListesi[satis.barkod]?.urunAdi) || ('Barkod: ' + (satis.barkod || '-'))}
+                            </span>
+                        </td>
                         <td>${satis.miktar}</td>
                         <td>${(parseFloat(satis.alisFiyati) || 0) > 0 ? (parseFloat(satis.alisFiyati)).toFixed(2) : '-'}</td>
                         <td>${(parseFloat(satis.fiyat) || 0).toFixed(2)}</td>
@@ -9234,6 +9320,80 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             } catch (error) {
                 console.error('Manuel yedekleme hatası:', error);
                 showNotification('❌ Manuel yedekleme hatası: ' + error.message, 'error');
+            }
+        }
+
+        // Eksik ürünleri içe aktar
+        async function importMissingProducts() {
+            try {
+                const result = await Swal.fire({
+                    title: 'Eksik Ürünleri İçe Aktar',
+                    html: `
+                        <div style="text-align: left;">
+                            <p>Bu işlem yedekveriler.json dosyasındaki ürünleri inceler ve:</p>
+                            <ul>
+                                <li>✅ Barkodu veritabanında olmayan ürünleri ekler</li>
+                                <li>🔀 Aynı barkod ancak farklı ürün adı/marka varsa varyant olarak ekler</li>
+                                <li>⏭️ Aynı ürünler tekrar etmez</li>
+                            </ul>
+                            <p><strong>Bu işlem geri alınamaz!</strong></p>
+                        </div>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'İçe Aktar',
+                    cancelButtonText: 'İptal',
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d'
+                });
+                
+                if (result.isConfirmed) {
+                    showNotification('🔄 Eksik ürünler içe aktarılıyor...', 'info');
+                    
+                    const response = await fetch(`${API_BASE}/api/import-missing-products`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    const importResult = await response.json();
+                    
+                    if (importResult.success) {
+                        const stats = importResult.data;
+                        await Swal.fire({
+                            title: '✅ İçe Aktarma Tamamlandı',
+                            html: `
+                                <div style="text-align: left;">
+                                    <h4>İşlem Özeti:</h4>
+                                    <ul>
+                                        <li>✅ Yeni ürün eklendi: <strong>${stats.added}</strong></li>
+                                        <li>🔄 Güncellenen ürün: <strong>${stats.updated}</strong></li>
+                                        <li>⏭️ Atlanan ürün: <strong>${stats.skipped}</strong></li>
+                                        <li>📊 Toplam işlenen: <strong>${stats.total}</strong></li>
+                                    </ul>
+                                </div>
+                            `,
+                            icon: 'success',
+                            confirmButtonText: 'Tamam'
+                        });
+                        
+                        // Verileri yenile
+                        await tumVerileriYukle();
+                        stokTablosunuGuncelle();
+                        showNotification(`✅ ${stats.added} yeni ürün eklendi, ${stats.updated} ürün güncellendi`, 'success');
+                    } else {
+                        throw new Error(importResult.message || 'İçe aktarma başarısız');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ Eksik ürün içe aktarma hatası:', error);
+                showNotification('❌ İçe aktarma hatası: ' + error.message, 'error');
+                await Swal.fire({
+                    title: '❌ İçe Aktarma Hatası',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonText: 'Tamam'
+                });
             }
         }
 
