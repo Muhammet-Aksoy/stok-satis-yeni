@@ -419,7 +419,7 @@
         }
 
         .menu-item:hover {
-            background: #f8f9fa;
+            background: var(--menu-hover, #f8f9fa);
         }
 
         .menu-item:last-child {
@@ -435,10 +435,10 @@
             align-items: center;
             gap: 8px;
             padding: 8px 20px;
-            background: #f8f9fa;
-            border-top: 1px solid #f0f0f0;
+            background: var(--bg-secondary, #f8f9fa);
+            border-top: 1px solid var(--border-color, #f0f0f0);
             font-size: 12px;
-            color: #666;
+            color: var(--text-secondary, #666);
         }
 
         .sync-indicator {
@@ -449,12 +449,12 @@
         }
 
         .sync-indicator.online {
-            background: #27ae60;
+            background: var(--success, #27ae60);
             box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
         }
 
         .sync-indicator.offline {
-            background: #e74c3c;
+            background: var(--danger, #e74c3c);
             box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
         }
 
@@ -494,8 +494,8 @@
         }
 
         .variant-badge {
-            background: #e8f4fd;
-            color: #2c6fbb;
+            background: var(--info, #e8f4fd);
+            color: var(--primary, #2c6fbb);
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 11px;
@@ -665,14 +665,14 @@
         }
 
         [data-theme="dark"] .form-control:focus {
-            background-color: #2f2f2f;
+            background-color: var(--input-bg, #2f2f2f);
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
         }
         
         [data-theme="dark"] input::placeholder,
         [data-theme="dark"] textarea::placeholder {
-            color: #888888;
+            color: var(--placeholder-text, #888888);
         }
 
         /* Button Styles */
@@ -884,11 +884,11 @@
         }
         
         [data-theme="dark"] tbody tr:nth-child(even) {
-            background-color: #1f1f1f;
+            background-color: var(--table-hover, #1f1f1f);
         }
         
         [data-theme="dark"] tbody tr:nth-child(even):hover {
-            background-color: #2a2a2a;
+            background-color: var(--table-hover, #2a2a2a);
         }
         
         [data-theme="dark"] tbody tr td {
@@ -897,7 +897,7 @@
         }
         
         [data-theme="dark"] thead th {
-            background-color: #2a2a2a;
+            background-color: var(--table-bg, #2a2a2a);
             color: var(--text-primary);
             border-color: var(--table-border);
             font-weight: 600;
@@ -960,7 +960,7 @@
         }
 
         .btn-print {
-            background: #3b82f6;
+            background: var(--primary, #3b82f6);
         }
 
         .action-btn:hover {
@@ -1113,7 +1113,7 @@
 
         /* Credit Sales */
         .credit-indicator {
-            background-color: #f39c12;
+            background-color: var(--warning, #f39c12);
             color: white;
             padding: 2px 8px;
             border-radius: 4px;
@@ -2932,6 +2932,12 @@
                 <div class="barcode-actions">
                     <button class="btn btn-primary" onclick="printBarcode()">
                         <i class="fas fa-print"></i> Yazdır
+                    </button>
+                    <button class="btn btn-success" onclick="copyBarcodeValue()">
+                        <i class="fas fa-copy"></i> Barkod Kopyala
+                    </button>
+                    <button class="btn btn-info" onclick="copyBarcodeImage()">
+                        <i class="fas fa-image"></i> Görsel Kopyala
                     </button>
                     <button class="btn btn-outline" onclick="closeModal()">
                         <i class="fas fa-times"></i> Kapat
@@ -4769,7 +4775,7 @@
                             </button>
                         </div>
                         <span class="tooltiptext">Çift tıklayarak arama yapabilirsiniz</span>
-                        <small style="display: block; font-size: 10px; color: #666; margin-top: 2px;">ID: ${urun.urun_id || urun.id || 'N/A'}</small>
+                        <small style="display: block; font-size: 10px; color: var(--text-secondary, #666); margin-top: 2px;">ID: ${urun.urun_id || urun.id || 'N/A'}</small>
                     </td>
                     <td>
                         <span class="product-name-link" onclick="showProductDetails('${key}')">
@@ -4815,7 +4821,7 @@
                                 <i class="fas fa-copy"></i>
                             </button>
                         </div>
-                        ${urun.marka ? `<p style="font-size: 12px; color: #888;">${urun.marka}</p>` : ''}
+                        ${urun.marka ? `<p style="font-size: 12px; color: var(--text-secondary, #888);">${urun.marka}</p>` : ''}
                     </div>
                     <div class="product-body">
                         <div class="product-info">
@@ -4929,7 +4935,7 @@
                         <div style="text-align: left;">
                             <p><strong>Barkod:</strong> ${barkod}</p>
                             <p><strong>Marka:</strong> ${marka || 'Belirtilmemiş'}</p>
-                            <p style="color: #e74c3c;">Bu ürün artık stok listesinde bulunmamaktadır.</p>
+                            <p style="color: var(--danger, #e74c3c);">Bu ürün artık stok listesinde bulunmamaktadır.</p>
                             <p>Ürün satış sonrası silinmiş olabilir.</p>
                         </div>
                     `,
@@ -4976,37 +4982,37 @@
                 html: `
                     <div style="text-align:left;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                         <div>
-                            <div style="font-size:12px;color:#666;">Ürün Adı</div>
+                            <div style="font-size:12px;color:var(--text-secondary, #666);">Ürün Adı</div>
                             <div style="font-weight:600;display:flex;align-items:center;gap:8px;">
                                 ${urunAdi}
-                                <button onclick="copyText('${urunAdi}')" style="background:none;border:none;color:#007bff;cursor:pointer;" title="Kopyala">
+                                <button onclick="copyText('${urunAdi}')" style="background:none;border:none;color:var(--link-color, #007bff);cursor:pointer;" title="Kopyala">
                                     <i class="fas fa-copy"></i>
                                 </button>
                             </div>
                         </div>
                         <div>
-                            <div style="font-size:12px;color:#666;">Barkod</div>
+                            <div style="font-size:12px;color:var(--text-secondary, #666);">Barkod</div>
                             <div style="font-weight:600;display:flex;align-items:center;gap:8px;">
                                 ${product.barkod || '-'}
-                                <button onclick="copyText('${product.barkod || ''}')" style="background:none;border:none;color:#007bff;cursor:pointer;" title="Kopyala">
+                                <button onclick="copyText('${product.barkod || ''}')" style="background:none;border:none;color:var(--link-color, #007bff);cursor:pointer;" title="Kopyala">
                                     <i class="fas fa-copy"></i>
                                 </button>
                             </div>
                         </div>
                         <div>
-                            <div style="font-size:12px;color:#666;">Marka</div>
+                            <div style="font-size:12px;color:var(--text-secondary, #666);">Marka</div>
                             <div style="font-weight:600;display:flex;align-items:center;gap:8px;">
                                 ${marka || '-'}
-                                <button onclick="copyText('${marka || ''}')" style="background:none;border:none;color:#007bff;cursor:pointer;" title="Kopyala">
+                                <button onclick="copyText('${marka || ''}')" style="background:none;border:none;color:var(--link-color, #007bff);cursor:pointer;" title="Kopyala">
                                     <i class="fas fa-copy"></i>
                                 </button>
                             </div>
                         </div>
                         <div>
-                            <div style="font-size:12px;color:#666;">Kategori</div>
+                            <div style="font-size:12px;color:var(--text-secondary, #666);">Kategori</div>
                             <div style="font-weight:600;display:flex;align-items:center;gap:8px;">
                                 ${kategori || '-'}
-                                <button onclick="copyText('${kategori || ''}')" style="background:none;border:none;color:#007bff;cursor:pointer;" title="Kopyala">
+                                <button onclick="copyText('${kategori || ''}')" style="background:none;border:none;color:var(--link-color, #007bff);cursor:pointer;" title="Kopyala">
                                     <i class="fas fa-copy"></i>
                                 </button>
                             </div>
@@ -7355,6 +7361,9 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 return;
             }
             
+            // Set current barcode value for copy functions
+            currentBarcodeValue = barkod;
+            
             // Find the product by barcode
             let urunAdi = '';
             let marka = '';
@@ -7454,10 +7463,20 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                             .barcode-actions {
                                 display: none !important;
                             }
+                            .copy-btn {
+                                display: none !important;
+                            }
+                            .barcode-container {
+                                margin: 20px;
+                                padding: 20px;
+                                border: 1px solid #ddd;
+                                border-radius: 8px;
+                                background: white;
+                            }
                             @media print {
                                 @page {
                                     size: A4;
-                                    margin: 2cm;
+                                    margin: 1cm;
                                 }
                                 body {
                                     margin: 0;
@@ -7467,7 +7486,12 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                                     justify-content: center;
                                     align-items: center;
                                     height: 100vh;
-                                    page-break-after: always;
+                                }
+                                .barcode-container {
+                                    border: 2px solid black;
+                                    margin: 10px;
+                                    padding: 15px;
+                                    page-break-inside: avoid;
                                 }
                                 * {
                                     page-break-inside: avoid;
@@ -7487,6 +7511,9 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                                 }, 500);
                             };
                         <\/script>
+                    </body>
+                    </html>`);
+                printWindow.document.close();
                     
     <!-- Eksik Ürünler Modal (kaldırıldı) -->
     <div id="missingProductsModal" class="modal">
@@ -7580,6 +7607,86 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 Swal.fire('Hata', 'Barkod yazdırılırken bir hata oluştu!', 'error');
             }
         }
+
+        // Barkod değerini kopyala
+        function copyBarcodeValue() {
+            const barcodeElement = document.getElementById('barcode');
+            if (!barcodeElement || !currentBarcodeValue) {
+                Swal.fire('Hata', 'Kopyalanacak barkod bulunamadı!', 'error');
+                return;
+            }
+            
+            copyBarcode(currentBarcodeValue);
+        }
+
+        // Barkod görselini kopyala
+        function copyBarcodeImage() {
+            try {
+                const barcodeElement = document.getElementById('barcode');
+                if (!barcodeElement) {
+                    Swal.fire('Hata', 'Barkod görseli bulunamadı!', 'error');
+                    return;
+                }
+
+                // SVG'yi canvas'a çevir
+                const svgData = new XMLSerializer().serializeToString(barcodeElement);
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+
+                img.onload = function() {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Canvas'ı blob'a çevir ve kopyala
+                    canvas.toBlob(function(blob) {
+                        if (navigator.clipboard && navigator.clipboard.write) {
+                            const item = new ClipboardItem({ 'image/png': blob });
+                            navigator.clipboard.write([item]).then(() => {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Başarılı',
+                                    text: 'Barkod görseli panoya kopyalandı!',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                            }).catch(() => {
+                                // Fallback: dosya olarak indir
+                                downloadBarcodeImage(canvas);
+                            });
+                        } else {
+                            // Fallback: dosya olarak indir
+                            downloadBarcodeImage(canvas);
+                        }
+                    });
+                };
+
+                img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+            } catch (error) {
+                console.error('Barkod görsel kopyalama hatası:', error);
+                Swal.fire('Hata', 'Barkod görseli kopyalanırken hata oluştu!', 'error');
+            }
+        }
+
+        // Barkod görselini indir
+        function downloadBarcodeImage(canvas) {
+            const link = document.createElement('a');
+            link.download = `barkod_${currentBarcodeValue || 'unknown'}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            
+            Swal.fire({
+                icon: 'info',
+                title: 'İndirildi',
+                text: 'Barkod görseli dosya olarak indirildi!',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+
+        // Global değişken current barcode value için
+        let currentBarcodeValue = '';
         
         // Müşteri satış geçmişini göster
         function showCustomerSales(musteriId) {

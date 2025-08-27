@@ -213,6 +213,18 @@ function initializeDatabase() {
                 console.log('➕ AlisFiyati sütunu ekleniyor...');
                 db.exec("ALTER TABLE satisGecmisi ADD COLUMN alisFiyati REAL DEFAULT 0");
             }
+            if (!colNames.has('urun_id')) {
+                console.log('➕ Urun_id sütunu ekleniyor...');
+                db.exec("ALTER TABLE satisGecmisi ADD COLUMN urun_id TEXT");
+            }
+            if (!colNames.has('marka')) {
+                console.log('➕ Marka sütunu ekleniyor...');
+                db.exec("ALTER TABLE satisGecmisi ADD COLUMN marka TEXT");
+            }
+            if (!colNames.has('varyant_id')) {
+                console.log('➕ Varyant_id sütunu ekleniyor...');
+                db.exec("ALTER TABLE satisGecmisi ADD COLUMN varyant_id TEXT");
+            }
             
             // Son durumu kontrol et
             const finalCols = db.prepare("PRAGMA table_info(satisGecmisi)").all();
@@ -266,6 +278,14 @@ function generateUrunId() {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
     return `urun_${timestamp}_${random}`;
+}
+
+// Generate random brand suffix for collision handling
+function generateRandomBrandSuffix() {
+    const prefixes = ['MRK', 'BRD', 'VRN', 'TYP'];
+    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `${prefix}_${random}`;
 }
 
 // Input validation helpers
@@ -2657,8 +2677,8 @@ app.post('/api/satis-ekle', async (req, res) => {
             });
             
             const satisResult = db.prepare(`
-                INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, alisFiyati, toplam, borc, tarih, musteriId, musteriAdi)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, alisFiyati, toplam, borc, tarih, musteriId, musteriAdi, urun_id, marka, varyant_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).run(
                 satis.barkod,
                 satis.urunAdi || stokUrunu.ad,
@@ -2669,7 +2689,10 @@ app.post('/api/satis-ekle', async (req, res) => {
                 borc,
                 satis.tarih,
                 satis.musteriId || '',
-                satis.musteriAdi || ''
+                satis.musteriAdi || '',
+                stokUrunu.urun_id || stokUrunu.id,
+                stokUrunu.marka || null,
+                stokUrunu.varyant_id || null
             );
             
             // Eklenen satışı al
@@ -3110,26 +3133,42 @@ app.post('/api/satis-iade', async (req, res) => {
         const saleBrand = existingSale.marka || '';
         const saleQuantity = existingSale.miktar;
         
-        // Mevcut stoku kontrol et - öncelikle ürün ID'si ile
+        // Mevcut stoku kontrol et - öncelikle satış kaydındaki ürün ID'si ile
         let existingStock = null;
         
-        // Eğer ürün ID'si varsa, önce onu kullan (en güvenli yöntem)
-        if (urunId) {
-            existingStock = db.prepare('SELECT * FROM stok WHERE urun_id = ?').get(urunId);
-            console.log(`🔍 Ürün ID ile arama: ${urunId} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
+        // Önce satış kaydındaki urun_id'yi kullan (en güvenli yöntem)
+        if (existingSale.urun_id) {
+            existingStock = db.prepare('SELECT * FROM stok WHERE urun_id = ?').get(existingSale.urun_id);
+            console.log(`🔍 Satış kaydındaki ürün ID ile arama: ${existingSale.urun_id} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
         }
         
-        // Ürün ID ile bulunamazsa, barkod ve marka ile EXACT match arama yap
+        // Eğer parametre olarak ürün ID'si varsa, önce onu kullan (geriye dönük uyumluluk)
+        if (!existingStock && urunId) {
+            existingStock = db.prepare('SELECT * FROM stok WHERE urun_id = ?').get(urunId);
+            console.log(`🔍 Parametre ürün ID ile arama: ${urunId} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
+        }
+        
+        // Ürün ID ile bulunamazsa, barkod, marka ve varyant ID ile EXACT match arama yap
         if (!existingStock) {
-            const exactMatchQuery = saleBrand ? 
-                'SELECT * FROM stok WHERE barkod = ? AND (marka = ? OR (marka IS NULL AND ? IS NULL))' :
-                'SELECT * FROM stok WHERE barkod = ? AND marka IS NULL';
+            const saleVariantId = existingSale.varyant_id || null;
             
-            if (saleBrand) {
-                existingStock = db.prepare(exactMatchQuery).get(saleBarcode, saleBrand, saleBrand);
-                console.log(`🔍 Barkod+Marka EXACT match: ${saleBarcode}+${saleBrand} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
+            // En spesifik arama: barkod + marka + varyant_id
+            if (saleBrand || saleVariantId) {
+                const exactMatchQuery = `
+                    SELECT * FROM stok 
+                    WHERE barkod = ? 
+                    AND (marka = ? OR (marka IS NULL AND ? IS NULL))
+                    AND (varyant_id = ? OR (varyant_id IS NULL AND ? IS NULL))
+                `;
+                existingStock = db.prepare(exactMatchQuery).get(
+                    saleBarcode, 
+                    saleBrand || null, saleBrand || null,
+                    saleVariantId, saleVariantId
+                );
+                console.log(`🔍 Barkod+Marka+Varyant EXACT match: ${saleBarcode}+${saleBrand || 'null'}+${saleVariantId || 'null'} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
             } else {
-                existingStock = db.prepare(exactMatchQuery).get(saleBarcode);
+                // Basit arama: sadece barkod ve marka=null
+                existingStock = db.prepare('SELECT * FROM stok WHERE barkod = ? AND marka IS NULL').get(saleBarcode);
                 console.log(`🔍 Barkod (marka=null) EXACT match: ${saleBarcode} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
             }
         }
