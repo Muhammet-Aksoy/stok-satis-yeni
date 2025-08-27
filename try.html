@@ -7190,7 +7190,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         // Arama yap - Kalıcı arama (timeout kaldırıldı)
         function aramaYap() {
             const searchInput = document.getElementById('searchInput');
-            const aramaMetni = searchInput.value.toLowerCase().replace(/\s+/g, '');
+            const aramaMetni = searchInput.value.toLowerCase().replace(/[\s\-]+/g, ''); // Boşluk ve "-" karakterlerini yok say
             const rows = document.querySelectorAll('#stokTablosu tbody tr');
             const cards = document.querySelectorAll('#card-view .product-card');
             const noProductMessage = document.getElementById('noProductMessage');
@@ -7201,7 +7201,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             localStorage.setItem('stockSearchTerm', searchInput.value);
             
             rows.forEach(row => {
-                const rowText = row.textContent.toLowerCase().replace(/\s+/g, '');
+                const rowText = row.textContent.toLowerCase().replace(/[\s\-]+/g, ''); // Boşluk ve "-" karakterlerini yok say
                 if (aramaMetni === '' || rowText.includes(aramaMetni)) {
                     row.style.display = '';
                     productFound = true;
@@ -7211,7 +7211,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             });
             
             cards.forEach(card => {
-                const cardText = card.textContent.toLowerCase().replace(/\s+/g, '');
+                const cardText = card.textContent.toLowerCase().replace(/[\s\-]+/g, ''); // Boşluk ve "-" karakterlerini yok say
                 if (aramaMetni === '' || cardText.includes(aramaMetni)) {
                     card.style.display = '';
                     productFound = true;
