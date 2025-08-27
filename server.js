@@ -2687,13 +2687,14 @@ app.post('/api/satis-ekle', async (req, res) => {
         // Cache'i temizle
         memoryCache.delete('tum_veriler');
         
-        // Real-time sync
-        io.emit('dataUpdate', {
+        // Real-time sync - FIX: Use consistent event name
+        io.emit('dataUpdated', {
             type: 'satis-add',
             data: result.data,
             stokGuncellendi: result.stokGuncellendi,
             yeniStokMiktari: result.yeniStokMiktari,
-            source: req.socket?.remoteAddress || 'unknown'
+            source: req.socket?.remoteAddress || 'unknown',
+            timestamp: new Date().toISOString()
         });
         
         res.json(result);
@@ -3118,21 +3119,43 @@ app.post('/api/satis-iade', async (req, res) => {
             console.log(`🔍 Ürün ID ile arama: ${urunId} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
         }
         
-        // Ürün ID ile bulunamazsa, barkod ve marka ile arama yap
-        if (!existingStock && saleBrand) {
-            existingStock = db.prepare('SELECT * FROM stok WHERE barkod = ? AND marka = ?').get(saleBarcode, saleBrand);
-            console.log(`🔍 Barkod+Marka ile arama: ${saleBarcode}+${saleBrand} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
+        // Ürün ID ile bulunamazsa, barkod ve marka ile EXACT match arama yap
+        if (!existingStock) {
+            const exactMatchQuery = saleBrand ? 
+                'SELECT * FROM stok WHERE barkod = ? AND (marka = ? OR (marka IS NULL AND ? IS NULL))' :
+                'SELECT * FROM stok WHERE barkod = ? AND marka IS NULL';
+            
+            if (saleBrand) {
+                existingStock = db.prepare(exactMatchQuery).get(saleBarcode, saleBrand, saleBrand);
+                console.log(`🔍 Barkod+Marka EXACT match: ${saleBarcode}+${saleBrand} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
+            } else {
+                existingStock = db.prepare(exactMatchQuery).get(saleBarcode);
+                console.log(`🔍 Barkod (marka=null) EXACT match: ${saleBarcode} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
+            }
         }
         
-        // Eğer hala bulunamazsa sadece barkod ile arama yap (geriye dönük uyumluluk için)
+        // Eğer hala bulunamazsa, en yakın eşleşmeyi bul (geriye dönük uyumluluk için)
         if (!existingStock) {
             const allWithBarcode = db.prepare('SELECT * FROM stok WHERE barkod = ?').all(saleBarcode);
+            console.log(`🔍 Barkod ile bulunan ürün sayısı: ${allWithBarcode.length}`);
+            
             if (allWithBarcode.length === 1) {
                 // Tek bir ürün varsa onu kullan
                 existingStock = allWithBarcode[0];
+                console.log(`🔍 Tek ürün bulundu, kullanılıyor: ${existingStock.id}`);
             } else if (allWithBarcode.length > 1) {
-                // Birden fazla ürün varsa, marka bilgisi olmayan ilkini tercih et
-                existingStock = allWithBarcode.find(p => !p.marka || p.marka.trim() === '') || allWithBarcode[0];
+                // Birden fazla ürün varsa, marka eşleşmesine göre en uygun olanı seç
+                if (saleBrand) {
+                    existingStock = allWithBarcode.find(p => p.marka === saleBrand);
+                    if (!existingStock) {
+                        // Exact brand match bulunamazsa, marka bilgisi olmayan ilkini tercih et
+                        existingStock = allWithBarcode.find(p => !p.marka || p.marka.trim() === '') || allWithBarcode[0];
+                    }
+                } else {
+                    // Satış kaydında marka yoksa, marka bilgisi olmayan ilkini tercih et
+                    existingStock = allWithBarcode.find(p => !p.marka || p.marka.trim() === '') || allWithBarcode[0];
+                }
+                console.log(`🔍 Çoklu ürün arasından seçildi: ${existingStock.id} (marka: ${existingStock.marka || 'none'})`);
             }
         }
         
@@ -3147,24 +3170,30 @@ app.post('/api/satis-iade', async (req, res) => {
                 console.log(`✅ Stok güncellendi: ${saleBarcode} - Yeni miktar: ${newAmount}`);
             }
         } else {
-            // Yeni ürün olarak ekle - sadece satış kaydında ürün varsa ve stokta hiç yoksa
-            const newUrunId = generateUrunId();
-            const insertResult = db.prepare(`
-                INSERT INTO stok (urun_id, barkod, ad, marka, miktar, alisFiyati, satisFiyati, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-            `).run(
-                newUrunId,
-                saleBarcode, 
-                existingSale.urunAdi || urunAdi || 'İade Edilen Ürün',
-                saleBrand,
-                saleQuantity, 
-                existingSale.alisFiyati || alisFiyati || 0,
-                existingSale.fiyat || 0
-            );
+            // ⚠️ CRITICAL FIX: Yeni ürün oluşturmak yerine, uyarı ver
+            console.warn(`⚠️ İade için stok bulunamadı: Barkod=${saleBarcode}, Marka=${saleBrand || 'none'}`);
+            console.warn(`⚠️ Bu durum kopya ürün oluşmasını önlemek için yeni ürün eklenmeyecek.`);
             
-            if (insertResult.changes > 0) {
-                stokGuncellemesi = db.prepare('SELECT * FROM stok WHERE urun_id = ?').get(newUrunId);
-                console.log(`✅ Yeni stok oluşturuldu: ${saleBarcode} - Miktar: ${saleQuantity}`);
+            // Double-check: Son bir kez tüm stokları kontrol et
+            const allStock = db.prepare('SELECT * FROM stok WHERE barkod = ?').all(saleBarcode);
+            if (allStock.length > 0) {
+                console.warn(`⚠️ Beklenmedik durum: Aynı barkodlu ${allStock.length} ürün bulundu ama eşleştirilemedi:`);
+                allStock.forEach((stock, index) => {
+                    console.warn(`   ${index + 1}. ID: ${stock.id}, Marka: "${stock.marka || 'none'}", Miktar: ${stock.miktar}`);
+                });
+                
+                // En son çare olarak ilk bulunan ürünü kullan
+                existingStock = allStock[0];
+                const newAmount = existingStock.miktar + saleQuantity;
+                const updateResult = db.prepare('UPDATE stok SET miktar = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(newAmount, existingStock.id);
+                
+                if (updateResult.changes > 0) {
+                    stokGuncellemesi = db.prepare('SELECT * FROM stok WHERE id = ?').get(existingStock.id);
+                    console.log(`✅ Son çare ile stok güncellendi: ${saleBarcode} - Yeni miktar: ${newAmount}`);
+                }
+            } else {
+                console.warn(`⚠️ İade işlemi: Stok kaydı hiç bulunamadığı için yeni ürün eklenmeyecek.`);
+                // İade işlemi tamamlandı, sadece satış silindi, stok güncellemesi yok
             }
         }
         
@@ -5935,14 +5964,41 @@ app.post('/api/import-missing-products', async (req, res) => {
         const fs = require('fs');
         const path = require('path');
         
-        // Function to generate random brand suffix
-        function generateRandomBrandSuffix() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let result = 'MARKA_';
-            for (let i = 0; i < 6; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
+        // Function to clean and validate product data
+        function cleanProductData(product) {
+            // Preserve original brand if it exists and is meaningful
+            let cleanMarka = product.marka;
+            if (!cleanMarka || cleanMarka.trim() === '' || cleanMarka === 'null' || cleanMarka === null) {
+                cleanMarka = null; // Don't assign random brand, use null for no brand
             }
-            return result;
+            
+            return {
+                ...product,
+                marka: cleanMarka,
+                barkod: product.barkod?.trim(),
+                ad: product.ad?.trim(),
+                aciklama: product.aciklama?.trim() || null
+            };
+        }
+        
+        // Function to detect and filter duplicate products
+        function filterDuplicates(products) {
+            const uniqueProducts = new Map();
+            const duplicates = [];
+            
+            products.forEach(product => {
+                const key = `${product.barkod}_${product.marka || 'NO_BRAND'}`;
+                
+                if (uniqueProducts.has(key)) {
+                    duplicates.push(product);
+                    console.log(`🔄 Duplicate found: ${product.barkod} (${product.marka || 'No Brand'})`);
+                } else {
+                    uniqueProducts.set(key, product);
+                }
+            });
+            
+            console.log(`📊 Duplicate filtering: ${products.length} total, ${duplicates.length} duplicates removed, ${uniqueProducts.size} unique products`);
+            return Array.from(uniqueProducts.values());
         }
         
         let missingProducts = [];
@@ -5964,8 +6020,15 @@ app.post('/api/import-missing-products', async (req, res) => {
                 fileData = JSON.parse(fs.readFileSync(yedekFile, 'utf8'));
                 // Convert yedekveriler.json format to array
                 if (fileData.stokListesi) {
-                    missingProducts = Object.values(fileData.stokListesi);
-                    console.log(`📦 Using ${missingProducts.length} products from yedekveriler.json`);
+                    let rawProducts = Object.values(fileData.stokListesi);
+                    console.log(`📦 Raw products from yedekveriler.json: ${rawProducts.length}`);
+                    
+                    // Clean product data (fix brand issues)
+                    rawProducts = rawProducts.map(cleanProductData);
+                    
+                    // Filter duplicates
+                    missingProducts = filterDuplicates(rawProducts);
+                    console.log(`📦 Using ${missingProducts.length} unique products from yedekveriler.json`);
                 }
             } else if (fs.existsSync(eksikFile)) {
                 foundFile = 'eksik_urunler.json';

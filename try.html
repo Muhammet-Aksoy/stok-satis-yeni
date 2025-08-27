@@ -3326,6 +3326,7 @@
                     
                 case 'satis-add':
                     if (data.data) {
+                        console.log('📡 Real-time satış eklendi:', data.data);
                         // Check if this sale already exists to prevent duplicates
                         const existingSale = satisGecmisi.find(sale => 
                             sale.id === data.data.id || 
@@ -3336,6 +3337,7 @@
                         );
                         
                         if (!existingSale) {
+                            console.log('📡 Yeni satış eklenecek:', data.data.id);
                             // Ensure urunAdi is properly set
                             if (!data.data.urunAdi && data.data.barkod) {
                                 // Try to get product name from stock
@@ -3347,7 +3349,11 @@
                             }
                             satisGecmisi.push(data.data);
                             guncellenenVerileriKaydet();
+                            console.log('📡 Satış geçmişi güncellendi, toplam:', satisGecmisi.length);
+                        } else {
+                            console.log('📡 Satış zaten mevcut, tekrar eklenmeyecek');
                         }
+                        console.log('📡 Satış tablosu güncelleniyor...');
                         satisTablosunuGuncelle();
                         guncelleIstatistikler();
                         showNotification('💰 Yeni satış kaydedildi', 'info');
@@ -5490,7 +5496,12 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         
         // Satış geçmişini güncelle
         function satisTablosunuGuncelle() {
+            console.log('📊 Satış tablosu güncelleniyor, toplam satış:', satisGecmisi?.length || 0);
             const salesBody = document.getElementById('salesBody');
+            if (!salesBody) {
+                console.warn('⚠️ Satış tablosu elementi bulunamadı (salesBody)');
+                return;
+            }
             salesBody.innerHTML = '';
             
             if (satisGecmisi && satisGecmisi.length > 0) {
@@ -6051,8 +6062,11 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     guncellenenVerileriKaydet();
                     
                     // UI'yi güncelle
+                    console.log('💰 UI güncelleniyor - Satış başarılı');
                     stokTablosunuGuncelle();
+                    console.log('💰 Satış tablosu güncelleniyor...');
                     satisTablosunuGuncelle();
+                    console.log('💰 İstatistikler güncelleniyor...');
                     guncelleIstatistikler();
                     
                     if (urun.stok_miktari === 0) {
