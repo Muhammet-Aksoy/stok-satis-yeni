@@ -3066,14 +3066,14 @@ app.delete('/api/satis-sil/:id', async (req, res) => {
 // POST /api/satis-iade - Satış iade
 app.post('/api/satis-iade', async (req, res) => {
     try {
-        const { satisId, barkod, miktar, urunAdi, alisFiyati } = req.body;
-        console.log('🔄 İade işlemi başlatılıyor:', satisId);
+        const { satisId, urunId, barkod, miktar, urunAdi, alisFiyati } = req.body;
+        console.log('🔄 İade işlemi başlatılıyor:', satisId, 'Ürün ID:', urunId);
         
         // Validate required fields
-        if (!satisId || !barkod || !miktar) {
+        if (!satisId || !miktar) {
             return res.status(400).json({
                 success: false,
-                message: 'Satış ID, barkod ve miktar zorunludur',
+                message: 'Satış ID ve miktar zorunludur',
                 timestamp: new Date().toISOString()
             });
         }
@@ -3103,21 +3103,28 @@ app.post('/api/satis-iade', async (req, res) => {
             });
         }
         
-        // Stok güncellemesi - barkodu ve marka bilgisini satış kaydından al
+        // Stok güncellemesi - öncelikle ürün ID'si ile arama yap
         let stokGuncellemesi = null;
         const saleBarcode = existingSale.barkod;
         const saleBrand = existingSale.marka || '';
         const saleQuantity = existingSale.miktar;
         
-        // Mevcut stoku kontrol et - barkod ve marka ile eşleştir
+        // Mevcut stoku kontrol et - öncelikle ürün ID'si ile
         let existingStock = null;
         
-        // Önce aynı barkod ve marka ile arama yap
-        if (saleBrand) {
-            existingStock = db.prepare('SELECT * FROM stok WHERE barkod = ? AND marka = ?').get(saleBarcode, saleBrand);
+        // Eğer ürün ID'si varsa, önce onu kullan (en güvenli yöntem)
+        if (urunId) {
+            existingStock = db.prepare('SELECT * FROM stok WHERE urun_id = ?').get(urunId);
+            console.log(`🔍 Ürün ID ile arama: ${urunId} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
         }
         
-        // Eğer bulunamazsa sadece barkod ile arama yap (geriye dönük uyumluluk için)
+        // Ürün ID ile bulunamazsa, barkod ve marka ile arama yap
+        if (!existingStock && saleBrand) {
+            existingStock = db.prepare('SELECT * FROM stok WHERE barkod = ? AND marka = ?').get(saleBarcode, saleBrand);
+            console.log(`🔍 Barkod+Marka ile arama: ${saleBarcode}+${saleBrand} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
+        }
+        
+        // Eğer hala bulunamazsa sadece barkod ile arama yap (geriye dönük uyumluluk için)
         if (!existingStock) {
             const allWithBarcode = db.prepare('SELECT * FROM stok WHERE barkod = ?').all(saleBarcode);
             if (allWithBarcode.length === 1) {
