@@ -1195,6 +1195,11 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
 
+        .modal-content.large-modal {
+            max-width: 1200px;
+            width: 95%;
+        }
+
         /* Dark theme modal styles */
         [data-theme="dark"] .modal {
             background: var(--modal-overlay);
@@ -2623,6 +2628,12 @@
                             <button class="btn btn-info" onclick="showBestSellers()">
                                 <i class="fas fa-star"></i> Çok Satılanlar
                             </button>
+                            <button class="btn btn-primary" onclick="showBarcodeListModal()">
+                                <i class="fas fa-barcode"></i> Barkod Listesi
+                            </button>
+                            <button class="btn btn-success" onclick="copyAllBarcodes()">
+                                <i class="fas fa-copy"></i> Tüm Barkodları Kopyala
+                            </button>
 
                         </div>
                     </div>
@@ -2966,6 +2977,46 @@
                         </thead>
                         <tbody id="lowStockBody">
                             <!-- Düşük stoklu ürünler burada listelenecek -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barkod Listesi Modal -->
+    <div class="modal" id="barcodeListModal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h2>Barkod Listesi</h2>
+                <div class="modal-actions">
+                    <select id="barcodeFilterCategory" onchange="filterBarcodeList()">
+                        <option value="">Tüm Kategoriler</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="printBarcodeList()" title="Yazdır">
+                        <i class="fas fa-print"></i> Yazdır
+                    </button>
+                    <button class="btn btn-success" onclick="copyBarcodeList()" title="Kopyala">
+                        <i class="fas fa-copy"></i> Kopyala
+                    </button>
+                    <button class="close-modal" onclick="closeModal()">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Barkod</th>
+                                <th>Ürün Adı</th>
+                                <th>Marka</th>
+                                <th>Kategori</th>
+                                <th>Stok</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="barcodeListBody">
+                            <!-- Barkod listesi burada görünecek -->
                         </tbody>
                     </table>
                 </div>
@@ -11266,6 +11317,193 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             } catch (error) {
                 console.error('Manuel eksik ürün ekleme hatası:', error);
                 showNotification('Ürün eklenemedi: ' + error.message, 'error');
+            }
+        }
+
+        // Barkod listesi fonksiyonları
+        async function showBarcodeListModal() {
+            try {
+                const response = await fetch(`${API_BASE}/api/barkod-listesi`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const tbody = document.getElementById('barcodeListBody');
+                    const categorySelect = document.getElementById('barcodeFilterCategory');
+                    
+                    // Kategorileri toplama
+                    const categories = [...new Set(result.data.map(item => item.kategori || 'Kategori Yok'))].sort();
+                    categorySelect.innerHTML = '<option value="">Tüm Kategoriler</option>';
+                    categories.forEach(cat => {
+                        categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+                    });
+                    
+                    // Tabloyu doldur
+                    window.allBarcodes = result.data; // Global olarak sakla
+                    filterBarcodeList();
+                    
+                    document.getElementById('barcodeListModal').style.display = 'flex';
+                } else {
+                    Swal.fire('Hata', result.message || 'Barkod listesi alınamadı', 'error');
+                }
+            } catch (error) {
+                console.error('Barkod listesi hatası:', error);
+                Swal.fire('Hata', 'Barkod listesi alınırken hata oluştu', 'error');
+            }
+        }
+
+        function filterBarcodeList() {
+            const tbody = document.getElementById('barcodeListBody');
+            const categoryFilter = document.getElementById('barcodeFilterCategory').value;
+            
+            if (!window.allBarcodes) return;
+            
+            let filteredData = window.allBarcodes;
+            if (categoryFilter) {
+                filteredData = window.allBarcodes.filter(item => 
+                    (item.kategori || 'Kategori Yok') === categoryFilter
+                );
+            }
+            
+            tbody.innerHTML = '';
+            filteredData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <span class="barcode-text">${item.barkod}</span>
+                        <button class="copy-btn" onclick="copyBarcode('${item.barkod}')" title="Kopyala">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </td>
+                    <td>${item.urun_adi || 'N/A'}</td>
+                    <td>${item.marka || 'N/A'}</td>
+                    <td>${item.kategori || 'Kategori Yok'}</td>
+                    <td>${item.miktar || 0}</td>
+                    <td>
+                        <button class="action-btn btn-print" onclick="barkodBas('${item.barkod}')" title="Barkod Bas">
+                            <i class="fas fa-print"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function copyBarcodeList() {
+            const categoryFilter = document.getElementById('barcodeFilterCategory').value;
+            
+            if (!window.allBarcodes) {
+                Swal.fire('Hata', 'Barkod listesi bulunamadı', 'error');
+                return;
+            }
+            
+            let filteredData = window.allBarcodes;
+            if (categoryFilter) {
+                filteredData = window.allBarcodes.filter(item => 
+                    (item.kategori || 'Kategori Yok') === categoryFilter
+                );
+            }
+            
+            let copyText = 'BARKOD LİSTESİ\n';
+            copyText += '='.repeat(50) + '\n';
+            copyText += `Tarih: ${new Date().toLocaleDateString('tr-TR')}\n`;
+            copyText += `Toplam Ürün: ${filteredData.length}\n`;
+            if (categoryFilter) {
+                copyText += `Kategori: ${categoryFilter}\n`;
+            }
+            copyText += '\n';
+            
+            // Kategoriye göre grupla
+            const kategoriler = {};
+            filteredData.forEach(urun => {
+                const kat = urun.kategori || 'Kategori Yok';
+                if (!kategoriler[kat]) kategoriler[kat] = [];
+                kategoriler[kat].push(urun);
+            });
+            
+            Object.keys(kategoriler).sort().forEach(kat => {
+                copyText += `【 ${kat.toUpperCase()} 】\n`;
+                copyText += '-'.repeat(30) + '\n';
+                
+                kategoriler[kat].forEach((urun, index) => {
+                    copyText += `${index + 1}. ${urun.urun_adi}\n`;
+                    copyText += `   Barkod: ${urun.barkod}\n`;
+                    copyText += `   Marka: ${urun.marka || 'Yok'}\n`;
+                    copyText += `   Stok: ${urun.miktar}\n`;
+                    if (urun.varyant_id) {
+                        copyText += `   Varyant: ${urun.varyant_id}\n`;
+                    }
+                    copyText += '\n';
+                });
+                
+                copyText += '\n';
+            });
+            
+            navigator.clipboard.writeText(copyText).then(() => {
+                Swal.fire('Başarılı', 'Barkod listesi panoya kopyalandı', 'success');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = copyText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                Swal.fire('Başarılı', 'Barkod listesi panoya kopyalandı', 'success');
+            });
+        }
+
+        function printBarcodeList() {
+            const categoryFilter = document.getElementById('barcodeFilterCategory').value;
+            
+            if (!window.allBarcodes) {
+                Swal.fire('Hata', 'Barkod listesi bulunamadı', 'error');
+                return;
+            }
+            
+            let printUrl = `${API_BASE}/api/barkod-listesi?format=text`;
+            if (categoryFilter) {
+                printUrl += `&kategori=${encodeURIComponent(categoryFilter)}`;
+            }
+            
+            const printWindow = window.open(printUrl, '_blank');
+            if (!printWindow) {
+                Swal.fire('Hata', 'Yazdırma penceresi açılamadı! Tarayıcı popup engelliyor olabilir.', 'error');
+            }
+        }
+
+        async function copyAllBarcodes() {
+            try {
+                const response = await fetch(`${API_BASE}/api/barkod-listesi`);
+                const result = await response.json();
+                
+                if (result.success && result.data.length > 0) {
+                    let copyText = 'TÜM BARKODLAR\n';
+                    copyText += '='.repeat(30) + '\n';
+                    copyText += `Tarih: ${new Date().toLocaleDateString('tr-TR')}\n`;
+                    copyText += `Toplam: ${result.data.length} ürün\n\n`;
+                    
+                    result.data.forEach((urun, index) => {
+                        copyText += `${index + 1}. ${urun.barkod} - ${urun.urun_adi} (${urun.marka || 'Marka Yok'})\n`;
+                    });
+                    
+                    navigator.clipboard.writeText(copyText).then(() => {
+                        Swal.fire('Başarılı', `${result.data.length} ürünün barkodu panoya kopyalandı`, 'success');
+                    }).catch(() => {
+                        // Fallback for older browsers
+                        const textArea = document.createElement('textarea');
+                        textArea.value = copyText;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        Swal.fire('Başarılı', `${result.data.length} ürünün barkodu panoya kopyalandı`, 'success');
+                    });
+                } else {
+                    Swal.fire('Uyarı', 'Kopyalanacak barkod bulunamadı', 'warning');
+                }
+            } catch (error) {
+                console.error('Barkod kopyalama hatası:', error);
+                Swal.fire('Hata', 'Barkodlar kopyalanırken hata oluştu', 'error');
             }
         }
 

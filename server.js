@@ -3110,13 +3110,19 @@ app.post('/api/satis-iade', async (req, res) => {
         const saleBrand = existingSale.marka || '';
         const saleQuantity = existingSale.miktar;
         
-        // Mevcut stoku kontrol et - öncelikle ürün ID'si ile
+        // Mevcut stoku kontrol et - varyant ürünler için geliştirilmiş logic
         let existingStock = null;
         
         // Eğer ürün ID'si varsa, önce onu kullan (en güvenli yöntem)
         if (urunId) {
             existingStock = db.prepare('SELECT * FROM stok WHERE urun_id = ?').get(urunId);
             console.log(`🔍 Ürün ID ile arama: ${urunId} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
+        }
+        
+        // Ürün ID ile bulunamazsa, satış kaydından gelen varyant_id'yi de kontrol et
+        if (!existingStock && existingSale.varyant_id) {
+            existingStock = db.prepare('SELECT * FROM stok WHERE varyant_id = ? AND barkod = ?').get(existingSale.varyant_id, saleBarcode);
+            console.log(`🔍 Varyant ID ile arama: ${existingSale.varyant_id} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
         }
         
         // Ürün ID ile bulunamazsa, barkod ve marka ile EXACT match arama yap
@@ -3144,18 +3150,39 @@ app.post('/api/satis-iade', async (req, res) => {
                 existingStock = allWithBarcode[0];
                 console.log(`🔍 Tek ürün bulundu, kullanılıyor: ${existingStock.id}`);
             } else if (allWithBarcode.length > 1) {
-                // Birden fazla ürün varsa, marka eşleşmesine göre en uygun olanı seç
-                if (saleBrand) {
+                // Birden fazla ürün varsa, varyant ID'si olan öncelikle kontrol et
+                console.log(`🔍 ${allWithBarcode.length} adet varyant ürün bulundu, eşleştirme yapılıyor...`);
+                
+                // Önce varyant ID'si eşleşen var mı kontrol et
+                if (existingSale.varyant_id) {
+                    const variantMatch = allWithBarcode.find(p => p.varyant_id === existingSale.varyant_id);
+                    if (variantMatch) {
+                        existingStock = variantMatch;
+                        console.log(`🔍 Varyant ID eşleşmesi bulundu: ${existingStock.id} (varyant: ${existingStock.varyant_id})`);
+                    }
+                }
+                
+                // Varyant ID eşleşmesi yoksa, marka eşleşmesine göre en uygun olanı seç
+                if (!existingStock && saleBrand) {
                     existingStock = allWithBarcode.find(p => p.marka === saleBrand);
-                    if (!existingStock) {
+                    if (existingStock) {
+                        console.log(`🔍 Marka eşleşmesi bulundu: ${existingStock.id} (marka: ${existingStock.marka})`);
+                    } else {
                         // Exact brand match bulunamazsa, marka bilgisi olmayan ilkini tercih et
                         existingStock = allWithBarcode.find(p => !p.marka || p.marka.trim() === '') || allWithBarcode[0];
+                        console.log(`🔍 Fallback seçimi: ${existingStock.id} (marka: ${existingStock.marka || 'none'})`);
                     }
-                } else {
+                } else if (!existingStock) {
                     // Satış kaydında marka yoksa, marka bilgisi olmayan ilkini tercih et
                     existingStock = allWithBarcode.find(p => !p.marka || p.marka.trim() === '') || allWithBarcode[0];
+                    console.log(`🔍 Marka yok, fallback seçimi: ${existingStock.id} (marka: ${existingStock.marka || 'none'})`);
                 }
-                console.log(`🔍 Çoklu ürün arasından seçildi: ${existingStock.id} (marka: ${existingStock.marka || 'none'})`);
+                
+                // Debug: Tüm varyant seçeneklerini göster
+                console.log(`🔍 Mevcut varyant seçenekleri:`);
+                allWithBarcode.forEach((product, index) => {
+                    console.log(`   ${index + 1}. ID: ${product.id}, Marka: "${product.marka || 'none'}", Varyant: "${product.varyant_id || 'none'}", Miktar: ${product.miktar}`);
+                });
             }
         }
         
@@ -3217,6 +3244,82 @@ app.post('/api/satis-iade', async (req, res) => {
         res.status(500).json({ 
             success: false, 
             message: 'İade işlemi başarısız', 
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// GET /api/barkod-listesi - Barkod listesi al
+app.get('/api/barkod-listesi', (req, res) => {
+    try {
+        const { format = 'json', kategori = '' } = req.query;
+        
+        // Query için base SQL
+        let sql = 'SELECT id, barkod, ad AS urun_adi, marka, miktar, kategori, varyant_id FROM stok WHERE barkod IS NOT NULL AND barkod != ""';
+        let params = [];
+        
+        // Kategori filtresi
+        if (kategori && kategori.trim() !== '') {
+            sql += ' AND kategori = ?';
+            params.push(kategori.trim());
+        }
+        
+        sql += ' ORDER BY kategori, marka, ad';
+        
+        const barkodListesi = db.prepare(sql).all(...params);
+        
+        if (format === 'text') {
+            // Metin formatında döndür (yazdırma için)
+            let textOutput = 'BARKOD LİSTESİ\n';
+            textOutput += '='.repeat(50) + '\n';
+            textOutput += `Tarih: ${new Date().toLocaleDateString('tr-TR')}\n`;
+            textOutput += `Toplam Ürün: ${barkodListesi.length}\n\n`;
+            
+            // Kategoriye göre grupla
+            const kategoriler = {};
+            barkodListesi.forEach(urun => {
+                const kat = urun.kategori || 'Kategori Yok';
+                if (!kategoriler[kat]) kategoriler[kat] = [];
+                kategoriler[kat].push(urun);
+            });
+            
+            Object.keys(kategoriler).sort().forEach(kat => {
+                textOutput += `【 ${kat.toUpperCase()} 】\n`;
+                textOutput += '-'.repeat(30) + '\n';
+                
+                kategoriler[kat].forEach((urun, index) => {
+                    textOutput += `${index + 1}. ${urun.urun_adi}\n`;
+                    textOutput += `   Barkod: ${urun.barkod}\n`;
+                    textOutput += `   Marka: ${urun.marka || 'Yok'}\n`;
+                    textOutput += `   Stok: ${urun.miktar}\n`;
+                    if (urun.varyant_id) {
+                        textOutput += `   Varyant: ${urun.varyant_id}\n`;
+                    }
+                    textOutput += '\n';
+                });
+                
+                textOutput += '\n';
+            });
+            
+            res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+            res.send(textOutput);
+        } else {
+            // JSON formatında döndür
+            res.json({
+                success: true,
+                message: 'Barkod listesi başarıyla alındı',
+                data: barkodListesi,
+                total: barkodListesi.length,
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ Barkod listesi hatası:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Barkod listesi alınamadı',
             error: error.message,
             timestamp: new Date().toISOString()
         });
