@@ -2430,10 +2430,7 @@
             <span>Kategori Yönetimi</span>
         </div>
         
-        <div class="menu-item" onclick="openBulkSaleModal()">
-            <i class="fas fa-shopping-cart"></i>
-            <span>Toplu Satış</span>
-        </div>
+        <!-- Bulk sales feature removed as requested -->
                 
         
         <div class="menu-item" onclick="openQRConnection()">
@@ -3416,9 +3413,10 @@
                     // FIX: Handle server-initiated deletions and other client deletions properly
                     if (data.data && (data.data.satisId || data.data.id)) {
                         const satisId = data.data.satisId || data.data.id;
+                        const operationId = `satis-delete-${satisId}`;
                         
-                        // Skip if this is from the same client (to prevent double deletion)
-                        if (data.source === socket.id) {
+                        // Skip if this is a local operation to prevent double deletion
+                        if (localOperations.has(operationId)) {
                             console.log('🔄 Kendi silme işlemimiz, atlanıyor');
                             break;
                         }
@@ -3434,9 +3432,9 @@
                             guncelleIstatistikler();
                             guncellenenVerileriKaydet();
                             
-                            if (data.source === 'server') {
+                            if (data.source === 'server' || data.source === 'api') {
                                 console.log('🔄 Sunucu kaynaklı silme işlemi');
-                                // Don't show notification for server-initiated deletions (user already did the action)
+                                // Don't show notification for server-initiated deletions
                             } else {
                                 showNotification('🗑️ Satış silindi (başka kullanıcı tarafından)', 'info');
                             }
@@ -5106,57 +5104,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             });
         }
 
-        // Toplu satış modal'ını aç
-        function openBulkSaleModal() {
-            document.getElementById('mainMenuDropdown').classList.remove('show');
-            
-            Swal.fire({
-                title: '🛒 Toplu Satış',
-                html: `
-                    <div style="text-align: left;">
-                        <div style="margin-bottom: 15px;">
-                            <h4>Satış Sepeti</h4>
-                            <div id="bulkSaleCart" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px;">
-                                <p style="text-align: center; color: #666;">Sepet boş</p>
-                            </div>
-                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                                <input type="text" id="bulkSaleBarkod" placeholder="Barkod" style="flex: 2;">
-                                <input type="number" id="bulkSaleMiktar" placeholder="Miktar" min="1" value="1" style="flex: 1;">
-                                <input type="number" id="bulkSaleFiyat" placeholder="Fiyat" step="0.01" style="flex: 1;">
-                                <button class="btn btn-sm btn-primary" onclick="addToBulkCart()">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <h4>Müşteri Bilgileri (Opsiyonel)</h4>
-                            <select id="bulkSaleCustomer" style="width: 100%;">
-                                <option value="">Müşteri Seçin</option>
-                            </select>
-                        </div>
-                        
-                        <div style="text-align: center;">
-                            <div id="bulkSaleTotal" style="font-size: 18px; font-weight: bold; margin-bottom: 15px;">
-                                Toplam: 0.00 ₺
-                            </div>
-                            <button class="btn btn-success" onclick="completeBulkSale()" id="completeBulkSaleBtn" disabled>
-                                <i class="fas fa-check"></i> Satışı Tamamla
-                            </button>
-                            <button class="btn btn-danger" onclick="clearBulkCart()" style="margin-left: 10px;">
-                                <i class="fas fa-trash"></i> Sepeti Temizle
-                            </button>
-                        </div>
-                    </div>
-                `,
-                width: 600,
-                showConfirmButton: false,
-                showCloseButton: true,
-                didOpen: () => {
-                    loadCustomersForBulkSale();
-                }
-            });
-        }
+        // Bulk sales feature removed as requested
 
         // Kategori filtresini yükle
         async function loadCategoryFilter() {
@@ -5483,286 +5431,9 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         }
 
         // Toplu satış sepeti
-        let bulkSaleCart = [];
+        // Bulk sales variables and functions removed as requested
 
-        // Müşterileri toplu satış için yükle
-        async function loadCustomersForBulkSale() {
-            try {
-                const response = await fetch(`${API_BASE}/api/musteri-kontrol`);
-                const result = await response.json();
-                
-                if (result.success && result.data) {
-                    const select = document.getElementById('bulkSaleCustomer');
-                    result.data.forEach(customer => {
-                        const option = document.createElement('option');
-                        option.value = customer.id;
-                        option.textContent = customer.ad;
-                        select.appendChild(option);
-                    });
-                }
-            } catch (error) {
-                console.error('Müşteri yükleme hatası:', error);
-            }
-        }
-
-        // Toplu satış sepetine ürün ekle - Geliştirilmiş
-        function addToBulkCart() {
-            const barkod = document.getElementById('bulkSaleBarkod').value.trim();
-            const miktar = parseInt(document.getElementById('bulkSaleMiktar').value) || 1;
-            const fiyat = parseFloat(document.getElementById('bulkSaleFiyat').value) || 0;
-            
-            if (!barkod) {
-                showNotification('❌ Barkod gerekli', 'error');
-                return;
-            }
-            
-            // Ürünü stokta kontrol et - Geliştirilmiş barkod arama
-            let product = null;
-            for (const [key, p] of Object.entries(stokListesi)) {
-                if (p.barkod === barkod || key === barkod) {
-                    product = p;
-                    break;
-                }
-            }
-            
-            if (!product) {
-                showNotification('❌ Ürün bulunamadı', 'error');
-                return;
-            }
-            
-            // Stok kontrolü - Geliştirilmiş
-            const currentStock = product.stok_miktari || product.miktar || 0;
-            if (currentStock < miktar) {
-                showNotification(`❌ Yetersiz stok (Mevcut: ${currentStock})`, 'error');
-                return;
-            }
-            
-            // Sepete ekle - Aynı barkod kontrolü ile
-            const existingIndex = bulkSaleCart.findIndex(item => item.barkod === barkod);
-            if (existingIndex >= 0) {
-                // Mevcut ürünün miktarını güncelle
-                const newTotalMiktar = bulkSaleCart[existingIndex].miktar + miktar;
-                
-                // Stok kontrolü
-                if (currentStock < newTotalMiktar) {
-                    showNotification(`❌ Toplam miktar stoktan fazla! (Mevcut: ${currentStock}, İstenen: ${newTotalMiktar})`, 'error');
-                    return;
-                }
-                
-                bulkSaleCart[existingIndex].miktar = newTotalMiktar;
-                bulkSaleCart[existingIndex].fiyat = fiyat || bulkSaleCart[existingIndex].fiyat;
-                
-                showNotification(`✅ ${product.urun_adi || product.ad} miktarı güncellendi: ${bulkSaleCart[existingIndex].miktar}`, 'success');
-            } else {
-                // Yeni ürün ekle
-                bulkSaleCart.push({
-                    barkod: barkod,
-                    urunAdi: product.urun_adi || product.ad || 'Bilinmeyen Ürün',
-                    miktar: miktar,
-                    fiyat: fiyat || product.satisFiyati || 0,
-                    alisFiyati: product.alisFiyati || 0,
-                    stok_miktari: currentStock
-                });
-                
-                showNotification(`✅ ${product.urun_adi || product.ad} sepete eklendi`, 'success');
-            }
-            
-            // Formu temizle
-            document.getElementById('bulkSaleBarkod').value = '';
-            document.getElementById('bulkSaleMiktar').value = '1';
-            document.getElementById('bulkSaleFiyat').value = '';
-            
-            updateBulkSaleCart();
-        }
-
-        // Toplu satış sepetini güncelle - Geliştirilmiş
-        function updateBulkSaleCart() {
-            const cartDiv = document.getElementById('bulkSaleCart');
-            const totalDiv = document.getElementById('bulkSaleTotal');
-            const completeBtn = document.getElementById('completeBulkSaleBtn');
-            
-            if (bulkSaleCart.length === 0) {
-                cartDiv.innerHTML = '<p style="text-align: center; color: #666;">Sepet boş</p>';
-                totalDiv.textContent = 'Toplam: 0.00 ₺';
-                completeBtn.disabled = true;
-                return;
-            }
-            
-            let total = 0;
-            let html = '';
-            
-            bulkSaleCart.forEach((item, index) => {
-                const itemTotal = item.fiyat * item.miktar;
-                total += itemTotal;
-                
-                // Stok durumu kontrolü
-                const currentStock = item.stok_miktari || 0;
-                const stockStatus = currentStock >= item.miktar ? '✅' : '⚠️';
-                const stockColor = currentStock >= item.miktar ? '#27ae60' : '#f39c12';
-                
-                html += `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; background: ${currentStock >= item.miktar ? '#f8f9fa' : '#fff3cd'};">
-                        <div style="flex: 1;">
-                            <strong>${item.urunAdi}</strong><br>
-                            <small style="color: #666;">
-                                ${item.barkod} - ${item.miktar}x ${item.fiyat.toFixed(2)}₺
-                                <span style="color: ${stockColor}; margin-left: 8px;">
-                                    ${stockStatus} Stok: ${currentStock}
-                                </span>
-                            </small>
-                        </div>
-                        <div style="text-align: right;">
-                            <strong>${itemTotal.toFixed(2)}₺</strong><br>
-                            <button onclick="removeFromBulkCart(${index})" style="background: none; border: none; color: red; margin-left: 10px; cursor: pointer;" title="Sepetten çıkar">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            cartDiv.innerHTML = html;
-            totalDiv.textContent = `Toplam: ${total.toFixed(2)} ₺`;
-            completeBtn.disabled = false;
-            
-            // Stok uyarısı
-            const lowStockItems = bulkSaleCart.filter(item => (item.stok_miktari || 0) < item.miktar);
-            if (lowStockItems.length > 0) {
-                showNotification(`⚠️ ${lowStockItems.length} ürün için yetersiz stok!`, 'warning');
-            }
-        }
-
-        // Sepetten ürün çıkar
-        function removeFromBulkCart(index) {
-            bulkSaleCart.splice(index, 1);
-            updateBulkSaleCart();
-        }
-
-        // Sepeti temizle
-        function clearBulkCart() {
-            bulkSaleCart = [];
-            updateBulkSaleCart();
-        }
-
-        // Toplu satışı tamamla - Geliştirilmiş
-        async function completeBulkSale() {
-            if (bulkSaleCart.length === 0) {
-                showNotification('❌ Sepet boş', 'error');
-                return;
-            }
-            
-            // Stok kontrolü
-            const insufficientStock = bulkSaleCart.filter(item => (item.stok_miktari || 0) < item.miktar);
-            if (insufficientStock.length > 0) {
-                const itemNames = insufficientStock.map(item => item.urunAdi).join(', ');
-                Swal.fire('⚠️ Yetersiz Stok', `${itemNames} ürünleri için yetersiz stok bulunmaktadır.`, 'warning');
-                return;
-            }
-            
-            try {
-                const customerSelect = document.getElementById('bulkSaleCustomer');
-                const musteriId = customerSelect.value;
-                const musteriAdi = customerSelect.selectedOptions[0]?.textContent;
-                
-                // Onay modalı
-                const confirmResult = await Swal.fire({
-                    title: 'Toplu Satış Onayı',
-                    html: `
-                        <div style="text-align: left;">
-                            <p><strong>${bulkSaleCart.length} ürün satılacak</strong></p>
-                            <p>Toplam Tutar: <strong>${bulkSaleCart.reduce((sum, item) => sum + (item.fiyat * item.miktar), 0).toFixed(2)} ₺</strong></p>
-                            ${musteriAdi ? `<p>Müşteri: <strong>${musteriAdi}</strong></p>` : ''}
-                            <hr>
-                            <p>Devam etmek istiyor musunuz?</p>
-                        </div>
-                    `,
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Evet, Sat',
-                    cancelButtonText: 'İptal',
-                    confirmButtonColor: '#27ae60'
-                });
-                
-                if (!confirmResult.isConfirmed) {
-                    return;
-                }
-                
-                showNotification('🔄 Toplu satış işleniyor...', 'info');
-                
-                // Her ürün için ayrı satış yap
-                let successCount = 0;
-                let totalAmount = 0;
-                
-                for (const item of bulkSaleCart) {
-                    try {
-                        // Ürünü bul
-                        const product = Object.values(stokListesi).find(p => p.barkod === item.barkod);
-                        if (!product) continue;
-                        
-                        // Satış verisi oluştur
-                        const satis = {
-                            id: Date.now().toString(36) + Math.random().toString(36).substring(2, 7),
-                            tarih: new Date().toISOString(),
-                            barkod: item.barkod,
-                            urunAdi: item.urunAdi,
-                            marka: product.marka || '',
-                            miktar: item.miktar,
-                            fiyat: item.fiyat,
-                            alisFiyati: item.alisFiyati,
-                            toplam: item.fiyat * item.miktar,
-                            borc: false,
-                            musteriId: musteriId,
-                            aciklama: 'Toplu satış',
-                            odemeTarihi: null
-                        };
-                        
-                        // Backend'e kaydet
-                        const response = await fetch(`${API_BASE}/api/satis-ekle`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(satis)
-                        });
-                        
-                        const result = await response.json();
-                        
-                        if (result.success) {
-                            // Stok güncelle
-                            product.stok_miktari = (product.stok_miktari || 0) - item.miktar;
-                            if (product.miktar !== undefined) {
-                                product.miktar = product.stok_miktari;
-                            }
-                            
-                            // Satış geçmişine ekle
-                            satisGecmisi.push(result.data || satis);
-                            
-                            successCount++;
-                            totalAmount += satis.toplam;
-                        }
-                    } catch (error) {
-                        console.error(`Ürün satış hatası (${item.urunAdi}):`, error);
-                    }
-                }
-                
-                if (successCount > 0) {
-                    // UI güncelle
-                    stokTablosunuGuncelle();
-                    satisTablosunuGuncelle();
-                    guncelleIstatistikler();
-                    guncellenenVerileriKaydet();
-                    
-                    showNotification(`✅ ${successCount} ürün başarıyla satıldı! Toplam: ${totalAmount.toFixed(2)}₺`, 'success');
-                    bulkSaleCart = [];
-                    updateBulkSaleCart();
-                    Swal.close();
-                } else {
-                    showNotification('❌ Hiçbir ürün satılamadı', 'error');
-                }
-                
-            } catch (error) {
-                showNotification('❌ Toplu satış hatası: ' + error.message, 'error');
-                console.error('Toplu satış hatası:', error);
-            }
-        }
+        // All bulk sales functions removed as requested
         
         // Satış geçmişini güncelle
         function satisTablosunuGuncelle() {
@@ -6480,6 +6151,9 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         }
         
         // Satış sil (API ile entegre)
+        // Track local operations to prevent double-processing socket events
+        const localOperations = new Set();
+        
         async function satisSil(satisId) {
             const satisIndex = satisGecmisi.findIndex(s => s.id == satisId || s.id === parseInt(satisId));
             if (satisIndex === -1) {
@@ -6501,17 +6175,28 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 if (!dialog.isConfirmed) return;
                 try {
                     console.log('🗑️ Satış siliniyor:', satisId);
+                    
+                    // Mark this operation as local to prevent double-processing
+                    const operationId = `satis-delete-${satisId}`;
+                    localOperations.add(operationId);
+                    
                     const response = await fetch(`${API_BASE}/api/satis-sil/${satisId}`, { method: 'DELETE' });
                     const apiResult = await response.json();
-                    if (!response.ok || !apiResult.success) throw new Error(apiResult.message || 'Satış silinemedi');
+                    if (!response.ok || !apiResult.success) {
+                        localOperations.delete(operationId);
+                        throw new Error(apiResult.message || 'Satış silinemedi');
+                    }
                     
-                    // FIX: Only delete locally and emit socket event, don't do both
-                    // The socket event will be handled by other clients, not this one
+                    // Update local state immediately for better UX
                     satisGecmisi.splice(satisIndex, 1);
                     satisTablosunuGuncelle();
                     guncellenenVerileriKaydet();
                     showNotification('🗑️ Satış silindi', 'success');
                     Swal.fire({ icon: 'success', title: 'Satış Silindi!', text: apiResult.message, showConfirmButton: false, timer: 1200 });
+                    
+                    // Remove operation from tracking after a delay
+                    setTimeout(() => localOperations.delete(operationId), 5000);
+                    
                 } catch (error) {
                     console.error('❌ Satış silme hatası:', error);
                     Swal.fire('Hata', error.message || 'Satış silinemedi', 'error');
@@ -6731,7 +6416,14 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     // İşlem başarılı, pending operation'ı temizle
                     clearPendingOperation();
                     
-                    Swal.fire('Başarılı!', message, 'success');
+                    Swal.fire({ 
+                        icon: 'success', 
+                        title: 'Başarılı!', 
+                        text: message, 
+                        showConfirmButton: false, 
+                        timer: 2000,
+                        timerProgressBar: true 
+                    });
                     
                     // Formu temizle
                     document.getElementById('barkod').value = '';
@@ -6781,7 +6473,14 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                             // İşlem başarılı, pending operation'ı temizle
                             clearPendingOperation();
                             
-                            Swal.fire('Başarılı!', 'Yeni ürün eklendi', 'success');
+                            Swal.fire({ 
+                                icon: 'success', 
+                                title: 'Başarılı!', 
+                                text: 'Yeni ürün eklendi', 
+                                showConfirmButton: false, 
+                                timer: 2000,
+                                timerProgressBar: true 
+                            });
                             
                             // Formu temizle
                             document.getElementById('barkod').value = '';
@@ -6851,7 +6550,14 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                                 // İşlem başarılı, pending operation'ı temizle
                                 clearPendingOperation();
                                 
-                                Swal.fire('Başarılı!', 'Ürün güncellendi', 'success');
+                                Swal.fire({ 
+                                    icon: 'success', 
+                                    title: 'Başarılı!', 
+                                    text: 'Ürün güncellendi', 
+                                    showConfirmButton: false, 
+                                    timer: 2000,
+                                    timerProgressBar: true 
+                                });
                                 
                                 // Formu temizle
                                 document.getElementById('barkod').value = '';
@@ -7155,7 +6861,14 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             copyText += `Tarih: ${new Date().toLocaleDateString('tr-TR')}`;
             
             navigator.clipboard.writeText(copyText).then(() => {
-                Swal.fire('Başarılı', 'Düşük stoklu ürünler listesi panoya kopyalandı.', 'success');
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'Başarılı', 
+                    text: 'Düşük stoklu ürünler listesi panoya kopyalandı.', 
+                    showConfirmButton: false, 
+                    timer: 1500,
+                    timerProgressBar: true 
+                });
             }).catch(() => {
                 // Fallback for older browsers
                 const textArea = document.createElement('textarea');
@@ -7164,7 +6877,14 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-                Swal.fire('Başarılı', 'Düşük stoklu ürünler listesi panoya kopyalandı.', 'success');
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'Başarılı', 
+                    text: 'Düşük stoklu ürünler listesi panoya kopyalandı.', 
+                    showConfirmButton: false, 
+                    timer: 1500,
+                    timerProgressBar: true 
+                });
             });
         }
         
@@ -7218,7 +6938,14 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             }
             
             navigator.clipboard.writeText(barkod).then(() => {
-                Swal.fire('Başarılı', 'Barkod panoya kopyalandı.', 'success');
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'Başarılı', 
+                    text: 'Barkod panoya kopyalandı.', 
+                    showConfirmButton: false, 
+                    timer: 1500,
+                    timerProgressBar: true 
+                });
             }).catch(() => {
                 // Fallback for older browsers
                 const textArea = document.createElement('textarea');
@@ -7227,7 +6954,14 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-                Swal.fire('Başarılı', 'Barkod panoya kopyalandı.', 'success');
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'Başarılı', 
+                    text: 'Barkod panoya kopyalandı.', 
+                    showConfirmButton: false, 
+                    timer: 1500,
+                    timerProgressBar: true 
+                });
             });
         }
         
@@ -7548,6 +7282,12 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                                 margin: 0;
                                 text-align: center;
                                 background: white;
+                                width: 100%;
+                                height: 100vh;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: center;
+                                align-items: center;
                             }
                             .barcode-text h3 {
                                 margin: 10px 0;
@@ -7569,9 +7309,22 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                                 display: none !important;
                             }
                             @media print {
+                                @page {
+                                    size: A4;
+                                    margin: 2cm;
+                                }
                                 body {
                                     margin: 0;
-                                    padding: 10px;
+                                    padding: 0;
+                                    display: flex;
+                                    flex-direction: column;
+                                    justify-content: center;
+                                    align-items: center;
+                                    height: 100vh;
+                                    page-break-after: always;
+                                }
+                                * {
+                                    page-break-inside: avoid;
                                 }
                             }
                         </style>
@@ -7580,8 +7333,12 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                         ${barcodeContent}
                         <script>
                             window.onload = function() {
-                                window.print();
-                                window.close();
+                                setTimeout(function() {
+                                    window.print();
+                                    setTimeout(function() {
+                                        window.close();
+                                    }, 1000);
+                                }, 500);
                             };
                         <\/script>
                     
@@ -8220,7 +7977,14 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     showCustomerDetails(customerId);
 
                     showNotification('🗑️ Satış silindi', 'success');
-                    Swal.fire('Başarılı', 'Satış kaydı silindi.', 'success');
+                    Swal.fire({ 
+                        icon: 'success', 
+                        title: 'Başarılı', 
+                        text: 'Satış kaydı silindi.', 
+                        showConfirmButton: false, 
+                        timer: 1500,
+                        timerProgressBar: true 
+                    });
                 } catch (error) {
                     console.error('Satış silme hatası:', error);
                     Swal.fire('Hata', error.message || 'Satış silinirken hata oluştu.', 'error');
@@ -9186,7 +8950,14 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                         borcTablosunuGuncelle();
                         guncellenenVerileriKaydet();
                         
-                        Swal.fire('Başarılı', 'Borç ödendi.', 'success');
+                        Swal.fire({ 
+                            icon: 'success', 
+                            title: 'Başarılı', 
+                            text: 'Borç ödendi.', 
+                            showConfirmButton: false, 
+                            timer: 1500,
+                            timerProgressBar: true 
+                        });
                     } catch (error) {
                         console.error('Borç ödeme hatası:', error);
                         Swal.fire('Hata', 'Borç ödenirken hata oluştu.', 'error');
@@ -9243,7 +9014,14 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                             
                             guncellenenVerileriKaydet();
                             borcTablosunuGuncelle();
-                            Swal.fire('Silindi!', 'Borç başarıyla silindi.', 'success');
+                            Swal.fire({ 
+                                icon: 'success', 
+                                title: 'Silindi!', 
+                                text: 'Borç başarıyla silindi.', 
+                                showConfirmButton: false, 
+                                timer: 1500,
+                                timerProgressBar: true 
+                            });
                         } else {
                             throw new Error(result.message || 'Borç silinemedi');
                         }
@@ -9426,7 +9204,14 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            Swal.fire('Başarılı!', 'Verileriniz başarıyla indirildi.', 'success');
+            Swal.fire({ 
+                icon: 'success', 
+                title: 'Başarılı!', 
+                text: 'Verileriniz başarıyla indirildi.', 
+                showConfirmButton: false, 
+                timer: 2000,
+                timerProgressBar: true 
+            });
         }
         // Manuel yedekleme
         async function manuelYedekleme() {
