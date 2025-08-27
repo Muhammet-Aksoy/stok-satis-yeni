@@ -771,7 +771,7 @@
 
         .search-box input {
             width: 100%;
-            padding: 10px 15px 10px 40px;
+            padding: 10px 40px 10px 40px;
             border: 1px solid var(--border);
             border-radius: 6px;
             font-size: 15px;
@@ -783,6 +783,26 @@
             top: 50%;
             transform: translateY(-50%);
             color: var(--gray);
+        }
+        
+        .clear-search-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gray);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+        }
+        
+        .clear-search-btn:hover {
+            background-color: var(--hover-bg);
+            color: var(--text);
         }
 
         .view-toggle {
@@ -2586,7 +2606,10 @@
                     <div class="table-controls">
                         <div class="search-box">
                             <i class="fas fa-search"></i>
-                            <input type="text" id="searchInput" placeholder="Ürün ara..." oninput="aramaYap()">
+                            <input type="text" id="searchInput" placeholder="Ürün ara..." oninput="aramaYap(); updateClearButtonVisibility();">
+                            <button type="button" id="clearSearchBtn" class="clear-search-btn" onclick="clearSearch()" title="Aramayı temizle" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <div class="view-toggle">
@@ -4239,6 +4262,11 @@
             // Veri başlatma
             await initializeData();
             
+            // Kaydedilmiş aramayı yükle
+            setTimeout(() => {
+                loadSavedSearch();
+            }, 500);
+            
             // Periyodik senkronizasyon (15 saniyede bir) - ULTRA OPTIMIZED
             setInterval(() => {
                 if (socket.connected) {
@@ -5038,6 +5066,8 @@
                 confirmButtonText: 'Kapat'
             });
         }
+
+
 
         // Metni kopyala
         function copyText(text) {
@@ -7157,8 +7187,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 currentView = 'card';
             }
         }
-        // Arama yap - 60 saniye timeout ile
-        let searchTimeout;
+        // Arama yap - Kalıcı arama (timeout kaldırıldı)
         function aramaYap() {
             const searchInput = document.getElementById('searchInput');
             const aramaMetni = searchInput.value.toLowerCase().replace(/\s+/g, '');
@@ -7168,9 +7197,12 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             
             let productFound = false;
             
+            // Store search state for persistence
+            localStorage.setItem('stockSearchTerm', searchInput.value);
+            
             rows.forEach(row => {
                 const rowText = row.textContent.toLowerCase().replace(/\s+/g, '');
-                if (rowText.includes(aramaMetni)) {
+                if (aramaMetni === '' || rowText.includes(aramaMetni)) {
                     row.style.display = '';
                     productFound = true;
                 } else {
@@ -7180,7 +7212,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             
             cards.forEach(card => {
                 const cardText = card.textContent.toLowerCase().replace(/\s+/g, '');
-                if (cardText.includes(aramaMetni)) {
+                if (aramaMetni === '' || cardText.includes(aramaMetni)) {
                     card.style.display = '';
                     productFound = true;
                 } else {
@@ -7195,15 +7227,37 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                 noProductMessage.style.display = 'none';
             }
             
-            // 60 saniye sonra arama kutusunu temizle (eğer değişiklik yapılmazsa)
-            clearTimeout(searchTimeout);
-            if (aramaMetni.length > 0) {
-                searchTimeout = setTimeout(() => {
-                    if (searchInput.value === searchInput.value) { // Değişiklik kontrol etmek için
-                        searchInput.value = '';
-                        aramaYap(); // Temizlendikten sonra filtreyi kaldır
-                    }
-                }, 60000); // 60 saniye
+            // Update clear button visibility
+            updateClearButtonVisibility();
+        }
+        
+        // Clear search function
+        function clearSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.value = '';
+            localStorage.removeItem('stockSearchTerm');
+            aramaYap(); // Refresh to show all products
+            searchInput.focus(); // Keep focus on search input
+        }
+        
+        // Update clear button visibility
+        function updateClearButtonVisibility() {
+            const clearBtn = document.getElementById('clearSearchBtn');
+            const searchInput = document.getElementById('searchInput');
+            if (clearBtn) {
+                clearBtn.style.display = searchInput.value.trim() ? 'inline-block' : 'none';
+            }
+        }
+        
+        // Load saved search on page load
+        function loadSavedSearch() {
+            const savedSearch = localStorage.getItem('stockSearchTerm');
+            if (savedSearch) {
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.value = savedSearch;
+                    aramaYap(); // Apply the saved search
+                }
             }
         }
         
@@ -7211,7 +7265,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         function yeniUrunEkle() {
             const searchInput = document.getElementById('searchInput');
             document.getElementById('urunAdi').value = searchInput.value;
-            searchInput.value = '';
+            clearSearch(); // Use clearSearch to properly clean up
             document.getElementById('noProductMessage').style.display = 'none';
             document.getElementById('barkod').focus();
         }
