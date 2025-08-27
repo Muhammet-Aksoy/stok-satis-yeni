@@ -501,6 +501,12 @@
             font-size: 11px;
             margin-left: 5px;
         }
+        
+        .variant-info {
+            color: #6c757d;
+            font-size: 12px;
+            font-style: italic;
+        }
 
         .app-controls {
             display: flex;
@@ -1235,6 +1241,24 @@
         
         .btn-copy:hover {
             background: var(--success-hover);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
         }
         .barcode-container {
             display: flex;
@@ -2930,8 +2954,14 @@
                     <svg id="barcode"></svg>
                 </div>
                 <div class="barcode-actions">
+                    <button class="btn btn-copy" onclick="copyCurrentBarcode()" id="copyBarcodeBtn">
+                        <i class="fas fa-copy"></i> Barkodu Kopyala
+                    </button>
                     <button class="btn btn-primary" onclick="printBarcode()">
                         <i class="fas fa-print"></i> Yazdır
+                    </button>
+                    <button class="btn btn-secondary" onclick="downloadBarcode()">
+                        <i class="fas fa-download"></i> İndir
                     </button>
                     <button class="btn btn-outline" onclick="closeModal()">
                         <i class="fas fa-times"></i> Kapat
@@ -5604,12 +5634,17 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     const toplam = kayitliToplam > 0 ? kayitliToplam : hesaplananToplam;
                     const alis = (parseFloat(satis.alisFiyati) || 0);
                     
+                    // Varyant bilgilerini ekle
+                    const markaBilgisi = satis.marka ? ` <span class="variant-info">(${satis.marka})</span>` : '';
+                    const varyantBilgisi = satis.varyant_id ? ` <span class="variant-badge">V:${satis.varyant_id}</span>` : '';
+                    const variantDisplay = markaBilgisi + varyantBilgisi;
+                    
                     tr.innerHTML = `
                         <td>${tarihStr}</td>
                         <td>${barkodGoster}</td>
-                        <td title="Orijinal: ${satis.urunAdi}">
+                        <td title="Orijinal: ${satis.urunAdi}${satis.marka ? ' - Marka: ' + satis.marka : ''}${satis.varyant_id ? ' - Varyant: ' + satis.varyant_id : ''}">
                             <span class="product-name-link" onclick="showSalesProductDetails('${satis.barkod}', '${satis.marka || ''}', '${satis.id}')">
-                                ${currentProductName}
+                                ${currentProductName}${variantDisplay}
                             </span>
                         </td>
                         <td>${miktar}</td>
@@ -5620,7 +5655,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                         <td>${musteriAdi}</td>
                         <td>
                             <div class="action-buttons">
-                                <button class="action-btn btn-return" title="İade" onclick="urunIade('${satis.id}')">
+                                <button class="action-btn btn-return" title="İade - ${currentProductName}${markaBilgisi}" onclick="urunIade('${satis.id}')">
                                     <i class="fas fa-undo"></i>
                                 </button>
                                 <button class="action-btn btn-edit" title="Düzenle" onclick="satisDuzenle('${satis.id}')">
@@ -6781,7 +6816,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                                     await forcedeleteProduct(urun, key);
                                 } else if (forceResult.isDenied) {
                                     // Show sales for this product
-                                    showProductSalesForReturn(urun.barkod);
+                                    showProductSalesForReturn(urun.barkod, urun.marka, urun.varyant_id);
                                 }
                             });
                         } else {
@@ -6859,56 +6894,99 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             }
         }
         
-        // Ürün satışlarını iade için göster
-        function showProductSalesForReturn(barkod) {
-            const productSales = satisGecmisi.filter(s => s.barkod === barkod);
+        // Ürün satışlarını iade için göster - Varyant ürünler için geliştirilmiş
+        function showProductSalesForReturn(barkod, marka = null, varyantId = null) {
+            // Önce varyant bilgileri ile eşleşen satışları bul
+            let productSales;
+            if (marka !== null || varyantId !== null) {
+                // Spesifik varyant için satışları filtrele
+                productSales = satisGecmisi.filter(s => 
+                    s.barkod === barkod && 
+                    (s.marka || '') === (marka || '') &&
+                    (s.varyant_id || '') === (varyantId || '')
+                );
+            } else {
+                // Sadece barkod ile filtrele ama varyant bilgilerini göster
+                productSales = satisGecmisi.filter(s => s.barkod === barkod);
+            }
             
             if (productSales.length === 0) {
-                Swal.fire('Bilgi', 'Bu ürün için satış kaydı bulunamadı.', 'info');
+                const variantInfo = marka ? ` (Marka: ${marka})` : '';
+                Swal.fire('Bilgi', `Bu ürün${variantInfo} için satış kaydı bulunamadı.`, 'info');
                 return;
             }
             
+            // Varyant ürünleri grupla
+            const salesByVariant = {};
+            productSales.forEach(sale => {
+                const variantKey = `${sale.marka || 'Markasız'}_${sale.varyant_id || 'Varyant-Yok'}`;
+                if (!salesByVariant[variantKey]) {
+                    salesByVariant[variantKey] = [];
+                }
+                salesByVariant[variantKey].push(sale);
+            });
+            
             let salesHTML = `
-                <div style="max-height: 300px; overflow-y: auto;">
+                <div style="max-height: 400px; overflow-y: auto;">
                     <p><strong>Barkod ${barkod} için ${productSales.length} satış bulundu:</strong></p>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                        <thead>
-                            <tr style="background-color: #f8f9fa;">
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Tarih</th>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Miktar</th>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Fiyat</th>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">İşlem</th>
-                            </tr>
-                        </thead>
-                        <tbody>
             `;
             
-            productSales.forEach(sale => {
-                const tarih = new Date(sale.tarih).toLocaleDateString('tr-TR');
+            // Her varyant için ayrı tablo oluştur
+            Object.keys(salesByVariant).forEach(variantKey => {
+                const [variantMarka, variantId] = variantKey.split('_');
+                const variantSales = salesByVariant[variantKey];
+                const displayMarka = variantMarka === 'Markasız' ? 'Markasız' : variantMarka;
+                const displayVariant = variantId === 'Varyant-Yok' ? '' : ` (Varyant: ${variantId})`;
+                
                 salesHTML += `
-                    <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${tarih}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${sale.miktar}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${sale.fiyat?.toFixed(2) || '0.00'} ₺</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">
-                            <button onclick="urunIade('${sale.id}')" style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer;">İade Et</button>
-                        </td>
-                    </tr>
+                    <div style="margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px; padding: 10px;">
+                        <h4 style="margin: 0 0 10px 0; color: #2c6fbb;">${displayMarka}${displayVariant}</h4>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background-color: #f8f9fa;">
+                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Tarih</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Ürün Adı</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Miktar</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Fiyat</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                variantSales.forEach(sale => {
+                    const tarih = new Date(sale.tarih).toLocaleDateString('tr-TR');
+                    const urunAdi = sale.urunAdi || sale.urun_adi || sale.ad || 'Ürün Adı Yok';
+                    salesHTML += `
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${tarih}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px; font-size: 12px;">${urunAdi}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${sale.miktar}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${sale.fiyat?.toFixed(2) || '0.00'} ₺</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">
+                                <button onclick="urunIade('${sale.id}')" 
+                                        style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;"
+                                        title="Bu satışı iade et">İade Et</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                salesHTML += `
+                            </tbody>
+                        </table>
+                    </div>
                 `;
             });
             
-            salesHTML += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
+            salesHTML += `</div>`;
             
             Swal.fire({
-                title: 'Ürün Satış Geçmişi',
+                title: 'Ürün Satış Geçmişi - Varyant Detayları',
                 html: salesHTML,
                 icon: 'info',
                 confirmButtonText: 'Tamam',
-                width: '600px'
+                width: '800px'
             });
         }
         // Düşük stoklu ürünleri göster
@@ -7349,11 +7427,17 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             updateSalesSummary(filteredSales);
         }
         // Barkod basma fonksiyonu
+        // Global variable to store current barcode value
+        let currentBarcodeValue = '';
+
         function barkodBas(barkod) {
             if (!barkod) {
                 Swal.fire('Hata', 'Barkod değeri girilmemiş!', 'error');
                 return;
             }
+            
+            // Store current barcode value for copy function
+            currentBarcodeValue = barkod;
             
             // Find the product by barcode
             let urunAdi = '';
@@ -7398,6 +7482,112 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             
             // Show the modal
             document.getElementById('barcodeModal').style.display = 'flex';
+        }
+
+        // Copy current barcode value from modal
+        function copyCurrentBarcode() {
+            if (!currentBarcodeValue) {
+                Swal.fire('Hata', 'Kopyalanacak barkod bulunamadı.', 'error');
+                return;
+            }
+            
+            navigator.clipboard.writeText(currentBarcodeValue).then(() => {
+                // Visual feedback on button
+                const copyBtn = document.getElementById('copyBarcodeBtn');
+                const originalHTML = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Kopyalandı!';
+                copyBtn.style.backgroundColor = '#27ae60';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                    copyBtn.style.backgroundColor = '';
+                }, 1500);
+                
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'Başarılı', 
+                    text: `Barkod "${currentBarcodeValue}" panoya kopyalandı.`, 
+                    showConfirmButton: false, 
+                    timer: 2000,
+                    timerProgressBar: true 
+                });
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = currentBarcodeValue;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'Başarılı', 
+                    text: `Barkod "${currentBarcodeValue}" panoya kopyalandı.`, 
+                    showConfirmButton: false, 
+                    timer: 2000,
+                    timerProgressBar: true 
+                });
+            });
+        }
+
+        // Download barcode as image
+        function downloadBarcode() {
+            if (!currentBarcodeValue) {
+                Swal.fire('Hata', 'İndirilecek barkod bulunamadı.', 'error');
+                return;
+            }
+            
+            const svg = document.getElementById('barcode');
+            if (!svg) {
+                Swal.fire('Hata', 'Barkod görseli bulunamadı.', 'error');
+                return;
+            }
+            
+            try {
+                // Create canvas and convert SVG to image
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const svgData = new XMLSerializer().serializeToString(svg);
+                
+                const img = new Image();
+                const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+                const url = URL.createObjectURL(svgBlob);
+                
+                img.onload = function() {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Download the image
+                    canvas.toBlob(function(blob) {
+                        const downloadUrl = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = downloadUrl;
+                        a.download = `barkod_${currentBarcodeValue}_${new Date().toISOString().slice(0,10)}.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(downloadUrl);
+                        
+                        Swal.fire({ 
+                            icon: 'success', 
+                            title: 'Başarılı', 
+                            text: 'Barkod görseli indirildi.', 
+                            showConfirmButton: false, 
+                            timer: 2000 
+                        });
+                    }, 'image/png');
+                    
+                    URL.revokeObjectURL(url);
+                };
+                
+                img.src = url;
+                
+            } catch (error) {
+                console.error('Barkod indirme hatası:', error);
+                Swal.fire('Hata', 'Barkod görseli indirilemedi.', 'error');
+            }
         }
         // Barkod yazdırma
         function printBarcode() {
