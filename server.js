@@ -641,8 +641,8 @@ socket.on('dataUpdate', (data) => {
                 break;
         }
 
-        // Tüm istemcilere bildir
-        socket.broadcast.emit('dataUpdate', {
+        // Tüm istemcilere bildir - use consistent event name
+        socket.broadcast.emit('dataUpdated', {
             ...data,
             source: socket.id
         });
@@ -5975,18 +5975,31 @@ app.post('/api/import-missing-products', async (req, res) => {
         
         // Function to clean and validate product data
         function cleanProductData(product) {
-            // Preserve original brand if it exists and is meaningful
+            // Normalize brand
             let cleanMarka = product.marka;
-            if (!cleanMarka || cleanMarka.trim() === '' || cleanMarka === 'null' || cleanMarka === null) {
-                cleanMarka = null; // Don't assign random brand, use null for no brand
+            if (typeof cleanMarka === 'string') {
+                cleanMarka = cleanMarka.trim();
             }
-            
+            if (!cleanMarka || cleanMarka === '' || cleanMarka === 'null') {
+                cleanMarka = null;
+            }
+
+            // Normalize name from multiple possible fields
+            const rawAd = product.ad || product.urun_adi || product.urunAdi || '';
+            const cleanAd = typeof rawAd === 'string' ? rawAd.trim() : String(rawAd || '');
+
+            // Normalize barkod and aciklama
+            const cleanBarkod = product.barkod != null ? String(product.barkod).trim() : null;
+            const cleanAciklama = product.aciklama != null && String(product.aciklama).trim() !== ''
+                ? String(product.aciklama).trim()
+                : null;
+
             return {
                 ...product,
                 marka: cleanMarka,
-                barkod: product.barkod?.trim(),
-                ad: product.ad?.trim(),
-                aciklama: product.aciklama?.trim() || null
+                barkod: cleanBarkod,
+                ad: cleanAd,
+                aciklama: cleanAciklama
             };
         }
         
@@ -6102,14 +6115,7 @@ app.post('/api/import-missing-products', async (req, res) => {
                     skippedCount++;
                     continue;
                 }
-                
-                // If there are brandless products with the same barcode, assign a random brand
-                if (existingBrands.includes('') || existingBrands.includes(null)) {
-                    if (!marka) {
-                        marka = generateRandomBrandSuffix();
-                        console.log(`🏷️ Random brand assigned: ${barkod} -> ${marka}`);
-                    }
-                }
+                // Do NOT assign random brands. Keep brand as null if not provided to avoid wrong brand values.
             }
             
             const currentTime = new Date().toISOString();
