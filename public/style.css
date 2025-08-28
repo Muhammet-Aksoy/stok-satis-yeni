@@ -2225,6 +2225,25 @@
             border-color: var(--danger, #ef4444) !important;
         }
 
+        /* Additional dark theme fixes */
+        [data-theme="dark"] .summary-item h3 {
+            color: var(--text-primary);
+        }
+        [data-theme="dark"] .product-info strong {
+            color: var(--text-primary);
+        }
+        [data-theme="dark"] .product-footer {
+            background: var(--card-bg);
+        }
+        [data-theme="dark"] .search-box i {
+            color: var(--text-secondary);
+        }
+        [data-theme="dark"] .notification {
+            background: var(--notification-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--notification-border);
+        }
+
         /* Dark theme specific text classes */
         [data-theme="dark"] .text-primary {
             color: var(--primary, #3b82f6) !important;
