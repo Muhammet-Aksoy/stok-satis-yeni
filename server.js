@@ -195,7 +195,7 @@ function initializeDatabase() {
             console.warn('⚠️ Index creation error:', error.message);
         }
 
-        // Schema migration: ensure satisGecmisi has borc, toplam, alisFiyati columns
+        // Schema migration: ensure satisGecmisi has borc, toplam, alisFiyati, marka, urun_id, varyant_id columns
         try {
             const satisCols = db.prepare("PRAGMA table_info(satisGecmisi)").all();
             const colNames = new Set(satisCols.map(c => c.name));
@@ -212,6 +212,18 @@ function initializeDatabase() {
             if (!colNames.has('alisFiyati')) {
                 console.log('➕ AlisFiyati sütunu ekleniyor...');
                 db.exec("ALTER TABLE satisGecmisi ADD COLUMN alisFiyati REAL DEFAULT 0");
+            }
+            if (!colNames.has('marka')) {
+                console.log('➕ Marka sütunu ekleniyor...');
+                db.exec("ALTER TABLE satisGecmisi ADD COLUMN marka TEXT");
+            }
+            if (!colNames.has('urun_id')) {
+                console.log('➕ Urun_id sütunu ekleniyor...');
+                db.exec("ALTER TABLE satisGecmisi ADD COLUMN urun_id TEXT");
+            }
+            if (!colNames.has('varyant_id')) {
+                console.log('➕ Varyant_id sütunu ekleniyor...');
+                db.exec("ALTER TABLE satisGecmisi ADD COLUMN varyant_id TEXT");
             }
             
             // Son durumu kontrol et
@@ -2182,6 +2194,119 @@ app.get('/api/backup-analysis', async (req, res) => {
     }
 });
 
+// Verify backups vs database and stock list consistency
+app.get('/api/backup-verify', async (req, res) => {
+    try {
+        console.log('🔎 Yedek doğrulama başlatılıyor...');
+        const results = {
+            scanned_json_files: [],
+            missing_in_db: {
+                stok: [],
+                satis: [],
+                musteriler: []
+            },
+            present_in_db: {
+                stok: 0,
+                satis: 0,
+                musteriler: 0
+            },
+            summary: {}
+        };
+        const backupDirs = [
+            path.join(__dirname, 'veriler', 'backups'),
+            path.join(__dirname, 'all-backups'),
+            path.join(__dirname, 'backups'),
+            path.join(__dirname)
+        ];
+        const jsonFiles = [];
+        for (const dir of backupDirs) {
+            if (await fs.pathExists(dir)) {
+                const files = await fs.readdir(dir);
+                for (const f of files) {
+                    if (f.endsWith('.json')) jsonFiles.push(path.join(dir, f));
+                }
+            }
+        }
+        // Also include root yedekveriler.json if exists
+        const rootJson = path.join(__dirname, 'yedekveriler.json');
+        if (await fs.pathExists(rootJson)) jsonFiles.push(rootJson);
+
+        const stokKey = (p) => `${p.barkod || ''}_${(p.marka || '').toLowerCase()}_${p.varyant_id || ''}`;
+
+        for (const filePath of jsonFiles) {
+            try {
+                const content = await fs.readFile(filePath, 'utf8');
+                const data = JSON.parse(content);
+                const record = { file: path.basename(filePath), stok: 0, satis: 0, musteriler: 0 };
+                // Verify stok
+                const backupStok = data.stokListesi || data.stok || {};
+                const backupStokArray = Array.isArray(backupStok) ? backupStok : Object.values(backupStok);
+                record.stok = backupStokArray.length;
+                for (const urun of backupStokArray) {
+                    const marka = urun.marka || '';
+                    const varyant_id = urun.varyant_id || '';
+                    const barkod = urun.barkod || '';
+                    if (!barkod) continue;
+                    const exists = db.prepare('SELECT COUNT(*) as c FROM stok WHERE barkod = ? AND (LOWER(COALESCE(marka, "")) = LOWER(?) ) AND COALESCE(varyant_id, "") = ?')
+                                    .get(barkod, marka, varyant_id).c > 0;
+                    if (exists) results.present_in_db.stok++;
+                    else results.missing_in_db.stok.push({ barkod, marka, varyant_id, ad: urun.ad || urun.urun_adi || '' });
+                }
+
+                // Verify satis
+                const backupSales = data.satisGecmisi || data.sales || [];
+                record.satis = backupSales.length;
+                for (const sale of backupSales) {
+                    const exists = db.prepare('SELECT COUNT(*) as c FROM satisGecmisi WHERE barkod = ? AND tarih = ? AND miktar = ? AND fiyat = ?')
+                                    .get(sale.barkod || '', sale.tarih || '', sale.miktar || 0, sale.fiyat || 0).c > 0;
+                    if (exists) results.present_in_db.satis++;
+                    else results.missing_in_db.satis.push({ barkod: sale.barkod, tarih: sale.tarih, miktar: sale.miktar, fiyat: sale.fiyat });
+                }
+
+                // Verify customers
+                const backupCustomers = data.musteriler || {};
+                const customersArray = Array.isArray(backupCustomers) ? backupCustomers : Object.entries(backupCustomers).map(([id, c]) => ({ id, ...c }));
+                record.musteriler = customersArray.length;
+                for (const cust of customersArray) {
+                    const id = cust.id || cust.musteriId;
+                    if (!id) continue;
+                    const exists = db.prepare('SELECT COUNT(*) as c FROM musteriler WHERE id = ?').get(id).c > 0;
+                    if (exists) results.present_in_db.musteriler++;
+                    else results.missing_in_db.musteriler.push({ id, ad: cust.ad || '' });
+                }
+
+                results.scanned_json_files.push(record);
+            } catch (e) {
+                console.warn('⚠️ Yedek dosyası okunamadı:', filePath, e.message);
+            }
+        }
+
+        results.summary = {
+            scanned_files: results.scanned_json_files.length,
+            missing_counts: {
+                stok: results.missing_in_db.stok.length,
+                satis: results.missing_in_db.satis.length,
+                musteriler: results.missing_in_db.musteriler.length
+            }
+        };
+
+        res.json({
+            success: true,
+            message: 'Yedek doğrulama tamamlandı',
+            results,
+            guidance: {
+                stok: 'Eksik ürünleri /api/stok-ekle ile ekleyin veya toplu import kullanın',
+                satis: 'Eksik satışları mümkünse tekrar içe aktarın veya manuel ekleyin',
+                musteriler: 'Eksik müşterileri /api/musteri-ekle ile ekleyin'
+            },
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('❌ Yedek doğrulama hatası:', error);
+        res.status(500).json({ success: false, message: 'Yedek doğrulama başarısız', error: error.message, timestamp: new Date().toISOString() });
+    }
+});
+
 // POST /api/stok-ekle - Tek ürün ekle
 app.post('/api/stok-ekle', async (req, res, next) => {
     try {
@@ -2639,6 +2764,22 @@ app.post('/api/satis-ekle', async (req, res) => {
                 throw new Error('Ürün bulunamadı');
             }
             
+            // Duplicate satış kontrolü - Stok düşmeden önce yap
+            const existingSaleEarly = db.prepare(`
+                SELECT * FROM satisGecmisi 
+                WHERE barkod = ? AND tarih = ? AND miktar = ? AND fiyat = ?
+            `).get(satis.barkod, satis.tarih, satis.miktar, satis.fiyat);
+
+            if (existingSaleEarly) {
+                console.log('⚠️ Duplicate sale detected (pre-stock), skipping stock update:', satis);
+                return { 
+                    success: true, 
+                    message: 'Satış zaten mevcut',
+                    data: existingSaleEarly,
+                    stokGuncellendi: false
+                };
+            }
+
             if (stokUrunu.miktar < satis.miktar) {
                 throw new Error(`❌ YETERSİZ STOK: "${stokUrunu.ad}" (${stokUrunu.marka || 'Markasız'}) ürününden sadece ${stokUrunu.miktar} adet stokta var. Satış yapmak istediğiniz miktar: ${satis.miktar} adet. Lütfen stok miktarını kontrol edin veya satış miktarını azaltın.`);
             }
@@ -2647,14 +2788,14 @@ app.post('/api/satis-ekle', async (req, res) => {
             const yeniMiktar = stokUrunu.miktar - satis.miktar;
             db.prepare('UPDATE stok SET miktar = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(yeniMiktar, stokUrunu.id);
             
-            // 2. Duplicate satış kontrolü
+            // 2. Duplicate satış kontrolü (post-check, normalde tetiklenmez)
             const existingSale = db.prepare(`
                 SELECT * FROM satisGecmisi 
                 WHERE barkod = ? AND tarih = ? AND miktar = ? AND fiyat = ?
             `).get(satis.barkod, satis.tarih, satis.miktar, satis.fiyat);
-            
+
             if (existingSale) {
-                console.log('⚠️ Duplicate sale detected, skipping:', satis);
+                console.log('⚠️ Duplicate sale detected after stock update (unexpected):', satis);
                 return { 
                     success: true, 
                     message: 'Satış zaten mevcut',
@@ -3157,15 +3298,16 @@ app.post('/api/satis-iade', async (req, res) => {
             console.log(`🔍 İade parametresindeki ürün ID ile arama: ${urunId} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
         }
         
-        // ÖNCELİK 3: Barkod ve marka ile EXACT match arama
+        // ÖNCELİK 3: Barkod + marka + varyant_id ile EXACT match arama
         if (!existingStock && saleBarcode) {
-            if (saleBrand) {
-                existingStock = db.prepare('SELECT * FROM stok WHERE barkod = ? AND marka = ?').get(saleBarcode, saleBrand);
-                console.log(`🔍 Barkod+Marka EXACT match: ${saleBarcode}+${saleBrand} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
+            const saleVariant = existingSale.varyant_id || '';
+            if (saleBrand || saleVariant) {
+                existingStock = db.prepare('SELECT * FROM stok WHERE barkod = ? AND LOWER(COALESCE(marka, "")) = LOWER(?) AND COALESCE(varyant_id, "") = ?').get(saleBarcode, saleBrand || '', saleVariant);
+                console.log(`🔍 Barkod+Marka+Varyant EXACT match: ${saleBarcode}+${saleBrand || ''}+${saleVariant} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
             } else {
-                // Markasız ürün araması
-                existingStock = db.prepare('SELECT * FROM stok WHERE barkod = ? AND (marka IS NULL OR marka = "")').get(saleBarcode);
-                console.log(`🔍 Barkod (markasız) EXACT match: ${saleBarcode} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
+                // Markasız ve varyantsız ürün araması
+                existingStock = db.prepare('SELECT * FROM stok WHERE barkod = ? AND (marka IS NULL OR marka = "") AND (varyant_id IS NULL OR varyant_id = "")').get(saleBarcode);
+                console.log(`🔍 Barkod (markasız/varyantsız) EXACT match: ${saleBarcode} ${existingStock ? 'bulundu' : 'bulunamadı'}`);
             }
         }
         
@@ -3181,7 +3323,7 @@ app.post('/api/satis-iade', async (req, res) => {
             } else if (allWithBarcode.length > 1) {
                 // Birden fazla ürün var - hata ver
                 const urunListesi = allWithBarcode.map(p => 
-                    `${p.ad} (${p.marka || 'Markasız'}) - ID: ${p.urun_id}`
+                    `${p.ad} (${p.marka || 'Markasız'}) [varyant: ${p.varyant_id || '-'}] - ID: ${p.urun_id}`
                 ).join('\n');
                 console.log(`❌ Aynı barkodlu ${allWithBarcode.length} ürün bulundu. Ürün ID belirtilmeli:\n${urunListesi}`);
                 
@@ -3195,9 +3337,10 @@ app.post('/api/satis-iade', async (req, res) => {
                         ad: p.ad,
                         marka: p.marka || 'Markasız',
                         miktar: p.miktar,
+                        varyant_id: p.varyant_id || '',
                         description: `${p.ad} (${p.marka || 'Markasız'}) - Stok: ${p.miktar}`
                     })),
-                    suggestion: 'Lütfen doğru ürünün ID\'sini belirterek iade işlemini tekrarlayın.',
+                    suggestion: 'Lütfen doğru ürünün ID\'sini veya varyant_id bilgisini belirterek iade işlemini tekrarlayın.',
                     timestamp: new Date().toISOString()
                 });
             }
