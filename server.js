@@ -2623,11 +2623,11 @@ app.post('/api/satis-ekle', async (req, res) => {
                     }
                     
                     if (!stokUrunu) {
-                        // Ürün listesini göster
-                        const urunListesi = withSameBarcode.map(p => 
-                            `${p.ad} (${p.marka || 'Markasız'}) - ID: ${p.urun_id}`
+                        // Ürün listesini detaylı göster
+                        const urunListesi = withSameBarcode.map((p, index) => 
+                            `${index + 1}. ${p.ad} (Marka: ${p.marka || 'Yok'}, Stok: ${p.miktar}) - ID: ${p.urun_id}`
                         ).join('\n');
-                        throw new Error(`Aynı barkodlu ${withSameBarcode.length} ürün bulundu. Lütfen ürünü seçin:\n${urunListesi}`);
+                        throw new Error(`⚠️ VARYANT ÜRÜN UYARISI: Bu barkodda ${withSameBarcode.length} farklı ürün bulundu. Satış yapılacak ürünü belirtmeniz gerekiyor:\n\n${urunListesi}\n\nLütfen ürün seçimi yapın veya ürün ID'sini belirtin.`);
                     }
                 }
             }
@@ -2640,7 +2640,7 @@ app.post('/api/satis-ekle', async (req, res) => {
             }
             
             if (stokUrunu.miktar < satis.miktar) {
-                throw new Error('Yetersiz stok');
+                throw new Error(`❌ YETERSİZ STOK: "${stokUrunu.ad}" (${stokUrunu.marka || 'Markasız'}) ürününden sadece ${stokUrunu.miktar} adet stokta var. Satış yapmak istediğiniz miktar: ${satis.miktar} adet. Lütfen stok miktarını kontrol edin veya satış miktarını azaltın.`);
             }
             
             // Stok miktarını güncelle
@@ -3187,13 +3187,17 @@ app.post('/api/satis-iade', async (req, res) => {
                 
                 return res.status(400).json({
                     success: false,
-                    message: `Aynı barkodlu ${allWithBarcode.length} ürün bulundu. İade edilecek ürünün ID\'si belirtilmelidir.`,
-                    products: allWithBarcode.map(p => ({
+                    message: `⚠️ VARYANT ÜRÜN ÇAKIŞMASI: Aynı barkodlu ${allWithBarcode.length} farklı ürün bulundu. İade yapılacak ürünü belirtmeniz gerekiyor.`,
+                    detail: `İade edilen satış: "${saleBarcode}" - "${existingSale.urunAdi}" (${saleBrand || 'Markasız'})`,
+                    availableProducts: allWithBarcode.map((p, index) => ({
+                        index: index + 1,
                         urun_id: p.urun_id,
                         ad: p.ad,
                         marka: p.marka || 'Markasız',
-                        miktar: p.miktar
+                        miktar: p.miktar,
+                        description: `${p.ad} (${p.marka || 'Markasız'}) - Stok: ${p.miktar}`
                     })),
+                    suggestion: 'Lütfen doğru ürünün ID\'sini belirterek iade işlemini tekrarlayın.',
                     timestamp: new Date().toISOString()
                 });
             }
@@ -3232,8 +3236,17 @@ app.post('/api/satis-iade', async (req, res) => {
                     console.log(`✅ Son çare ile stok güncellendi: ${saleBarcode} - Yeni miktar: ${newAmount}`);
                 }
             } else {
-                console.warn(`⚠️ İade işlemi: Stok kaydı hiç bulunamadığı için yeni ürün eklenmeyecek.`);
-                // İade işlemi tamamlandı, sadece satış silindi, stok güncellemesi yok
+                                        console.warn(`⚠️ CRITICAL: İade işlemi sırasında stok kaydı bulunamadı!`);
+                        console.warn(`⚠️ Satış bilgileri: Barkod=${saleBarcode}, Marka=${saleBrand}, Ürün ID=${saleUrunId}`);
+                        
+                        // Kullanıcıya detaylı hata mesajı döndür
+                        return res.status(404).json({
+                            success: false,
+                            message: `İade edilecek ürün stok listesinde bulunamadı. Bu durum veri uyumsuzluğunu gösterir.`,
+                            detail: `Aranan ürün: Barkod="${saleBarcode}", Marka="${saleBrand || 'Yok'}", Ürün ID="${saleUrunId || 'Yok'}"`,
+                            suggestion: 'Lütfen stok listesini kontrol edin ve gerekirse ürünü manuel olarak ekleyin.',
+                            timestamp: new Date().toISOString()
+                        });
             }
         }
         

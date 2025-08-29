@@ -33,12 +33,23 @@ const eklenenUrunler = [];
 for (const [key, yedekUrun] of Object.entries(yedekStokListesi)) {
     const barkod = yedekUrun.barkod || '';
     const ad = yedekUrun.ad || '';
-    const marka = yedekUrun.marka || '';
+    // Marka alanını daha dikkatli kontrol et - null, undefined, boş string olabilir
+    const marka = yedekUrun.marka === null || yedekUrun.marka === undefined || yedekUrun.marka === '' ? '' : String(yedekUrun.marka).trim();
     
     if (!barkod || !ad) {
         console.log(`❌ Hatalı veri - Barkod veya ad eksik: ${key}`);
+        console.log(`   Barkod: "${barkod}", Ad: "${ad}", Marka: "${marka}"`);
         hataliSayisi++;
         continue;
+    }
+    
+    console.log(`🔍 İşlenen ürün - Barkod: "${barkod}", Ad: "${ad}", Marka: "${marka || 'YOK'}"`);
+    
+    // Marka varlığını kontrol et
+    if (marka && marka.trim()) {
+        console.log(`✅ Marka bilgisi mevcut: "${marka}"`);
+    } else {
+        console.log(`⚠️ Marka bilgisi boş veya yok`);
     }
     
     // Aynı barkod + ad + marka kombinasyonuna sahip ürün var mı kontrol et
