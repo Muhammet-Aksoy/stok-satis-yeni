@@ -2579,40 +2579,48 @@ app.post('/api/satis-ekle', async (req, res) => {
                 barkod: satis.barkod, 
                 marka: satis.marka, 
                 varyant_id: satis.varyant_id,
-                id: satis.id 
+                stokId: satis.stokId || satis.stok_id,
+                urunId: satis.urunId || satis.urun_id
             });
             
             let stokUrunu = null;
-            if (satis.id) {
-                stokUrunu = db.prepare('SELECT * FROM stok WHERE id = ?').get(satis.id);
-                console.log('🔍 ID ile arama sonucu:', stokUrunu ? 'Bulundu' : 'Bulunamadı');
+            const stokId = satis.stokId || satis.stok_id || null;
+            const urunId = satis.urunId || satis.urun_id || null;
+            if (stokId) {
+                stokUrunu = db.prepare('SELECT * FROM stok WHERE id = ?').get(stokId);
+                console.log('🔍 Stok ID ile arama sonucu:', stokUrunu ? 'Bulundu' : 'Bulunamadı');
             }
-            if (!stokUrunu) {
-                // Önce sadece barkod ile ara
-                stokUrunu = db.prepare('SELECT * FROM stok WHERE barkod = ?').get(satis.barkod);
-                console.log('🔍 Barkod ile arama sonucu:', stokUrunu ? 'Bulundu' : 'Bulunamadı');
-                
-                if (stokUrunu) {
-                    console.log('🔍 Bulunan ürün:', { 
-                        id: stokUrunu.id, 
-                        barkod: stokUrunu.barkod, 
-                        ad: stokUrunu.ad,
-                        marka: stokUrunu.marka,
-                        miktar: stokUrunu.miktar
-                    });
-                }
-                
-                // Eğer bulunamadıysa ve marka/varyant bilgisi varsa detaylı ara
-                if (!stokUrunu && (satis.marka || satis.varyant_id)) {
-                    stokUrunu = db.prepare('SELECT * FROM stok WHERE barkod = ? AND (marka = ? OR (? IS NULL AND marka IS NULL)) AND (varyant_id = ? OR (? IS NULL AND varyant_id IS NULL))')
-                        .get(
-                            satis.barkod,
-                            satis.marka || null,
-                            satis.marka || null,
-                            satis.varyant_id || null,
-                            satis.varyant_id || null
-                        );
-                    console.log('🔍 Detaylı arama sonucu:', stokUrunu ? 'Bulundu' : 'Bulunamadı');
+            if (!stokUrunu && urunId) {
+                stokUrunu = db.prepare('SELECT * FROM stok WHERE urun_id = ?').get(urunId);
+                console.log('🔍 Ürün ID ile arama sonucu:', stokUrunu ? 'Bulundu' : 'Bulunamadı');
+            }
+            // Marka/Varyant ile kesin eşleşme dene
+            if (!stokUrunu && satis.barkod && (satis.marka || satis.varyant_id)) {
+                stokUrunu = db.prepare('SELECT * FROM stok WHERE barkod = ? AND (lower(marka) = lower(?) OR (? IS NULL AND marka IS NULL)) AND (varyant_id = ? OR (? IS NULL AND varyant_id IS NULL))')
+                    .get(
+                        satis.barkod,
+                        satis.marka || null,
+                        satis.marka || null,
+                        satis.varyant_id || null,
+                        satis.varyant_id || null
+                    );
+                console.log('🔍 Barkod+Marka/Varyant eşleşme sonucu:', stokUrunu ? 'Bulundu' : 'Bulunamadı');
+            }
+            // Sadece barkod ile; ancak birden fazla kayıt varsa marka/varyant zorunlu olsun
+            if (!stokUrunu && satis.barkod) {
+                const withSameBarcode = db.prepare('SELECT * FROM stok WHERE barkod = ?').all(satis.barkod);
+                console.log(`🔍 Barkod ile bulunan ürün sayısı: ${withSameBarcode.length}`);
+                if (withSameBarcode.length === 1) {
+                    stokUrunu = withSameBarcode[0];
+                } else if (withSameBarcode.length > 1) {
+                    // Önce marka eşleşmesi (case-insensitive), sonra varyant, aksi halde hata ver
+                    const markaNorm = (satis.marka || '').toLowerCase();
+                    const varyantNorm = (satis.varyant_id || '').toString();
+                    stokUrunu = withSameBarcode.find(p => (p.marka || '').toLowerCase() === markaNorm) 
+                              || withSameBarcode.find(p => (p.varyant_id || '') === varyantNorm);
+                    if (!stokUrunu) {
+                        throw new Error('Aynı barkodlu birden fazla ürün bulundu. Lütfen marka/varyant seçiniz.');
+                    }
                 }
             }
             
@@ -5517,6 +5525,47 @@ app.post('/api/stok-temizle', async (req, res) => {
     }
 });
 
+// DELETE exact duplicate stock rows (keep variants) and merge quantities
+app.post('/api/stok-temizle-dup', async (req, res) => {
+    try {
+        const rows = db.prepare('SELECT * FROM stok').all();
+        const groups = new Map();
+        rows.forEach(r => {
+            const brandNorm = (r.marka || '').toString().trim().toLowerCase();
+            const variantNorm = (r.varyant_id || '').toString().trim();
+            const key = `${r.barkod}_${brandNorm}_${variantNorm}`;
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(r);
+        });
+        let deleted = 0;
+        let merged = 0;
+        const tx = db.transaction(() => {
+            for (const [, list] of groups.entries()) {
+                if (list.length > 1) {
+                    list.sort((a, b) => (new Date(b.updated_at) - new Date(a.updated_at)) || (b.id - a.id));
+                    const keep = list[0];
+                    const rest = list.slice(1);
+                    const sumMiktar = rest.reduce((acc, r) => acc + (parseInt(r.miktar) || 0), 0);
+                    if (sumMiktar !== 0) {
+                        db.prepare('UPDATE stok SET miktar = miktar + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(sumMiktar, keep.id);
+                        merged++;
+                    }
+                    for (const r of rest) {
+                        db.prepare('DELETE FROM stok WHERE id = ?').run(r.id);
+                        deleted++;
+                    }
+                }
+            }
+        });
+        tx();
+        io.emit('dataUpdated', { type: 'stok-cleaned-duplicates', data: { deleted, merged }, timestamp: new Date().toISOString() });
+        res.json({ success: true, deleted, merged });
+    } catch (error) {
+        console.error('❌ Stok duplicate temizleme hatası:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Satış geçmişi yükleme endpoint'i (veriler.json'dan)
 app.post('/api/satis-yukle-veriler-json', async (req, res) => {
     try {
@@ -6009,7 +6058,9 @@ app.post('/api/import-missing-products', async (req, res) => {
             const duplicates = [];
             
             products.forEach(product => {
-                const key = `${product.barkod}_${product.marka || 'NO_BRAND'}`;
+                const brandNorm = (product.marka || '').toString().trim().toLowerCase();
+                const variantNorm = (product.varyant_id || '').toString().trim();
+                const key = `${product.barkod}_${brandNorm || 'NO_BRAND'}_${variantNorm || 'NO_VARIANT'}`;
                 
                 if (uniqueProducts.has(key)) {
                     duplicates.push(product);
@@ -6089,7 +6140,7 @@ app.post('/api/import-missing-products', async (req, res) => {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
         
-        const checkStmt = db.prepare('SELECT * FROM stok WHERE barkod = ? AND (marka = ? OR (marka IS NULL AND ? IS NULL))');
+        const checkStmt = db.prepare('SELECT * FROM stok WHERE barkod = ? AND (lower(marka) = lower(?) OR (marka IS NULL AND ? IS NULL)) AND (varyant_id = ? OR (varyant_id IS NULL AND ? IS NULL))');
         
         let addedCount = 0;
         let updatedCount = 0;
@@ -6102,8 +6153,9 @@ app.post('/api/import-missing-products', async (req, res) => {
                 continue;
             }
             
-            let marka = product.marka || null;
+            let marka = (product.marka != null && String(product.marka).trim() !== '') ? String(product.marka).trim() : null;
             const barkod = product.barkod;
+            const varyant = (product.varyant_id != null && String(product.varyant_id).trim() !== '') ? String(product.varyant_id).trim() : null;
             
             // Handle barcode collisions with brand assignment
             if (existingBarcodes.has(barkod)) {
@@ -6122,7 +6174,7 @@ app.post('/api/import-missing-products', async (req, res) => {
             
             try {
                 // Check if exact combination exists
-                const exists = checkStmt.get(barkod, marka, marka);
+                const exists = checkStmt.get(barkod, marka, marka, varyant, varyant);
                 
                 if (!exists) {
                     // Add new product
@@ -6137,7 +6189,7 @@ app.post('/api/import-missing-products', async (req, res) => {
                         product.satisFiyati || product.alisFiyati || 0,
                         product.kategori || '',
                         product.aciklama || '',
-                        product.varyant_id || '',
+                        varyant || '',
                         product.eklenmeTarihi || currentTime,
                         currentTime
                     );
