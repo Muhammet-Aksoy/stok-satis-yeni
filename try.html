@@ -5557,6 +5557,12 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
 
         // All bulk sales functions removed as requested
         
+        // Basit HTML escape yardımcı fonksiyonu (title gibi attribute'larda bozulmayı önler)
+        function escapeHtml(str) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+            return String(str ?? '').replace(/[&<>"']/g, ch => map[ch]);
+        }
+        
         // Satış geçmişini güncelle
         function satisTablosunuGuncelle() {
             console.log('📊 Satış tablosu güncelleniyor, toplam satış:', satisGecmisi?.length || 0);
@@ -5570,6 +5576,15 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             if (satisGecmisi && satisGecmisi.length > 0) {
                 // Satış verilerini sırala
                 let sortedSales = [...satisGecmisi];
+                
+                // Rendere etmeden önce duplicate satışları filtrele (barkod+tarih+miktar+fiyat)
+                const seenSales = new Set();
+                sortedSales = sortedSales.filter(s => {
+                    const key = `${s.barkod}_${s.tarih}_${s.miktar}_${s.fiyat}`;
+                    if (seenSales.has(key)) return false;
+                    seenSales.add(key);
+                    return true;
+                });
                 
                 if (currentSalesSort.column) {
                     sortedSales.sort((a, b) => {
@@ -5642,10 +5657,14 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     const varyantBilgisi = satis.varyant_id ? ` <span class="variant-badge">V:${satis.varyant_id}</span>` : '';
                     const variantDisplay = markaBilgisi + varyantBilgisi;
                     
+                    // Title attribute'ları güvenle oluştur
+                    const productTitleText = `Ürün ID: ${satis.urun_id || '-'} | Orijinal: ${satis.urunAdi || ''}${satis.marka ? ' - Marka: ' + satis.marka : ''}${satis.varyant_id ? ' - Varyant: ' + satis.varyant_id : ''}`;
+                    const iadeTitle = `İade - ${currentProductName}${satis.marka ? ' (' + satis.marka + ')' : ''}`;
+                    
                     tr.innerHTML = `
                         <td>${tarihStr}</td>
                         <td>${barkodGoster}</td>
-                        <td title="Ürün ID: ${satis.urun_id || '-'} | Orijinal: ${satis.urunAdi}${satis.marka ? ' - Marka: ' + satis.marka : ''}${satis.varyant_id ? ' - Varyant: ' + satis.varyant_id : ''}">
+                        <td title="${escapeHtml(productTitleText)}">
                             <span class="product-name-link" onclick="showSalesProductDetails('${satis.barkod}', '${satis.marka || ''}', '${satis.id}')">
                                 ${currentProductName}${variantDisplay}
                             </span>
@@ -5658,7 +5677,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                         <td>${musteriAdi}</td>
                         <td>
                             <div class="action-buttons">
-                                <button class="action-btn btn-return" title="İade - ${currentProductName}${markaBilgisi}" onclick="urunIade('${satis.id}')">
+                                <button class="action-btn btn-return" title="${escapeHtml(iadeTitle)}" onclick="urunIade('${satis.id}')">
                                     <i class="fas fa-undo"></i>
                                 </button>
                                 <button class="action-btn btn-edit" title="Düzenle" onclick="satisDuzenle('${satis.id}')">
@@ -9149,7 +9168,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         }
         
         // Eski stub kaldırıldı: satisSil fonksiyonu yukarıda tanımlı API tabanlı sürüm kullanılacaktır.
-        function urunIade(satisId) {
+        function urunIadeStub(satisId) {
             console.log('🔄 Ürün iade:', satisId);
             console.log('🔍 Mevcut satışlar:', satisGecmisi.map(s => ({ id: s.id, barkod: s.barkod, urunAdi: s.urunAdi })));
             

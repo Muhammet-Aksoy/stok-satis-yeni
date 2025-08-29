@@ -2627,6 +2627,12 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             }
         }
         
+        // Basit HTML escape yardımcı fonksiyonu (attribute güvenliği)
+        function escapeHtml(str) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+            return String(str ?? '').replace(/[&<>"']/g, ch => map[ch]);
+        }
+        
         // Satış geçmişini güncelle
         function satisTablosunuGuncelle() {
             const salesBody = document.getElementById('salesBody');
@@ -2635,6 +2641,15 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
             if (satisGecmisi && satisGecmisi.length > 0) {
                 // Satış verilerini sırala
                 let sortedSales = [...satisGecmisi];
+                
+                // Duplicate satışları filtrele (barkod+tarih+miktar+fiyat)
+                const seenSales = new Set();
+                sortedSales = sortedSales.filter(s => {
+                    const key = `${s.barkod}_${s.tarih}_${s.miktar}_${s.fiyat}`;
+                    if (seenSales.has(key)) return false;
+                    seenSales.add(key);
+                    return true;
+                });
                 
                 if (currentSalesSort.column) {
                     sortedSales.sort((a, b) => {
@@ -2702,10 +2717,13 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     const toplam = kayitliToplam > 0 ? kayitliToplam : hesaplananToplam;
                     const alis = (parseFloat(satis.alisFiyati) || 0);
                     
+                    // Güvenli title metni hazırla
+                    const productTitleText = `Orijinal: ${satis.urunAdi || ''}`;
+                    
                     tr.innerHTML = `
                         <td>${tarihStr}</td>
                         <td>${barkodGoster}</td>
-                        <td title="Orijinal: ${satis.urunAdi}">${currentProductName}</td>
+                        <td title="${escapeHtml(productTitleText)}">${currentProductName}</td>
                         <td>${miktar}</td>
                         <td>${(parseFloat(satis.alisFiyati) || 0) > 0 ? (parseFloat(satis.alisFiyati)).toFixed(2) : '-'}</td>
                         <td>${(parseFloat(satis.fiyat) || 0).toFixed(2)}</td>
@@ -5902,7 +5920,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         }
         
         // Eski stub kaldırıldı: satisSil fonksiyonu yukarıda tanımlı API tabanlı sürüm kullanılacaktır.
-        function urunIade(satisId) {
+        function urunIadeStub(satisId) {
             console.log('🔄 Ürün iade:', satisId);
             console.log('🔍 Mevcut satışlar:', satisGecmisi.map(s => ({ id: s.id, barkod: s.barkod, urunAdi: s.urunAdi })));
             
