@@ -581,11 +581,14 @@ socket.on('dataUpdate', (data) => {
                     const toplam = parseFloat(data.data.toplam) || (fiyat * miktar) || 0;
                     const borc = data.data.borc ? 1 : 0;
                     db.prepare(`
-                        INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, alisFiyati, toplam, borc, tarih, musteriId, musteriAdi)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO satisGecmisi (barkod, urunAdi, marka, varyant_id, urun_id, miktar, fiyat, alisFiyati, toplam, borc, tarih, musteriId, musteriAdi)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     `).run(
                         data.data.barkod,
                         data.data.urunAdi || '',
+                        data.data.marka || '',
+                        data.data.varyant_id || '',
+                        data.data.urun_id || '',
                         miktar,
                         fiyat,
                         alisFiyati,
@@ -595,7 +598,7 @@ socket.on('dataUpdate', (data) => {
                         data.data.musteriId || '',
                         data.data.musteriAdi || ''
                     );
-                    console.log('✅ Satış eklendi:', data.data.barkod);
+                    console.log('✅ Satış eklendi:', data.data.barkod, '- Marka:', data.data.marka || 'YOK');
                 } else {
                     console.log('⚠️ Duplicate satış atlandı:', data.data.barkod);
                 }
@@ -2663,6 +2666,9 @@ app.post('/api/satis-ekle', async (req, res) => {
             console.log('💰 Satış ekleme detayları:', {
                 barkod: satis.barkod,
                 urunAdi: satis.urunAdi || stokUrunu.ad,
+                marka: stokUrunu.marka || '',
+                varyant_id: stokUrunu.varyant_id || '',
+                urun_id: stokUrunu.urun_id || stokUrunu.id,
                 miktar: satis.miktar,
                 fiyat: satis.fiyat,
                 alisFiyati: alisFiyati,
@@ -2674,11 +2680,14 @@ app.post('/api/satis-ekle', async (req, res) => {
             });
             
             const satisResult = db.prepare(`
-                INSERT INTO satisGecmisi (barkod, urunAdi, miktar, fiyat, alisFiyati, toplam, borc, tarih, musteriId, musteriAdi)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO satisGecmisi (barkod, urunAdi, marka, varyant_id, urun_id, miktar, fiyat, alisFiyati, toplam, borc, tarih, musteriId, musteriAdi)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).run(
                 satis.barkod,
                 satis.urunAdi || stokUrunu.ad,
+                stokUrunu.marka || '',
+                stokUrunu.varyant_id || '',
+                stokUrunu.urun_id || stokUrunu.id,
                 satis.miktar,
                 satis.fiyat,
                 alisFiyati,
