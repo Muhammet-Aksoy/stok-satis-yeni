@@ -4917,7 +4917,7 @@
                         }
                     }).then(result => {
                         if (result.isConfirmed) {
-                            searchProductsByBarcode(barkod);
+                            searchProductsByBarcode(barkod, true);
                         } else if (result.isDenied) {
                             searchAtilganWithBarcode(barkod);
                         } else if (result.dismiss === Swal.DismissReason.cancel) {
@@ -5645,7 +5645,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     tr.innerHTML = `
                         <td>${tarihStr}</td>
                         <td>${barkodGoster}</td>
-                        <td title="Orijinal: ${satis.urunAdi}${satis.marka ? ' - Marka: ' + satis.marka : ''}${satis.varyant_id ? ' - Varyant: ' + satis.varyant_id : ''}">
+                        <td title="Ürün ID: ${satis.urun_id || '-'} | Orijinal: ${satis.urunAdi}${satis.marka ? ' - Marka: ' + satis.marka : ''}${satis.varyant_id ? ' - Varyant: ' + satis.varyant_id : ''}">
                             <span class="product-name-link" onclick="showSalesProductDetails('${satis.barkod}', '${satis.marka || ''}', '${satis.id}')">
                                 ${currentProductName}${variantDisplay}
                             </span>
@@ -7090,7 +7090,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
         }
         
         // Aynı barkodlu ürünleri ara
-        async function searchProductsByBarcode(barkod) {
+        async function searchProductsByBarcode(barkod, showSelection = false) {
             try {
                 const response = await fetch(`${API_BASE}/api/urunler-barkod/${encodeURIComponent(barkod)}`);
                 const result = await response.json();
@@ -7805,7 +7805,7 @@ Güncelleme Tarihi: ${product.updated_at ? new Date(product.updated_at).toLocale
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${tarihStr}</td>
-                        <td title="Orijinal: ${satis.urunAdi}">${currentProductName}</td>
+                        <td title="Ürün ID: ${satis.urun_id || '-'} | Orijinal: ${satis.urunAdi}">${currentProductName}</td>
                         <td>${satis.miktar}</td>
                         <td>${(parseFloat(satis.fiyat) || 0).toFixed(2)}</td>
                         <td>${(parseFloat(satis.toplam) || ((parseFloat(satis.fiyat)||0) * (parseInt(satis.miktar)||0))).toFixed(2)}</td>
